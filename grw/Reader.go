@@ -99,7 +99,8 @@ func (r *Reader) Close() error {
 func (r *Reader) ReadAllAndClose() ([]byte, error) {
 	b, err := ioutil.ReadAll(r.Reader)
 	if err != nil {
-		r.Close()
+	  // Attempt to close even if there is an error while reading
+		r.Close() // #nosec
 		return b, err
 	}
 	err = r.Close()

@@ -18,13 +18,13 @@ import (
 )
 
 type Cache struct {
-	*Reader
+	Reader   ByteReadCloser
 	Cursor   int
 	Complete *bool
 	Content  *[]byte
 }
 
-func NewCache(r *Reader) *Cache {
+func NewCache(r ByteReadCloser) *Cache {
 	complete := false
 	content := make([]byte, 0)
 	return &Cache{
@@ -35,7 +35,7 @@ func NewCache(r *Reader) *Cache {
 	}
 }
 
-func NewCacheWithContent(r *Reader, c *[]byte, i int) *Cache {
+func NewCacheWithContent(r ByteReadCloser, c *[]byte, i int) *Cache {
 	complete := false
 	return &Cache{
 		Reader:   r,
@@ -43,6 +43,17 @@ func NewCacheWithContent(r *Reader, c *[]byte, i int) *Cache {
 		Cursor:   i,
 		Complete: &complete,
 	}
+}
+
+func (c *Cache) ReadByte() (byte, error) {
+
+	_, err := c.Reader.Read(make([]byte, 1))
+	if err != nil {
+		return (*c.Content)[len(*c.Content)-1], nil
+	}
+
+	return byte(0), nil
+
 }
 
 // Read reads a maximum len(p) bytes from the reader and returns an error, if any.
@@ -62,19 +73,28 @@ func (c *Cache) Read(p []byte) (n int, err error) {
 	}
 
 	if err != nil || n == 0 {
-		//fmt.Println("Setting complete to true in Read.")
-		//fmt.Println("Content is ", c.Content)
-		//panic(nil)
 		*c.Complete = true
 	}
 
-	//if n == 0 {
-	//	c.Complete = true
-	//}
-
-	//fmt.Println("Read("+fmt.Sprint(p)+") returning ",p[0:n],".  Content = ", c.Content)
-
 	return n, err
+}
+
+func (c *Cache) ReadBytes(delim byte) ([]byte, error) {
+
+	if *c.Complete {
+		return make([]byte, 0), io.EOF
+	}
+
+	b, err := c.Reader.ReadBytes(delim)
+	if len(b) > 0 {
+		*c.Content = append(*c.Content, b...)
+	}
+
+	if err != nil || len(b) == 0 {
+		*c.Complete = true
+	}
+
+	return b, err
 }
 
 // ReadFirst returns the first byte stating at the cursor.
@@ -182,4 +202,26 @@ func (c *Cache) ReadRange(start int, end int) ([]byte, error) {
 
 	//fmt.Println("End of ReadRange("+fmt.Sprint(start)+","+fmt.Sprint(end)+") has content ",c.Content)
 	return (*c.Content)[c.Cursor+start : c.Cursor+end+1], nil
+}
+
+func (c *Cache) Close() error {
+	return c.Reader.Close()
+}
+
+func (c *Cache) ReadAllAndClose() ([]byte, error) {
+	b, err := c.Reader.ReadAllAndClose()
+
+	if *c.Complete {
+		return make([]byte, 0), io.EOF
+	}
+
+	if len(b) > 0 {
+		*c.Content = append(*c.Content, b...)
+	}
+
+	if err != nil || len(b) == 0 {
+		*c.Complete = true
+	}
+
+	return b, err
 }

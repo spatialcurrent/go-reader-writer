@@ -19,5 +19,6 @@ type ByteReadCloser interface {
 	ReadAt(i int) (byte, error)
 	ReadAll() ([]byte, error)
 	ReadAllAndClose() ([]byte, error)
+	ReadFirst() (byte, error)
 	ReadRange(start int, end int) ([]byte, error)
 }

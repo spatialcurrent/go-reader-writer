@@ -57,6 +57,17 @@ func (w *Writer) WriteString(s string) (n int, err error) {
 	return 0, nil
 }
 
+// WriteLine writes a string with a trailing newline to the underlying writer and returns an error, if any.
+//  - https://godoc.org/io#Writer
+func (w *Writer) WriteLine(s string) (n int, err error) {
+
+	if w.Writer != nil {
+		return io.WriteString(w.Writer, s+"\n")
+	}
+
+	return 0, nil
+}
+
 // WriteError writes a an error as a string with a trailing newline to the underlying writer and returns an error, if any.
 //  - https://godoc.org/io#Writer
 func (w *Writer) WriteError(e error) (n int, err error) {

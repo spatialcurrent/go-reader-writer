@@ -28,7 +28,8 @@ func WriteBytes(alg string) (ByteWriteCloser, *bytes.Buffer, error) {
 	case "zip":
 		return nil, nil, &ErrWriterNotImplemented{Algorithm: alg}
 	case "none", "":
-		return WriteMemoryBytes()
+		writer, buffer := WriteMemoryBytes()
+		return writer, buffer, nil
 	}
 	return nil, new(bytes.Buffer), &ErrUnknownAlgorithm{Algorithm: alg}
 }

@@ -17,5 +17,6 @@ type ByteWriteCloser interface {
 	io.Closer
 	CloseFile() error
 	WriteString(s string) (n int, err error)
+	WriteLine(s string) (n int, err error)
 	WriteError(e error) (n int, err error)
 }

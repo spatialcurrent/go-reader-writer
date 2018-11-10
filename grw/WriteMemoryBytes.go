@@ -13,8 +13,8 @@ import (
 )
 
 // WriteMemoryBytes returns a reader for reading the bytes from an input array, and an error if any.
-func WriteMemoryBytes() (ByteWriteCloser, *bytes.Buffer, error) {
+func WriteMemoryBytes() (ByteWriteCloser, *bytes.Buffer) {
 	buf := new(bytes.Buffer)
 	bw := bufio.NewWriter(buf)
-	return &Writer{Writer: bw}, buf, nil
+	return &Writer{Writer: bw}, buf
 }

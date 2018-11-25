@@ -21,7 +21,7 @@ import (
 //
 //  - https://golang.org/pkg/archive/zip/
 //
-func ReadZipFile(path string, cache bool, buffer_size int) (ByteReadCloser, error) {
+func ReadZipFile(path string, cache bool) (ByteReadCloser, error) {
 
 	zr, err := zip.OpenReader(path)
 	if err != nil {

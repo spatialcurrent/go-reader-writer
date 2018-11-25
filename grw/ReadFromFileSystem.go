@@ -13,18 +13,18 @@ package grw
 //  - https://golang.org/pkg/compress/gzip/
 //  - https://godoc.org/github.com/golang/snappy
 //
-func ReadFromFileSystem(uri string, alg string, cache bool, buffer_size int) (ByteReadCloser, error) {
+func ReadFromFileSystem(path string, alg string, cache bool, buffer_size int) (ByteReadCloser, error) {
 	switch alg {
 	case "snappy":
-		return ReadSnappyFile(uri, cache, buffer_size)
+		return ReadSnappyFile(path, cache, buffer_size)
 	case "gzip":
-		return ReadGzipFile(uri, cache, buffer_size)
+		return ReadGzipFile(path, cache, buffer_size)
 	case "bzip2":
-		return ReadBzip2File(uri, cache, buffer_size)
+		return ReadBzip2File(path, cache, buffer_size)
 	case "zip":
-		return ReadZipFile(uri, cache, buffer_size)
+		return ReadZipFile(path, cache)
 	case "none", "":
-		return ReadLocalFile(uri, cache, buffer_size)
+		return ReadLocalFile(path, cache, buffer_size)
 	}
 	return nil, &ErrUnknownAlgorithm{Algorithm: alg}
 }

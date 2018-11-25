@@ -39,23 +39,8 @@ func ReadFromResource(uri string, alg string, buffer_size int, cache bool, s3_cl
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "Error expanding resource file path "+path)
 		}
-		switch alg {
-		case "snappy":
-			brc, err := ReadSnappyFile(pathExpanded, cache, buffer_size)
-			return brc, nil, err
-		case "gzip":
-			brc, err := ReadGzipFile(pathExpanded, cache, buffer_size)
-			return brc, nil, err
-		case "bzip2":
-			brc, err := ReadBzip2File(pathExpanded, cache, buffer_size)
-			return brc, nil, err
-		case "zip":
-			brc, err := ReadZipFile(pathExpanded, cache, buffer_size)
-			return brc, nil, err
-		case "none", "":
-			brc, err := ReadLocalFile(pathExpanded, cache, buffer_size)
-			return brc, nil, err
-		}
+		brc, err := ReadFromFileSystem(pathExpanded, alg, cache, buffer_size)
+		return brc, nil, err
 	}
 
 	return nil, nil, &ErrUnknownAlgorithm{Algorithm: alg}

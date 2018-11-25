@@ -7,13 +7,13 @@
 
 package grw
 
-// OpenFile returns a ByteReader for a file with a given compression.
+// ReadFromFilePath returns a ByteReader for a file with a given compression.
 // alg may be "snappy", "gzip", or "none."
 //
 //  - https://golang.org/pkg/compress/gzip/
 //  - https://godoc.org/github.com/golang/snappy
 //
-func ReadFromFileSystem(path string, alg string, cache bool, buffer_size int) (ByteReadCloser, error) {
+func ReadFromFilePath(path string, alg string, cache bool, buffer_size int) (ByteReadCloser, error) {
 	switch alg {
 	case "snappy":
 		return ReadSnappyFile(path, cache, buffer_size)

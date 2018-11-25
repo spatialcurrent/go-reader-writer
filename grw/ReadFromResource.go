@@ -39,7 +39,7 @@ func ReadFromResource(uri string, alg string, buffer_size int, cache bool, s3_cl
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "Error expanding resource file path "+path)
 		}
-		brc, err := ReadFromFileSystem(pathExpanded, alg, cache, buffer_size)
+		brc, err := ReadFromFilePath(pathExpanded, alg, cache, buffer_size)
 		return brc, nil, err
 	}
 

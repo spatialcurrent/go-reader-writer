@@ -14,8 +14,8 @@ import (
 )
 
 // WriteSnappyBytes returns a reader for reading the bytes from an input array, and an error if any.
-func WriteSnappyBytes() (ByteWriteCloser, *bytes.Buffer, error) {
+func WriteSnappyBytes() (ByteWriteCloser, *bytes.Buffer) {
 	buf := new(bytes.Buffer)
 	sw := snappy.NewBufferedWriter(buf)
-	return &Writer{Writer: bufio.NewWriter(sw), Closer: sw}, buf, nil
+	return &Writer{Writer: bufio.NewWriter(sw), Closer: sw}, buf
 }

@@ -24,7 +24,8 @@ func WriteBytes(alg string) (ByteWriteCloser, *bytes.Buffer, error) {
 	case "gzip":
 		return WriteGzipBytes()
 	case "snappy":
-		return WriteSnappyBytes()
+		writer, buffer := WriteSnappyBytes()
+		return writer, buffer, nil
 	case "zip":
 		return nil, nil, &ErrWriterNotImplemented{Algorithm: alg}
 	case "none", "":

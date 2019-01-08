@@ -27,5 +27,5 @@ func WriteGzipFile(path string, flag int) (ByteWriteCloser, error) {
 
 	gw := gzip.NewWriter(f)
 
-	return &Writer{Writer: bufio.NewWriter(gw), Closer: gw, File: f}, nil
+	return NewWriterWithCloserAndFile(bufio.NewWriter(gw), gw, f), nil
 }

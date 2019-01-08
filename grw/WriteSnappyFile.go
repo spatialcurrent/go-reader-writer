@@ -27,5 +27,5 @@ func WriteSnappyFile(path string, flag int) (ByteWriteCloser, error) {
 
 	sw := snappy.NewBufferedWriter(f)
 
-	return &Writer{Writer: bufio.NewWriter(sw), Closer: sw, File: f}, nil
+	return NewWriterWithCloserAndFile(bufio.NewWriter(sw), sw, f), nil
 }

@@ -9,8 +9,8 @@ package grw
 
 import (
 	"io"
-	//"io/ioutil"
 	"os"
+	"sync"
 )
 
 import (
@@ -20,9 +20,34 @@ import (
 // Writer is a struct for normalizing reading of bytes from files with arbitrary compression and for closing underlying resources.
 // Writer implements the ByteWriter interface by wrapping around a subordinate ByteWriter.
 type Writer struct {
-	Writer ByteWriter // the instance of ByteWriter used for reading bytes
-	Closer io.Closer  // Used for closing readers with footer metadata, e.g., gzip.  Not always needed, e.g., snappy
-	File   *os.File   // underlying file, if any
+	*sync.Mutex            // inherits Lock and Unlock Functions
+	Writer      ByteWriter // the instance of ByteWriter used for reading bytes
+	Closer      io.Closer  // Used for closing readers with footer metadata, e.g., gzip.  Not always needed, e.g., snappy
+	File        *os.File   // underlying file, if any
+}
+
+func NewWriter(writer ByteWriter) *Writer {
+	return &Writer{
+		Writer: writer,
+		Closer: nil,
+		File:   nil,
+		Mutex:  &sync.Mutex{}}
+}
+
+func NewWriterWithCloser(writer ByteWriter, closer io.Closer) *Writer {
+	return &Writer{
+		Writer: writer,
+		Closer: closer,
+		File:   nil,
+		Mutex:  &sync.Mutex{}}
+}
+
+func NewWriterWithCloserAndFile(writer ByteWriter, closer io.Closer, file *os.File) *Writer {
+	return &Writer{
+		Writer: writer,
+		Closer: closer,
+		File:   nil,
+		Mutex:  &sync.Mutex{}}
 }
 
 // WriteString writes a slice of bytes to the underlying writer and returns an error, if any.
@@ -68,6 +93,22 @@ func (w *Writer) WriteLine(s string) (n int, err error) {
 	return 0, nil
 }
 
+// WriteLineSafe writes a string with a trailing newline to the underlying writer and returns an error, if any.
+// WriteLineSafe also locks the writer for the duration of writing using a sync.Mutex.
+//  - https://godoc.org/io#Writer
+//  - https://godoc.org/sync#Mutex
+func (w *Writer) WriteLineSafe(s string) (n int, err error) {
+
+	if w.Writer != nil {
+		w.Lock()
+		n, err := io.WriteString(w.Writer, s+"\n")
+		w.Unlock()
+		return n, err
+	}
+
+	return 0, nil
+}
+
 // WriteError writes a an error as a string with a trailing newline to the underlying writer and returns an error, if any.
 //  - https://godoc.org/io#Writer
 func (w *Writer) WriteError(e error) (n int, err error) {
@@ -79,7 +120,24 @@ func (w *Writer) WriteError(e error) (n int, err error) {
 	return 0, nil
 }
 
-// Flush flushes any intermediate writer
+// WriteError writes a an error as a string with a trailing newline to the underlying writer and returns an error, if any.
+// WriteErrorSafe also locks the writer for the duration of writing using a sync.Mutex.
+//  - https://godoc.org/io#Writer
+//  - https://godoc.org/sync#Mutex
+func (w *Writer) WriteErrorSafe(e error) (n int, err error) {
+
+	if w.Writer != nil {
+		w.Lock()
+		n, err := io.WriteString(w.Writer, e.Error()+"\n")
+		w.Unlock()
+		return n, err
+	}
+
+	return 0, nil
+}
+
+// Flush flushes any intermediate writer.
+//  - https://godoc.org/io#Writer
 func (w *Writer) Flush() error {
 
 	if w.Writer != nil {
@@ -92,7 +150,26 @@ func (w *Writer) Flush() error {
 	return nil
 }
 
+// FlushSafe flushes any intermediate writer.
+// FlushSafe also locks the writer for the duration of flushing using a sync.Mutex.
+//  - https://godoc.org/io#Writer
+//  - https://godoc.org/sync#Mutex
+func (w *Writer) FlushSafe() error {
+
+	if w.Writer != nil {
+		w.Lock()
+		err := w.Writer.Flush()
+		w.Unlock()
+		if err != nil {
+			return errors.Wrap(err, "error flushing underlying writer")
+		}
+	}
+
+	return nil
+}
+
 // Close closes the Closer and the underlying *os.File if not nil.
+//  - https://godoc.org/os#File
 func (w *Writer) Close() error {
 
 	err := w.Flush()
@@ -108,6 +185,17 @@ func (w *Writer) Close() error {
 	}
 
 	return w.CloseFile()
+}
+
+// CloseSafe closes the Closer and the underlying *os.File if not nil.
+// CloseSafe also locks the writer for the duration of flushing using a sync.Mutex.
+//  - https://godoc.org/os#File
+//  - https://godoc.org/sync#Mutex
+func (w *Writer) CloseSafe() error {
+	w.Lock()
+	err := w.Close()
+	w.Unlock()
+	return err
 }
 
 // CloseFile closes the underlying file and bypasses the writer to stop writing immediately.

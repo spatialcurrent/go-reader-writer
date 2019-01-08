@@ -30,15 +30,15 @@ func WriteStderr(alg string) (ByteWriteCloser, error) {
 	case "bzip2":
 		return nil, &ErrWriterNotImplemented{Algorithm: alg}
 	case "gzip":
-		gw := gzip.NewWriter(os.Stdout)
-		return &Writer{Writer: bufio.NewWriter(gw), Closer: gw}, nil
+		gw := gzip.NewWriter(os.Stderr)
+		return NewWriterWithCloser(bufio.NewWriter(gw), gw), nil
 	case "snappy":
-		sw := snappy.NewWriter(os.Stdout)
-		return &Writer{Writer: bufio.NewWriter(sw), Closer: sw}, nil
+		sw := snappy.NewWriter(os.Stderr)
+		return NewWriterWithCloser(bufio.NewWriter(sw), sw), nil
 	case "zip":
 		return nil, &ErrWriterNotImplemented{Algorithm: alg}
 	case "none", "":
-		return &Writer{Writer: bufio.NewWriter(os.Stdout)}, nil
+		return NewWriter(bufio.NewWriter(os.Stderr)), nil
 	}
 
 	return nil, &ErrUnknownAlgorithm{Algorithm: alg}

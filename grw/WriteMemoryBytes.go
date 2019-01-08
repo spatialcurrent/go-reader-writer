@@ -16,5 +16,5 @@ import (
 func WriteMemoryBytes() (ByteWriteCloser, *bytes.Buffer) {
 	buf := new(bytes.Buffer)
 	bw := bufio.NewWriter(buf)
-	return &Writer{Writer: bw}, buf
+	return NewWriter(bw), buf
 }

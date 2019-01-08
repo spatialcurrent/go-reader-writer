@@ -24,5 +24,5 @@ func WriteLocalFile(path string, flag int) (ByteWriteCloser, error) {
 		return nil, errors.Wrap(err, "error opening file at \""+path+"\" for writing")
 	}
 
-	return &Writer{Writer: bufio.NewWriter(f), File: f}, nil
+	return NewWriterWithCloserAndFile(bufio.NewWriter(f), nil, f), nil
 }

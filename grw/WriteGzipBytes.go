@@ -17,5 +17,5 @@ import (
 func WriteGzipBytes() (ByteWriteCloser, *bytes.Buffer, error) {
 	buf := new(bytes.Buffer)
 	gw := gzip.NewWriter(buf)
-	return &Writer{Writer: bufio.NewWriter(gw), Closer: gw}, buf, nil
+	return NewWriterWithCloser(bufio.NewWriter(gw), gw), buf, nil
 }

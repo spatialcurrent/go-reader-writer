@@ -15,8 +15,14 @@ import (
 type ByteWriteCloser interface {
 	ByteWriter
 	io.Closer
+	Lock()
+	Unlock()
+	FlushSafe() error
+	CloseSafe() error
 	CloseFile() error
 	WriteString(s string) (n int, err error)
 	WriteLine(s string) (n int, err error)
+	WriteLineSafe(s string) (n int, err error)
 	WriteError(e error) (n int, err error)
+	WriteErrorSafe(e error) (n int, err error)
 }

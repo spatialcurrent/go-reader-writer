@@ -31,14 +31,14 @@ func WriteStdout(alg string) (ByteWriteCloser, error) {
 		return nil, &ErrWriterNotImplemented{Algorithm: alg}
 	case "gzip":
 		gw := gzip.NewWriter(os.Stdout)
-		return &Writer{Writer: bufio.NewWriter(gw), Closer: gw}, nil
+		return NewWriterWithCloser(bufio.NewWriter(gw), gw), nil
 	case "snappy":
 		sw := snappy.NewWriter(os.Stdout)
-		return &Writer{Writer: bufio.NewWriter(sw), Closer: sw}, nil
+		return NewWriterWithCloser(bufio.NewWriter(sw), sw), nil
 	case "zip":
 		return nil, &ErrWriterNotImplemented{Algorithm: alg}
 	case "none", "":
-		return &Writer{Writer: bufio.NewWriter(os.Stdout)}, nil
+		return NewWriter(bufio.NewWriter(os.Stdout)), nil
 	}
 
 	return nil, &ErrUnknownAlgorithm{Algorithm: alg}

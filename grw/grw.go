@@ -16,10 +16,10 @@
 // You can import reader as a package into your own Go project or use the command line interface.
 //
 //  import (
-//    "github.com/spatialcurrent/go-reader/reader"
+//    "github.com/spatialcurrent/go-reader-writer/grw"
 //  )
 //
-//  r, err := reader.OpenFile("data-for-2018.sz", "snappy")
+//  r, err := grw.ReadFromFilePath("data-for-2018.sz", "snappy", false, 4096)
 //  if err != nil {
 //    panic(err)
 //  }

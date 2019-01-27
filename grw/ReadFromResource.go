@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2018 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -34,7 +34,7 @@ func ReadFromResource(uri string, alg string, buffer_size int, cache bool, s3_cl
 			return &Reader{}, nil, errors.New("path missing bucket")
 		}
 		return ReadS3Object(path[0:i], path[i+1:], alg, cache, s3_client)
-	case "none", "":
+	case "none", "file", "":
 		pathExpanded, err := homedir.Expand(path)
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "Error expanding resource file path "+path)

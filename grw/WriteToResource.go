@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2018 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -14,7 +14,7 @@ import (
 	"os"
 )
 
-// WriteToResource
+// WriteToResource returns a ByteWriteCloser and error, if any.
 func WriteToResource(uri string, alg string, appendFlag bool, s3_client *s3.S3) (ByteWriteCloser, error) {
 
 	if uri == "stdout" {

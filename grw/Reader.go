@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2018 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -45,14 +45,21 @@ func (r *Reader) ReadByte() (byte, error) {
 	return 0, nil
 }
 
-// Read returns all bytes up to an including the first occurrence of the delimiter "delim" and an error, if any.
+// ReadBytes returns all bytes up to an including the first occurrence of the delimiter "delim" and an error, if any.
 func (r *Reader) ReadBytes(delim byte) ([]byte, error) {
-
 	if r.Reader != nil {
 		return r.Reader.ReadBytes(delim)
 	}
-
 	return make([]byte, 0), nil
+}
+
+// ReadString returns a string of all the bytes to an including the first occurrence of the delimiter "delim" and an error, if any.
+func (r *Reader) ReadString(delim byte) (string, error) {
+	b, err := r.ReadBytes(delim)
+	if err != nil {
+		return "", err
+	}
+	return string(b), err
 }
 
 // ReadFirst is not implemented by Reader

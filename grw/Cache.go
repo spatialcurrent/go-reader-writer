@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2018 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -95,6 +95,14 @@ func (c *Cache) ReadBytes(delim byte) ([]byte, error) {
 	}
 
 	return b, err
+}
+
+func (c *Cache) ReadString(delim byte) (string, error) {
+	b, err := c.ReadBytes(delim)
+	if err != nil {
+		return "", err
+	}
+	return string(b), err
 }
 
 // ReadFirst returns the first byte stating at the cursor.

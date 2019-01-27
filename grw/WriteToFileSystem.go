@@ -1,13 +1,13 @@
 // =================================================================
 //
-// Copyright (C) 2018 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
 
 package grw
 
-// OpenFile returns a ByteReader for a file with a given compression.
+// WriteToFileSystem returns a ByteWriteCloser for a file with a given compression.
 // alg may be "snappy", "gzip", or "none."
 //
 //  - https://golang.org/pkg/compress/gzip/

@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2018 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -13,6 +13,6 @@ import (
 )
 
 // ReadMemoryBytes returns a reader for reading the bytes from an input array, and an error if any.
-func ReadMemoryBytes(b []byte) (ByteReadCloser, error) {
-	return NewCache(&Reader{Reader: bufio.NewReader(bytes.NewReader(b))}), nil
+func ReadMemoryBytes(b []byte) ByteReadCloser {
+	return NewCache(&Reader{Reader: bufio.NewReader(bytes.NewReader(b))})
 }

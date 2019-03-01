@@ -13,7 +13,7 @@ package grw
 //  - https://golang.org/pkg/compress/gzip/
 //  - https://godoc.org/github.com/golang/snappy
 //
-func WriteToFileSystem(uri string, alg string, flag int) (ByteWriteCloser, error) {
+func WriteToFileSystem(uri string, alg string, flag int, parents bool) (ByteWriteCloser, error) {
 	switch alg {
 	case "snappy":
 		return WriteSnappyFile(uri, flag)
@@ -24,7 +24,7 @@ func WriteToFileSystem(uri string, alg string, flag int) (ByteWriteCloser, error
 	case "zip":
 		return nil, &ErrWriterNotImplemented{Algorithm: "zip"}
 	case "none", "":
-		return WriteLocalFile(uri, flag)
+		return WriteLocalFile(uri, flag, parents)
 	}
 	return nil, &ErrUnknownAlgorithm{Algorithm: alg}
 }

@@ -48,7 +48,7 @@ func WriteToResource(uri string, alg string, appendFlag bool, s3_client *s3.S3) 
 		case "zip":
 			return nil, &ErrWriterNotImplemented{Algorithm: "zip"}
 		case "none", "":
-			return WriteLocalFile(pathExpanded, flag)
+			return WriteLocalFile(pathExpanded, flag, false)
 		}
 	}
 

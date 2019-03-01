@@ -9,7 +9,9 @@ package grw
 
 import (
 	"bufio"
+	"fmt"
 	"os"
+	"path/filepath"
 )
 
 import (
@@ -17,11 +19,18 @@ import (
 )
 
 // WriteLocalFile returns a ByteWriteCloser for writing to a local file
-func WriteLocalFile(path string, flag int) (ByteWriteCloser, error) {
+func WriteLocalFile(path string, flag int, parents bool) (ByteWriteCloser, error) {
+
+	if parents {
+		err := os.MkdirAll(filepath.Dir(path), 0700)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("error creating parent directories for %q", path))
+		}
+	}
 
 	f, err := os.OpenFile(path, flag, 0600)
 	if err != nil {
-		return nil, errors.Wrap(err, "error opening file at \""+path+"\" for writing")
+		return nil, errors.Wrap(err, fmt.Sprintf("error opening file for writing at path %q", path))
 	}
 
 	return NewWriterWithCloserAndFile(bufio.NewWriter(f), nil, f), nil

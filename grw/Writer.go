@@ -46,7 +46,7 @@ func NewWriterWithCloserAndFile(writer ByteWriter, closer io.Closer, file *os.Fi
 	return &Writer{
 		Writer: writer,
 		Closer: closer,
-		File:   nil,
+		File:   file,
 		Mutex:  &sync.Mutex{}}
 }
 

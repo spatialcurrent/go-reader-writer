@@ -12,7 +12,7 @@ package main
 import (
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/pkg/errors"
-	"github.com/spatialcurrent/go-reader-writer/grw"
+	"github.com/spatialcurrent/go-reader-writer/pkg/grw"
 )
 
 func main() {

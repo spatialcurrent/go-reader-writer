@@ -15,7 +15,7 @@ package main
 import (
 	"C"
 	"github.com/pkg/errors"
-	"github.com/spatialcurrent/go-reader-writer/grw"
+	"github.com/spatialcurrent/go-reader-writer/pkg/grw"
 	"unsafe"
 )
 
@@ -24,7 +24,7 @@ func main() {}
 //export ReadString
 func ReadString(uri *C.char, alg *C.char, str **C.char) *C.char {
 
-	r, _, err := grw.ReadFromResource(C.GoString(uri), C.GoString(alg), 4096, false, nil)
+	r, _, err := grw.ReadFromResource(C.GoString(uri), C.GoString(alg), 4096, nil)
 	if err != nil {
 		return C.CString(errors.Wrap(err, "error opening resource from uri "+C.GoString(uri)).Error())
 	}
@@ -42,7 +42,7 @@ func ReadString(uri *C.char, alg *C.char, str **C.char) *C.char {
 //export ReadBytes
 func ReadBytes(uri *C.char, alg *C.char, bytes *unsafe.Pointer, length *C.int) *C.char {
 
-	r, _, err := grw.ReadFromResource(C.GoString(uri), C.GoString(alg), 4096, false, nil)
+	r, _, err := grw.ReadFromResource(C.GoString(uri), C.GoString(alg), 4096, nil)
 	if err != nil {
 		return C.CString(errors.Wrap(err, "error opening resource from uri "+C.GoString(uri)).Error())
 	}

@@ -16,5 +16,4 @@ import (
 type ByteWriter interface {
 	io.Writer
 	io.ByteWriter
-	Flush() error
 }

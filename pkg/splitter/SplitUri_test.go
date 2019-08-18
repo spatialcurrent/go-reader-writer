@@ -5,7 +5,7 @@
 //
 // =================================================================
 
-package grw
+package splitter
 
 import (
 	"testing"
@@ -27,19 +27,19 @@ func TestSplitUriPort(t *testing.T) {
 	assert.Equal(t, "example.com:80", remainder)
 }
 
-func TestSplitAuthorityPortPath(t *testing.T) {
+func TestSplitUriPortPath(t *testing.T) {
 	scheme, remainder := SplitUri("https://example.com:80/foo")
 	assert.Equal(t, "https", scheme)
 	assert.Equal(t, "example.com:80/foo", remainder)
 }
 
-func TestSplitAuthorityNoScheme(t *testing.T) {
+func TestSplitUriNoScheme(t *testing.T) {
 	scheme, remainder := SplitUri("example.com")
 	assert.Equal(t, "", scheme)
 	assert.Equal(t, "example.com", remainder)
 }
 
-func TestSplitAuthorityNoSchemePath(t *testing.T) {
+func TestSplitUriNoSchemePath(t *testing.T) {
 	scheme, remainder := SplitUri("example.com/foo/bar")
 	assert.Equal(t, "", scheme)
 	assert.Equal(t, "example.com/foo/bar", remainder)

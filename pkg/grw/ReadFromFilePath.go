@@ -9,6 +9,7 @@ package grw
 
 import (
 	"io"
+	"path/filepath"
 )
 
 import (
@@ -16,11 +17,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ReadFromFilePath returns a ByteReader for a file with a given compression.
-// alg may be "snappy", "gzip", or "none."
+// ReadFromFilePath opens a ByteReadCloser for the given path, compression algorithm, and buffer size.
+// ReadFromFilePath returns the ByteReadCloser and error, if any.
 //
-//  - https://golang.org/pkg/compress/gzip/
-//  - https://godoc.org/github.com/golang/snappy
+// ReadFromFilePath returns an error if the path cannot be expanded,
+// the file references by the path cannot be opened, or
+// the compression algorithm is invalid.
 //
 func ReadFromFilePath(path string, alg string, bufferSize int) (ByteReadCloser, error) {
 
@@ -33,19 +35,24 @@ func ReadFromFilePath(path string, alg string, bufferSize int) (ByteReadCloser, 
 		return nil, errors.Wrapf(err, "error expanding file path %q", path)
 	}
 
+	pathAbsolute, err := filepath.Abs(pathExpanded)
+	if err != nil {
+		return nil, errors.Wrapf(err, "error resolving file path %q", pathAbsolute)
+	}
+
 	switch alg {
 	case AlgorithmBzip2, AlgorithmGzip, AlgorithmSnappy, AlgorithmNone, "":
-		f, err := OpenFile(pathExpanded)
+		f, err := OpenFile(pathAbsolute)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error opening file at path %q", pathExpanded)
+			return nil, errors.Wrapf(err, "error opening file at path %q", pathAbsolute)
 		}
 		r, closers, err := WrapReader(f, []io.Closer{f}, alg, bufferSize)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error wrapping reader for file at path %q", pathExpanded)
+			return nil, errors.Wrapf(err, "error wrapping reader for file at path %q", pathAbsolute)
 		}
-		return &Reader{Reader: r, Closers: closers}, nil
+		return &Reader{Reader: r, Closer: &Closer{Closers: closers}}, nil
 	case AlgorithmZip:
-		return ReadZipFile(pathExpanded)
+		return ReadZipFile(pathAbsolute)
 	}
 
 	return nil, &ErrUnknownAlgorithm{Algorithm: alg}

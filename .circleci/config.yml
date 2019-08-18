@@ -33,6 +33,9 @@ jobs:
       - restore_cache:
           keys:
             - v1-go-src-{{ .Branch }}-{{ .Revision }}
+      - run: sudo npm install -g n
+      - run: sudo n v11.15.0
+      - run: sudo npm install --global source-map-support
       - run: make deps_gopherjs
       - run: make deps_javascript
       - run: npm run test:clean

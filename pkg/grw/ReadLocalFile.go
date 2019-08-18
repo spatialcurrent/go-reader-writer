@@ -24,5 +24,5 @@ func ReadLocalFile(path string, bufferSize int) (ByteReadCloser, error) {
 		return nil, errors.Wrapf(err, "error opening regular file")
 	}
 
-	return &Reader{Reader: bufio.NewReaderSize(f, bufferSize), Closers: []io.Closer{f}}, nil
+	return &Reader{Reader: bufio.NewReaderSize(f, bufferSize), Closer: &Closer{Closers: []io.Closer{f}}}, nil
 }

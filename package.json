@@ -1,0 +1,51 @@
+{
+  "name": "go-reader-writer",
+  "version": "0.0.2",
+  "description": "Simple library and command line program for reading and writing resource by uri with support for common compression algorithms",
+  "main": "bin/grw.js",
+  "scripts": {
+    "lint": "eslint js",
+    "clean": "rm -fr dist/grw.mod.min.js",
+    "build": "make dist/grw.mod.min.js",
+    "test:unit": "n use 11.15.0 ./node_modules/.bin/jest -c jest.config.unit.js",
+    "test:unit:clean": "npm run clean && npm run build && npm run test:unit",
+    "test:integration": "n use 11.15.0 ./node_modules/.bin/jest -c jest.config.integration.js",
+    "test:integration:clean": "npm run clean && npm run build && npm run test:integration",
+    "test": "npm run test:unit && npm run test:integration",
+    "test:clean": "npm run clean && npm run build && npm run test",
+    "examples": "n use 11.15.0 examples/js/index.mod.js"
+  },
+  "engines" : {
+    "node" : ">=11.15.0 <12.0.0"
+  },
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spatialcurrent/go-reader-writer.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/spatialcurrent/go-reader-writer/issues"
+  },
+  "homepage": "https://github.com/spatialcurrent/go-reader-writer#readme",
+  "devDependencies": {
+    "jest": "^23.6.0",
+    "jest-cli": "^23.6.0"
+  },
+  "dependencies": {
+    "node-gyp": "^5.0.3",
+    "xhr2": "^0.2.0",
+    "text-encoding": "^0.7.0"
+  },
+  "jest": {
+    "roots": [
+      "js"
+    ],
+    "moduleFileExtensions": [
+      "js",
+      "json"
+    ],
+    "testEnvironment": "./testEnvironment"
+  }
+}

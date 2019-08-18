@@ -16,11 +16,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ReadFromFile returns a ByteReader for a file with a given compression.
-// alg may be "snappy", "gzip", or "none."
+// ReadFromFile opens a ByteReadCloser for the given path, compression algorithm, and buffer size.
+// ReadFromFile returns the ByteReadCloser and error, if any.
 //
-//  - https://golang.org/pkg/compress/gzip/
-//  - https://godoc.org/github.com/golang/snappy
+// ReadFromFile returns an error if the compression algorithm is invalid.
 //
 func ReadFromFile(file *os.File, alg string, bufferSize int) (ByteReadCloser, error) {
 	switch alg {
@@ -29,7 +28,7 @@ func ReadFromFile(file *os.File, alg string, bufferSize int) (ByteReadCloser, er
 		if err != nil {
 			return nil, errors.Wrapf(err, "error wrapping reader for file at path %q", file.Name())
 		}
-		return &Reader{Reader: r, Closers: closers}, nil
+		return &Reader{Reader: r, Closer: &Closer{Closers: closers}}, nil
 	case AlgorithmZip:
 		brc, err := ReadZipFile(file.Name())
 		if err != nil {

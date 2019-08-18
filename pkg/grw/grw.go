@@ -5,12 +5,14 @@
 //
 // =================================================================
 
+// +build !js
+
 // Package grw provides the interfaces, embedded structs, and implementing code
 // for normalizing the reading/writing of a stream of bytes from archive/compressed files.
 // This package supports the bzip2, gzip, snappy, and zip archive/compression algorithms.  No compression can be identified as "none" or a blank string.
 // This package is used by the go-stream package.
 //  - https://godoc.org/github.com/spatialcurrent/go-stream/stream
-///
+//
 // Usage
 //
 // You can import reader as a package into your own Go project or use the command line interface.
@@ -63,10 +65,10 @@ const (
 	AlgorithmSnappy = "snappy" // Snappy compression
 	AlgorithmZip    = "zip"    // Zip archive
 
-	SchemeHttp  = "http"
-	SchemeHttps = "https"
 	SchemeFile  = "file"
 	SchemeFtp   = "ftp"
+	SchemeHTTP  = "http"
+	SchemeHTTPS = "https"
 	SchemeS3    = "s3"
 )
 
@@ -77,6 +79,14 @@ var (
 		AlgorithmNone,
 		AlgorithmSnappy,
 		AlgorithmZip,
+	}
+
+	Schemes = []string{
+		SchemeFile,
+		SchemeFtp,
+		SchemeHTTP,
+		SchemeHTTPS,
+		SchemeS3,
 	}
 
 	ErrPathMissing = errors.New("path is missing")

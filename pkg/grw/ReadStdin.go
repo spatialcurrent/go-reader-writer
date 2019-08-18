@@ -36,7 +36,7 @@ func ReadStdin(alg string) (ByteReadCloser, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "Error creating gzip reader for stdin")
 		}
-		return &Reader{Reader: bufio.NewReader(gr), Closers: []io.Closer{gr}}, nil
+		return &Reader{Reader: bufio.NewReader(gr), Closer: &Closer{Closers: []io.Closer{gr}}}, nil
 	case "snappy":
 		return &Reader{Reader: bufio.NewReader(snappy.NewReader(bufio.NewReader(os.Stdin)))}, nil
 	case "none", "":

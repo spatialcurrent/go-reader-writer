@@ -28,5 +28,5 @@ func ReadGzipBytes(b []byte) (ByteReadCloser, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating gzip reader for memory block.")
 	}
-	return &Reader{Reader: bufio.NewReader(gr), Closers: []io.Closer{gr}}, nil
+	return &Reader{Reader: bufio.NewReader(gr), Closer: &Closer{Closers: []io.Closer{gr}}}, nil
 }

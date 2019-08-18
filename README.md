@@ -4,7 +4,7 @@
 
 # Description
 
-**go-reader-writer** (aka GRW) is a simple library for managing reading/writing of resources.  GRW can read from `bzip2`, `gzip`, `snappy`, and `zip` resources and write to `gzip` and `snappy` resources.
+**go-reader-writer** (aka GRW) is a simple library for reading and writing resource by uri.  GRW can read from `bzip2`, `gzip`, `snappy`, and `zip` resources and write to `gzip` and `snappy` resources.
 
 Using cross compilers, this library can also be called by other languages.  This library is cross compiled into a Shared Object file (`*.so`).  The Shared Object file can be called by `C`, `C++`, and `Python` on Linux machines.  See the examples folder for patterns that you can use.  This library is also compiled to pure `JavaScript` using [GopherJS](https://github.com/gopherjs/gopherjs).
 
@@ -85,6 +85,8 @@ TBD
 The command line go-reader-wrtier program can be built with the `scripts/build_cli.sh` script.
 
 **JavaScript**
+
+The JavaScript artifact is built using [GopherJS](https://github.com/gopherjs/gopherjs) which can be installed with `make deps_gopherjs` or `go get -u github.com/gopherjs/gopherjs`.  If you will be reading from the local filesystem, you will need to install support for syscalls with the instructions found at https://github.com/gopherjs/gopherjs/blob/master/doc/syscalls.md#nodejs-on-linux-and-macos.
 
 You can compile go-reader-writer to pure JavaScript with the `scripts/build_javascript.sh` script.
 

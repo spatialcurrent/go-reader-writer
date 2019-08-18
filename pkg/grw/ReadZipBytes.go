@@ -38,5 +38,5 @@ func ReadZipBytes(b []byte) (ByteReadCloser, error) {
 		return nil, errors.Wrap(err, "error opening internal file for zip")
 	}
 
-	return &Reader{Reader: bufio.NewReader(zfr), Closers: []io.Closer{zfr}}, nil
+	return &Reader{Reader: bufio.NewReader(zfr), Closer: &Closer{Closers: []io.Closer{zfr}}}, nil
 }

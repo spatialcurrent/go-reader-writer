@@ -17,7 +17,7 @@ import (
 
 // OpenFile returns wraps os.OpenFile
 func OpenFile(path string) (*os.File, error) {
-	f, err := os.OpenFile(path, os.O_RDONLY, 0600)
+	f, err := os.OpenFile(path, os.O_RDONLY, 0)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error opening file at %q for reading", path)
 	}

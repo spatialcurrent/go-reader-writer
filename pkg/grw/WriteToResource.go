@@ -14,6 +14,10 @@ import (
 	"os"
 )
 
+import (
+	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
+)
+
 // WriteToResource returns a ByteWriteCloser and error, if any.
 func WriteToResource(uri string, alg string, appendFlag bool, s3_client *s3.S3) (ByteWriteCloser, error) {
 
@@ -23,7 +27,7 @@ func WriteToResource(uri string, alg string, appendFlag bool, s3_client *s3.S3) 
 		return WriteStderr(alg)
 	}
 
-	scheme, path := SplitUri(uri)
+	scheme, path := splitter.SplitUri(uri)
 	switch scheme {
 	case "none", "":
 		pathExpanded, err := homedir.Expand(path)

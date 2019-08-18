@@ -34,5 +34,5 @@ func ReadGzipFile(path string, buffer_size int) (ByteReadCloser, error) {
 		return nil, errors.Wrap(err, "Error creating gzip reader for file \""+path+"\"")
 	}
 
-	return &Reader{Reader: bufio.NewReaderSize(gr, buffer_size), Closers: []io.Closer{gr, f}}, nil
+	return &Reader{Reader: bufio.NewReaderSize(gr, buffer_size), Closer: &Closer{Closers: []io.Closer{gr, f}}}, nil
 }

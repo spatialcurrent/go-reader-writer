@@ -48,7 +48,7 @@ func ReadS3Object(bucket string, key string, alg string, bufferSize int, s3Clien
 		if err != nil {
 			return nil, metadata, errors.Wrapf(err, "error wrapping reader for object at uri s3://%s/%s", bucket, key)
 		}
-		return &Reader{Reader: r, Closers: closers}, metadata, nil
+		return &Reader{Reader: r, Closer: &Closer{Closers: closers}}, metadata, nil
 	case AlgorithmZip:
 		body, err := ioutil.ReadAll(result.Body)
 		if err != nil {

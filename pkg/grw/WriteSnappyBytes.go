@@ -17,6 +17,5 @@ import (
 func WriteSnappyBytes() (ByteWriteCloser, *bytes.Buffer) {
 	buf := new(bytes.Buffer)
 	sw := snappy.NewBufferedWriter(buf)
-	//return &Writer{Writer: bufio.NewWriter(sw), Closer: sw}, buf
 	return NewWriterWithCloser(bufio.NewWriter(sw), sw), buf
 }

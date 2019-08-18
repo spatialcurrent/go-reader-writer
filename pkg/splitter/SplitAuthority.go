@@ -5,7 +5,7 @@
 //
 // =================================================================
 
-package grw
+package splitter
 
 import (
 	"strings"

@@ -16,5 +16,5 @@ type ErrUnknownAlgorithm struct {
 }
 
 func (e *ErrUnknownAlgorithm) Error() string {
-	return fmt.Sprintf("%s is not known", e.Algorithm)
+	return fmt.Sprintf("algorithm %q is not known", e.Algorithm)
 }

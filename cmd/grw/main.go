@@ -36,6 +36,7 @@ import (
 
 import (
 	"github.com/spatialcurrent/go-reader-writer/pkg/grw"
+	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 
 const (
@@ -45,38 +46,14 @@ const (
 	flagAWSAccessKeyID     string = "aws-access-key-id"
 	flagAWSSecretAccessKey string = "aws-secret-access-key"
 	flagAWSSessionToken    string = "aws-session-token"
-
-	flagInputCompression  string = "input-compression"
-	flagInputBufferSize   string = "input-buffer-size"
-	flagOutputCompression string = "output-compression"
-	flagOutputBufferSize  string = "output-buffer-size"
-	flagOutputAppend      string = "output-append"
-	flagOutputOverwrite   string = "output-overwrite"
-	flagVerbose           string = "verbose"
+	flagInputCompression   string = "input-compression"
+	flagInputBufferSize    string = "input-buffer-size"
+	flagOutputCompression  string = "output-compression"
+	flagOutputBufferSize   string = "output-buffer-size"
+	flagOutputAppend       string = "output-append"
+	flagOutputOverwrite    string = "output-overwrite"
+	flagVerbose            string = "verbose"
 )
-
-func closeReaderAndWriter(inputReader grw.ByteReadCloser, outputWriter grw.ByteWriteCloser, brokenPipe bool) (error, error) {
-	errorReader := inputReader.Close()
-	if errorReader != nil {
-		errorReader = errors.Wrap(errorReader, "error closing input resource")
-	}
-
-	if brokenPipe {
-		// close without flushing to output writer
-		errorWriter := outputWriter.CloseFile()
-		if errorWriter != nil {
-			errorWriter = errors.Wrap(errorWriter, "error closing output resource")
-		}
-		return errorReader, errorWriter
-	}
-
-	errorWriter := outputWriter.Close()
-	if errorWriter != nil {
-		errorWriter = errors.Wrap(errorWriter, "error closing output resource")
-	}
-
-	return errorReader, errorWriter
-}
 
 func initFlags(flag *pflag.FlagSet) {
 	flag.String(flagAWSProfile, "", "AWS Profile")
@@ -236,7 +213,7 @@ func main() {
 						if err == io.EOF {
 							eof = true
 						} else {
-							fmt.Fprintf(os.Stderr, errors.Wrapf(err, "error reading from resource at uri %q", inputUri).Error())
+							fmt.Fprint(os.Stderr, errors.Wrapf(err, "error reading from resource at uri %q", inputUri).Error())
 						}
 					}
 
@@ -252,7 +229,7 @@ func main() {
 								break
 							}
 						}
-						fmt.Fprintf(os.Stderr, errors.Wrapf(err, "error writing to resource at uri %q", outputUri).Error())
+						fmt.Fprint(os.Stderr, errors.Wrapf(err, "error writing to resource at uri %q", outputUri).Error())
 					}
 
 				}
@@ -261,19 +238,19 @@ func main() {
 
 			wg.Wait() // wait until done writing or received signal for graceful shutdown
 
-			errorReader, errorWriter := closeReaderAndWriter(inputReader, outputWriter, brokenPipe)
+			errorReader, errorWriter := grw.CloseReaderAndWriter(inputReader, outputWriter, brokenPipe)
 			if errorReader != nil || errorWriter != nil {
 				if errorReader != nil {
-					fmt.Fprintf(os.Stderr, errorReader.Error())
+					fmt.Fprint(os.Stderr, errorReader.Error())
 				}
 				if errorWriter != nil {
-					fmt.Fprintf(os.Stderr, errorWriter.Error())
+					fmt.Fprint(os.Stderr, errorWriter.Error())
 				}
 				os.Exit(1)
 			}
 
 			if strings.HasPrefix(outputUri, "s3://") {
-				_, outputPath := grw.SplitUri(outputUri)
+				_, outputPath := splitter.SplitUri(outputUri)
 				i := strings.Index(outputPath, "/")
 				if i == -1 {
 					return errors.Wrap(err, "path missing bucket")

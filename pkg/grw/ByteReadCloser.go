@@ -16,7 +16,7 @@ import (
 type ByteReadCloser interface {
 	ByteReader
 	io.Closer
-	ReadAt(i int) (byte, error)
+	io.ReaderAt
 	ReadAll() ([]byte, error)
 	ReadAllAndClose() ([]byte, error)
 	ReadFirst() (byte, error)

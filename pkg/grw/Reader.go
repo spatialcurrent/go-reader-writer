@@ -12,15 +12,11 @@ import (
 	"io/ioutil"
 )
 
-import (
-	"github.com/pkg/errors"
-)
-
 // Reader is a struct for normalizing reading of bytes from files with arbitrary compression and for closing underlying resources.
 // Reader implements the ByteReader interface by wrapping around a subordinate ByteReader.
 type Reader struct {
-	Reader  ByteReader  // the instance of ByteReader used for reading bytes
-	Closers []io.Closer // Used for closing readers and files with footer metadata, e.g., gzip.  Not always needed, e.g., snappy
+	Reader io.Reader // the instance of ByteReader used for reading bytes
+	Closer *Closer   // the underlying closers
 }
 
 // Read reads a maximum len(p) bytes from the reader and returns an error, if any.
@@ -37,7 +33,10 @@ func (r *Reader) Read(p []byte) (n int, err error) {
 func (r *Reader) ReadByte() (byte, error) {
 
 	if r.Reader != nil {
-		return r.Reader.ReadByte()
+		if br, ok := r.Reader.(ByteReader); ok {
+			return br.ReadByte()
+		}
+		return byte(0), &ErrFunctionNotImplemented{Function: "ReadBytes", Object: "Reader"}
 	}
 
 	return 0, nil
@@ -46,7 +45,10 @@ func (r *Reader) ReadByte() (byte, error) {
 // ReadBytes returns all bytes up to an including the first occurrence of the delimiter "delim" and an error, if any.
 func (r *Reader) ReadBytes(delim byte) ([]byte, error) {
 	if r.Reader != nil {
-		return r.Reader.ReadBytes(delim)
+		if br, ok := r.Reader.(ByteReader); ok {
+			return br.ReadBytes(delim)
+		}
+		return make([]byte, 0), &ErrFunctionNotImplemented{Function: "ReadBytes", Object: "Reader"}
 	}
 	return make([]byte, 0), nil
 }
@@ -65,9 +67,14 @@ func (r *Reader) ReadFirst() (byte, error) {
 	return byte(0), &ErrFunctionNotImplemented{Function: "ReadFirst", Object: "Reader"}
 }
 
-// ReadAt is not implemented by Reader
-func (r *Reader) ReadAt(i int) (byte, error) {
-	return byte(0), &ErrFunctionNotImplemented{Function: "ReadAt", Object: "Reader"}
+func (r *Reader) ReadAt(p []byte, off int64) (n int, err error) {
+	if r.Reader != nil {
+		if ra, ok := r.Reader.(io.ReaderAt); ok {
+			return ra.ReadAt(p, off)
+		}
+		return 0, &ErrFunctionNotImplemented{Function: "ReadAt", Object: "Reader"}
+	}
+	return 0, nil
 }
 
 // ReadRange is not implemented by Reader
@@ -80,17 +87,10 @@ func (r *Reader) ReadAll() ([]byte, error) {
 	return ioutil.ReadAll(r.Reader)
 }
 
-// Close closes all the closers sequentially.
 func (r *Reader) Close() error {
-	if r.Closers != nil {
-		for i, c := range r.Closers {
-			err := c.Close()
-			if err != nil {
-				return errors.Wrapf(err, "error closing closer %d", i)
-			}
-		}
+	if r.Closer != nil {
+		return r.Closer.Close()
 	}
-
 	return nil
 }
 

@@ -5,13 +5,14 @@
 //
 // =================================================================
 
+// +build !js
+
 package grw
 
 import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/url"
 	"strings"
 	"time"
 )
@@ -21,22 +22,27 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ReadFTPFile returns a ByteReadCloser for an object for a ftp, ftps, or sftp address.
-// alg may be "bzip2", "gzip", "snappy", "zip", or "".
+import (
+	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
+)
+
+// ReadFTPFile returns a ByteReadCloser for an object for given ftp, ftps, or sftp address, compression algorithm, and buffer size.
+// ReadFTPFile returns the ByteReadCloser and error, if any.
 //
-//  - https://golang.org/pkg/compress/bzip2/
-//  - https://golang.org/pkg/compress/gzip/
-//  - https://godoc.org/github.com/golang/snappy
-//  - https://golang.org/pkg/archive/zip/
+// ReadFTPFile returns an error if the address cannot be dialed,
+// the userinfo cannot be parsed,
+// the user and password are invalid,
+// the file cannot be retrieved, or
+// the compression algorithm is invalid.
 //
 func ReadFTPFile(uri string, alg string, bufferSize int) (ByteReadCloser, error) {
 
-	_, fullpath := SplitUri(uri)
+	_, fullpath := splitter.SplitUri(uri)
 
 	parts := strings.SplitN(fullpath, "/", 2)
 	authority, p := parts[0], parts[1]
 
-	userinfo, host, port := SplitAuthority(authority)
+	userinfo, host, port := splitter.SplitAuthority(authority)
 	if len(port) == 0 {
 		port = "21"
 	}
@@ -47,26 +53,15 @@ func ReadFTPFile(uri string, alg string, bufferSize int) (ByteReadCloser, error)
 	}
 
 	if len(userinfo) > 0 {
-		user := ""
-		password := ""
-		if strings.Contains(userinfo, ":") {
-			parts := strings.SplitN(userinfo, ":", 2)
-			if len(parts) == 2 {
-				user, err = url.PathUnescape(parts[0])
-				if err != nil {
-					return nil, errors.Wrapf(err, "error parsing user %q", parts[0])
-				}
-				password, err = url.PathUnescape(parts[1])
-				if err != nil {
-					return nil, errors.Wrap(err, "error parsing password")
-				}
-			}
-		} else {
-			user = userinfo
-		}
-		err = conn.Login(user, password)
+		user, password, err := splitter.SplitUserInfo(userinfo)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error logging in with user %q", user)
+			return nil, errors.Wrapf(err, "error parsing userinfo %q", userinfo)
+		}
+		if len(user) > 0 {
+			err = conn.Login(user, password)
+			if err != nil {
+				return nil, errors.Wrapf(err, "error logging in with user %q", user)
+			}
 		}
 	}
 
@@ -93,7 +88,7 @@ func ReadFTPFile(uri string, alg string, bufferSize int) (ByteReadCloser, error)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error wrapping reader for ftp file at uri %q", uri)
 		}
-		return &Reader{Reader: r, Closers: closers}, nil
+		return &Reader{Reader: r, Closer: &Closer{Closers: closers}}, nil
 	}
 
 	return nil, &ErrUnknownAlgorithm{Algorithm: alg}

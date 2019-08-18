@@ -29,5 +29,11 @@ func ReadBzip2File(path string, buffer_size int) (ByteReadCloser, error) {
 		return nil, errors.Wrapf(err, "error opening bzip2 file")
 	}
 
-	return &Reader{Reader: bufio.NewReaderSize(bzip2.NewReader(bufio.NewReaderSize(f, buffer_size)), buffer_size), Closers: []io.Closer{f}}, nil
+	r := &Reader{
+		Reader: bufio.NewReaderSize(bzip2.NewReader(bufio.NewReaderSize(f, buffer_size)), buffer_size),
+		Closer: &Closer{
+			Closers: []io.Closer{f},
+		},
+	}
+	return r, nil
 }

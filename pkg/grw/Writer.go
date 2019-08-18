@@ -22,32 +22,32 @@ import (
 type Writer struct {
 	*sync.Mutex            // inherits Lock and Unlock Functions
 	Writer      ByteWriter // the instance of ByteWriter used for reading bytes
-	Closer      io.Closer  // Used for closing readers with footer metadata, e.g., gzip.  Not always needed, e.g., snappy
-	File        *os.File   // underlying file, if any
+	Closer      *Closer    // the underlying closers
 }
 
 func NewWriter(writer ByteWriter) *Writer {
 	return &Writer{
 		Writer: writer,
 		Closer: nil,
-		File:   nil,
 		Mutex:  &sync.Mutex{}}
 }
 
 func NewWriterWithCloser(writer ByteWriter, closer io.Closer) *Writer {
 	return &Writer{
 		Writer: writer,
-		Closer: closer,
-		File:   nil,
-		Mutex:  &sync.Mutex{}}
+		Closer: &Closer{
+			Closers: []io.Closer{closer},
+		},
+		Mutex: &sync.Mutex{}}
 }
 
 func NewWriterWithCloserAndFile(writer ByteWriter, closer io.Closer, file *os.File) *Writer {
 	return &Writer{
 		Writer: writer,
-		Closer: closer,
-		File:   file,
-		Mutex:  &sync.Mutex{}}
+		Closer: &Closer{
+			Closers: []io.Closer{closer, file},
+		},
+		Mutex: &sync.Mutex{}}
 }
 
 // WriteString writes a slice of bytes to the underlying writer and returns an error, if any.
@@ -141,9 +141,11 @@ func (w *Writer) WriteErrorSafe(e error) (n int, err error) {
 func (w *Writer) Flush() error {
 
 	if w.Writer != nil {
-		err := w.Writer.Flush()
-		if err != nil {
-			return errors.Wrap(err, "error flushing underlying writer")
+		if flusher, ok := w.Writer.(Flusher); ok {
+			err := flusher.Flush()
+			if err != nil {
+				return errors.Wrap(err, "error flushing underlying writer")
+			}
 		}
 	}
 
@@ -158,7 +160,10 @@ func (w *Writer) FlushSafe() error {
 
 	if w.Writer != nil {
 		w.Lock()
-		err := w.Writer.Flush()
+		var err error
+		if flusher, ok := w.Writer.(Flusher); ok {
+			err = flusher.Flush()
+		}
 		w.Unlock()
 		if err != nil {
 			return errors.Wrap(err, "error flushing underlying writer")
@@ -168,23 +173,12 @@ func (w *Writer) FlushSafe() error {
 	return nil
 }
 
-// Close closes the Closer and the underlying *os.File if not nil.
-//  - https://godoc.org/os#File
+// Close flushes the writer and then closes all the underlying io.Closer sequentially.
 func (w *Writer) Close() error {
-
-	err := w.Flush()
-	if err != nil {
-		return errors.Wrap(err, "error flushing writer")
+	if w.Closer == nil {
+		return nil
 	}
-
-	if w.Closer != nil {
-		err := w.Closer.Close()
-		if err != nil {
-			return errors.Wrap(err, "error closing write closer.")
-		}
-	}
-
-	return w.CloseFile()
+	return w.Closer.Close()
 }
 
 // CloseSafe closes the Closer and the underlying *os.File if not nil.
@@ -196,17 +190,4 @@ func (w *Writer) CloseSafe() error {
 	err := w.Close()
 	w.Unlock()
 	return err
-}
-
-// CloseFile closes the underlying file and bypasses the writer to stop writing immediately.
-func (w *Writer) CloseFile() error {
-
-	if w.File != nil {
-		err := w.File.Close()
-		if err != nil {
-			return errors.Wrap(err, "error closing underlying file.")
-		}
-	}
-
-	return nil
 }

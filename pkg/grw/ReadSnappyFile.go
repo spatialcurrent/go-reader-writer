@@ -28,5 +28,5 @@ func ReadSnappyFile(path string, buffer_size int) (ByteReadCloser, error) {
 		return nil, errors.Wrapf(err, "error opening snappy file")
 	}
 
-	return &Reader{Reader: bufio.NewReaderSize(snappy.NewReader(bufio.NewReaderSize(f, buffer_size)), buffer_size), Closers: []io.Closer{f}}, nil
+	return &Reader{Reader: bufio.NewReaderSize(snappy.NewReader(bufio.NewReaderSize(f, buffer_size)), buffer_size), Closer: &Closer{Closers: []io.Closer{f}}}, nil
 }

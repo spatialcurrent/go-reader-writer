@@ -9,22 +9,23 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "reader.h"
+#include "grw.h"
 
 int
 main(int argc, char **argv) {
     char *err;
 
-    char *input_uri = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_month.geojson";
+    printf("Algorithms: %s\n", Algorithms());
+
+    printf("Schemes: %s\n", Schemes());
+
+    char *input_uri = "https://raw.githubusercontent.com/spatialcurrent/go-reader-writer/master/test/doc.txt";
     char *input_alg = "none";
     char *output_string;
 
     printf("%s\n", input_uri);
 
-    char *version = Version();
-    printf("version: %s\n", version);
-
-    err = ReadAll(input_uri, input_alg, &output_string);
+    err = ReadString(input_uri, input_alg, &output_string);
 
     if (err != NULL) {
         fprintf(stderr, "error: %s\n", err);

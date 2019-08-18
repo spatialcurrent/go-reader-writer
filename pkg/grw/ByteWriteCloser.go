@@ -14,12 +14,12 @@ import (
 // ByteWriteCloser is an interface that extends io.Writer, io.ByteWriter, and io.Closer
 type ByteWriteCloser interface {
 	ByteWriter
+	Flusher
 	io.Closer
 	Lock()
 	Unlock()
 	FlushSafe() error
 	CloseSafe() error
-	CloseFile() error
 	WriteString(s string) (n int, err error)
 	WriteLine(s string) (n int, err error)
 	WriteLineSafe(s string) (n int, err error)

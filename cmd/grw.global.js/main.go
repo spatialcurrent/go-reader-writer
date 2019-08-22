@@ -8,7 +8,7 @@
 // grw.global.js is the package for go-reader-writer (GRW) that adds GRW functions to the global scope under the "grw" variable.
 //
 // In Node, depending on where require is called and the build system used, the functions may need to be required at the top of each module file.
-// In a web browser, gss can be made available to the entire web page.
+// In a web browser, grw can be made available to the entire web page.
 // The functions are defined in the Exports variable in the grwjs package.
 //
 // Usage

@@ -49,10 +49,10 @@ jobs:
       - run: sudo npm install -g n
       - run: make deps_gopherjs
       - run: make deps_javascript
-      #- run: npm run test:clean
+      - run: npm run build:clean
       - run: make run_example_c
       - run: make run_example_cpp
-      - run: make run_example_javascript
+      #- run: make run_example_javascript
       - run: make run_example_python
   build_cli:
     executor: base

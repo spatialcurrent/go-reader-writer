@@ -7,6 +7,7 @@
     "lint": "eslint js",
     "clean": "rm -fr dist/grw.mod.min.js",
     "build": "make dist/grw.mod.min.js",
+    "build:clean": "npm run clean && npm run build",
     "test:unit": "n use 11.15.0 ./node_modules/.bin/jest -c jest.config.unit.js",
     "test:unit:clean": "npm run clean && npm run build && npm run test:unit",
     "test:integration": "n use 11.15.0 ./node_modules/.bin/jest -c jest.config.integration.js",

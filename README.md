@@ -2,104 +2,141 @@
 
 # go-reader-writer
 
-# Description
+## Description
 
-**go-reader-writer** (aka GRW) is a simple library for managing reading/writing of resources.  GRW can read from `bzip2`, `gzip`, `snappy`, and `zip` resources and write to `gzip` and `snappy` resources.
+**go-reader-writer** (aka GRW) is a simple library for reading and writing resource by uri.  GRW can read from `bzip2`, `gzip`, `snappy`, and `zip` resources and write to `gzip` and `snappy` resources.
 
 Using cross compilers, this library can also be called by other languages.  This library is cross compiled into a Shared Object file (`*.so`).  The Shared Object file can be called by `C`, `C++`, and `Python` on Linux machines.  See the examples folder for patterns that you can use.  This library is also compiled to pure `JavaScript` using [GopherJS](https://github.com/gopherjs/gopherjs).
 
-# Usage
+## Usage
 
 **CLI**
 
-You can use the command line tool to convert between formats.
+The command line tool, `grw`, can be used to easily covert data between formats.  We currently support the following platforms.
 
-```
-Usage: grw [-input_uri INPUT_URI] [-input_compression [bzip2|gzip|snappy|zip|none]] [-output_uri OUTPUT_URI] [-output_compression [bzip2|gzip|snappy|zip|none]] [-verbose] [-version]
-Options:
-  -aws_access_key_id string
-        Defaults to value of environment variable AWS_ACCESS_KEY_ID
-  -aws_default_region string
-        Defaults to value of environment variable AWS_DEFAULT_REGION.
-  -aws_secret_access_key string
-        Defaults to value of environment variable AWS_SECRET_ACCESS_KEY.
-  -aws_session_token string
-        Defaults to value of environment variable AWS_SESSION_TOKEN.
-  -help
-        Print help
-  -input_buffer_size int
-        the input reader buffer size (default 4096)
-  -input_compression string
-        Stream input compression algorithm for nodes, using: bzip2, gzip, snappy, zip, or none.
-  -input_uri string
-        "stdin" or uri to input file (default "stdin")
-  -output_append
-        append output to resource
-  -output_buffer_size int
-        the output writer buffer size (default 4096)
-  -output_compression string
-        Stream input compression algorithm for nodes, using: bzip2, gzip, snappy, zip, or none.
-  -output_uri string
-        "stdout" or uri to output resource (default "stdout")
-  -version
-        Prints version to stdout
-```
+| GOOS | GOARCH |
+| ---- | ------ |
+| darwin | amd64 |
+| linux | amd64 |
+| windows | amd64 |
+| linux | arm64 |
+
+Pull requests to support other platforms are welcome!  See the [examples](#examples) section below for usage.
 
 **Go**
 
-You can import **go-reader-writer** as a library with:
+You can install the go-reader-writer packages with.
+
+
+```shell
+go get -u -d github.com/spatialcurrent/go-reader-writer/...
+```
+
+You can then import the `grw` package with:
 
 ```go
 import (
-  "github.com/spatialcurrent/go-reader-writer/grw"
+  "github.com/spatialcurrent/go-reader-writer/pkg/grw"
 )
-...
 ```
 
-See [grw](https://godoc.org/github.com/spatialcurrent/go-reader-writer/grw) in GoDoc for information on how to use Go API.
+See [grw](https://godoc.org/github.com/spatialcurrent/go-reader-writer/pkg/grw) in GoDoc for information on how to use Go API.
+
+**Node**
+
+GRW is built as a module.  In modern JavaScript, the module can be imported using [destructuring assignment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment).
+
+```javascript
+const { read, algorithms, schemes } = require('./dist/grw.mod.min.js');
+```
+
+In legacy JavaScript, you can use the `grw.global.js` file that simply adds `grw` to the global scope.
+
+**C**
+
+A variant of the reader and writer functions are exported in a Shared Object file (`*.so`), which can be called by `C`, `C++`, and `Python` programs on Linux machines.  For complete patterns for `C`, `C++`, and `Python`, see the `examples` folder in this repo.
+
+## Releases
+
+**go-reader-writer** is currently in **alpha**.  See releases at https://github.com/spatialcurrent/go-reader-writer/releases.  See the **Building** section below to build from scratch.
 
 **JavaScript**
 
-```html
-<html>
-  <head>
-    <script src="https://...grw.js"></script>
-  </head>
-  <body>
-    <script>
-      grw.open(uri, "none", function(text){ ... })
-      ...
-    </script>
-  </body>
-</html>
+- `grw.global.js`, `grw.global.js.map` - JavaScript global build  with source map
+- `grw.global.min.js`, `grw.global.min.js.map` - Minified JavaScript global build with source map
+- `grw.mod.js`, `grw.mod.js.map` - JavaScript module build  with source map
+- `grw.mod.min.js`, `grw.mod.min.js.map` - Minified JavaScript module with source map
+
+**Darwin**
+
+- `grw_darwin_amd64` - CLI for Darwin on amd64 (includes `macOS` and `iOS` platforms)
+
+**Linux**
+
+- `grw_linux_amd64` - CLI for Linux on amd64
+- `grw_linux_amd64` - CLI for Linux on arm64
+- `grw_linux_amd64.h`, `grw_linuxamd64.so` - Shared Object for Linux on amd64
+- `grw_linux_armv7.h`, `grw_linux_armv7.so` - Shared Object for Linux on ARMv7
+- `grw_linux_armv8.h`, `grw_linux_armv8.so` - Shared Object for Linux on ARMv8
+
+**Windows**
+
+- `grw_windows_amd64.exe` - CLI for Windows on amd64
+
+## Examples
+
+### Go
+
+See the examples in the [grw](https://godoc.org/github.com/spatialcurrent/go-reader-writer/pkg/grw) package documentation.
+
+### CLI
+
+To download a file over https and write to stdout.
+
+```shell
+grw https://github.com/spatialcurrent/go-reader-writer/releases/download/0.0.1/grw.h -
 ```
 
-# Examples:
+To download a file from AWS S3, compress as gzip, and save locally.
 
-TBD
+```shell
+grw --output-compression gzip s3://path/to/file /local/file
+```
 
-# Building
+## Building
+
+Use `make help` to see help information for each target.
 
 **CLI**
 
-The command line go-reader-wrtier program can be built with the `scripts/build_cli.sh` script.
+The `make build_cli` script is used to build executables for Linux and Windows.
 
 **JavaScript**
 
-You can compile go-reader-writer to pure JavaScript with the `scripts/build_javascript.sh` script.
+You can compile GRW to pure JavaScript with the `make build_javascript` script.
 
 **Shared Object**
 
-The `scripts/build_so.sh` script is used to build a Shared Object (`*.go`), which can be called by `C`, `C++`, and `Python` on Linux machines.
+The `make build_so` script is used to build Shared Objects (`*.so`), which can be called by `C`, `C++`, and `Python` on Linux machines.
 
 **Changing Destination**
 
-The default destination for build artifacts is `go-reader/bin`, but you can change the destination with a CLI argument.  For building on a Chromebook consider saving the artifacts in `/usr/local/go/bin`, e.g., `bash scripts/build_cli.sh /usr/local/go/bin`
+The default destination for build artifacts is `go-reader-writer/bin`, but you can change the destination with an environment variable.  For building on a Chromebook consider saving the artifacts in `/usr/local/go/bin`, e.g., `DEST=/usr/local/go/bin make build_cli`
 
-# Contributing
+## Testing
+
+**Go**
+
+To run Go tests use `make test_go` (or `bash scripts/test.sh`), which runs unit tests, `go vet`, `go vet with shadow`, [errcheck](https://github.com/kisielk/errcheck), [ineffassign](https://github.com/gordonklaus/ineffassign), [staticcheck](https://staticcheck.io/), and [misspell](https://github.com/client9/misspell).
+
+**JavaScript**
+
+To run JavaScript tests, first install [Jest](https://jestjs.io/) using `make deps_javascript`, use [Yarn](https://yarnpkg.com/en/), or another method.  Then, build the JavaScript module with `make build_javascript`.  To run tests, use `make test_javascript`.  You can also use the scripts in the `package.json`.
+
+## Contributing
 
 [Spatial Current, Inc.](https://spatialcurrent.io) is currently accepting pull requests for this repository.  We'd love to have your contributions!  Please see [Contributing.md](https://github.com/spatialcurrent/go-reader-writer/blob/master/CONTRIBUTING.md) for how to get started.
 
-# License
+## License
 
 This work is distributed under the **MIT License**.  See **LICENSE** file.

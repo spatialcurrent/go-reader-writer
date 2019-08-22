@@ -2,53 +2,58 @@ version: 2.1
 executors:
   base:
     docker:
-      - image: circleci/golang:1.11
+      - image: circleci/golang:1.12-node
     working_directory: /go/src/github.com/spatialcurrent/go-reader-writer
 jobs:
   pre_deps_golang:
     executor: base
     steps:
       - checkout
-      - run: go get -d ./...
+      - run: make deps_go
       - run: sudo chown -R circleci /go/src
       - save_cache:
           key: v1-go-src-{{ .Branch }}-{{ .Revision }}
           paths:
             - /go/src
-  test:
+  test_go:
     executor: base
     steps:
       - run: sudo chown -R circleci /go/src
       - restore_cache:
           keys:
             - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run:
-          name: Install gometalinter
-          command: |
-            go get -u github.com/alecthomas/gometalinter
-            gometalinter --install
-      - run:
-          name: Test
-          command: bash scripts/test.sh
-  validate:
+      - run: make deps_go_test
+      - run: make test_go
+      - run: make imports
+      - run: git diff --exit-code
+  test_javascript:
     executor: base
     steps:
       - run: sudo chown -R circleci /go/src
       - restore_cache:
           keys:
             - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run:
-          name: Install Dig
-          command: sudo apt update && sudo apt install dnsutils
-      - run:
-          name: "Update ~/.ssh/known_hosts"
-          command: |
-            mkdir ~/.ssh/
-            touch ~/.ssh/known_hosts
-            for ip in $(dig @8.8.8.8 github.com +short); do ssh-keyscan github.com,$ip; ssh-keyscan $ip; done 2>/dev/null >> ~/.ssh/known_hosts
-      - run: go get github.com/spatialcurrent/go-header/...
-      - run: go install github.com/spatialcurrent/go-header/cmd/goheader
-      - run: goheader fix --fix-year 2019 --exit-code-on-changes 1 --verbose
+      - run: sudo npm install -g n
+      - run: sudo n v11.15.0
+      - run: sudo npm install --global source-map-support
+      - run: make deps_gopherjs
+      - run: make deps_javascript
+      #- run: npm run test:clean
+  examples:
+    executor: base
+    steps:
+      - run: sudo chown -R circleci /go/src
+      - restore_cache:
+          keys:
+            - v1-go-src-{{ .Branch }}-{{ .Revision }}
+      - run: sudo npm install -g n
+      - run: make deps_gopherjs
+      - run: make deps_javascript
+      - run: npm run build:clean
+      - run: make run_example_c
+      - run: make run_example_cpp
+      #- run: make run_example_javascript
+      - run: make run_example_python
   build_cli:
     executor: base
     steps:
@@ -56,7 +61,8 @@ jobs:
       - restore_cache:
           keys:
             - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run: bash scripts/build_cli.sh
+      - run: go get github.com/inconshreveable/mousetrap # for windows CLI builds
+      - run: make build_cli
       - store_artifacts:
           path: bin
           destination: /
@@ -67,12 +73,10 @@ jobs:
       - restore_cache:
           keys:
             - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run:
-          name: Install GopherJS
-          command: go get -u github.com/gopherjs/gopherjs
-      - run: bash scripts/build_javascript.sh
+      - run: make deps_gopherjs
+      - run: make build_javascript
       - store_artifacts:
-          path: bin
+          path: dist
           destination: /
   build_so:
     executor: base
@@ -81,7 +85,8 @@ jobs:
       - restore_cache:
           keys:
             - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run: bash scripts/build_so.sh
+      - run: sudo make deps_arm
+      - run: make build_so
       - store_artifacts:
           path: bin
           destination: /
@@ -89,10 +94,13 @@ workflows:
   main:
     jobs:
       - pre_deps_golang
-      - test:
+      - test_go:
           requires:
             - pre_deps_golang
-      - validate:
+      - test_javascript:
+          requires:
+            - pre_deps_golang
+      - examples:
           requires:
             - pre_deps_golang
       - build_cli:

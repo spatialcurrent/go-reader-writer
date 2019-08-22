@@ -15,26 +15,39 @@ import sys
 # You can add current directory with LD_LIBRARY_PATH=. python test.py
 lib = cdll.LoadLibrary("grw.so")
 
+# Define Function Definitions
+schemes = lib.Schemes
+schemes.argtypes = []
+schemes.restype = c_char_p
+
+# Define Function Definitions
+algorithms = lib.Algorithms
+algorithms.argtypes = []
+algorithms.restype = c_char_p
+
 # Define Function Definition
-readAll = lib.ReadAll
-readAll.argtypes = [c_char_p, c_char_p, POINTER(c_char_p)]
-readAll.restype = c_char_p
+read_string = lib.ReadString
+read_string.argtypes = [c_char_p, c_char_p, POINTER(c_char_p)]
+read_string.restype = c_char_p
 
-version = lib.Version
-version.argtypes = []
-version.restype = c_char_p
-
-print "version:", version()
+# Define Function Definition
+write_string = lib.WriteString
+write_string.argtypes = [c_char_p, c_char_p, c_int, c_char_p]
+write_string.restype = c_char_p
 
 # Define input and output variables
 # Output must be a ctypec_char_p
-input_uri = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_month.geojson"
+input_uri = "https://raw.githubusercontent.com/spatialcurrent/go-reader-writer/master/test/doc.txt";
 input_alg = "none"
 output_string_pointer = c_char_p()
 
+print "Algorithms: "+ algorithms()
+
+print "Schemes: "+ schemes()
+
 print input_uri
 
-err = readAll(input_uri, input_alg, byref(output_string_pointer))
+err = read_string(input_uri, input_alg, byref(output_string_pointer))
 if err != None:
     print("error: %s" % (str(err, encoding='utf-8')))
     sys.exit(1)
@@ -43,4 +56,9 @@ if err != None:
 output_string = output_string_pointer.value
 
 # Print output to stdout
-print output_string
+err = write_string("stdout", "", 0, output_string)
+if err != None:
+    print("error: %s" % (str(err, encoding='utf-8')))
+    sys.exit(1)
+
+print("")

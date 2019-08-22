@@ -8,7 +8,8 @@
 const { TextDecoder } = require('text-encoding');
 const { read, algorithms, schemes } = global.grw;
 
-const base_https = "https://raw.githubusercontent.com/spatialcurrent/go-reader-writer/master/test";
+const base_https = process.env.GRW_TESTDATA_HTTPS;
+expect(base_https).toBeDefined();
 
 function log(str) {
   console.log(str.replace(/\n/g, "\\n").replace(/\t/g, "\\t").replace(/"/g, "\\\""));

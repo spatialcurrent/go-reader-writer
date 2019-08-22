@@ -11,9 +11,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-)
 
-import (
 	"github.com/pkg/errors"
 )
 

@@ -10,9 +10,7 @@ package grw
 import (
 	"io"
 	"os"
-)
 
-import (
 	"github.com/pkg/errors"
 )
 

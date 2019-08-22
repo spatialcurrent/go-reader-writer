@@ -11,9 +11,7 @@ import (
 	"io"
 	"os"
 	"sync"
-)
 
-import (
 	"github.com/pkg/errors"
 )
 

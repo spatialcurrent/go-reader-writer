@@ -9,9 +9,7 @@ package grw
 
 import (
 	"os"
-)
 
-import (
 	"github.com/pkg/errors"
 )
 

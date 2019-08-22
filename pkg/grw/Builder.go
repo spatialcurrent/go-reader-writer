@@ -8,17 +8,13 @@
 package grw
 
 import (
-//"strings"
-)
-
-import (
 	"github.com/aws/aws-sdk-go/service/s3"
-	//"github.com/pkg/errors"
+	//"strings"
 )
 
-import (
+//"github.com/pkg/errors"
+
 //"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
-)
 
 type Builder struct {
 	uri        string

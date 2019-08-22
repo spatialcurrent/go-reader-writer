@@ -10,9 +10,7 @@ package grw
 import (
 	"io"
 	"path/filepath"
-)
 
-import (
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 )

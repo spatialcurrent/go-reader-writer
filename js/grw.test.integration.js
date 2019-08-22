@@ -11,7 +11,8 @@ const { TextDecoder } = require('text-encoding');
 
 const { read, algorithms, schemes } = global.grw;
 
-const base_s3 = "s3://spatialcurrent-data-us-west-2/testdata"
+const base_s3 = process.env.GRW_TESTDATA_S3
+expect(base_s3).toBeDefined();
 
 var options = {
   "AWS_DEFAULT_REGION": process.env.AWS_DEFAULT_REGION,

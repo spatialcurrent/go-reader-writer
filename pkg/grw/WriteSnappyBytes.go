@@ -10,6 +10,7 @@ package grw
 import (
 	"bufio"
 	"bytes"
+
 	"github.com/golang/snappy"
 )
 

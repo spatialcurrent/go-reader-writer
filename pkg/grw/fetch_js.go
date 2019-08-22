@@ -13,9 +13,7 @@ import (
 	"bytes"
 	//"fmt"
 	"io"
-)
 
-import (
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/pkg/errors"
 	"honnef.co/go/js/xhr"

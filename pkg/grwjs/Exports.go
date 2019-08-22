@@ -9,24 +9,18 @@ package grwjs
 
 import (
 	"fmt"
-)
 
-import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+
 	awssession "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/pkg/errors"
-)
 
-import (
-	"github.com/spatialcurrent/go-try-get/pkg/gtg"
-)
-
-import (
 	"github.com/spatialcurrent/go-reader-writer/pkg/grw"
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
+	"github.com/spatialcurrent/go-try-get/pkg/gtg"
 )
 
 func newS3Client(options map[string]interface{}) (*s3.S3, error) {

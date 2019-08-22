@@ -11,15 +11,9 @@ package grw
 
 import (
 	"strings"
-)
 
-import (
-	//"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/pkg/errors"
-)
-
-import (
-	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
+	"github.com/spatialcurrent/go-reader-writer/pkg/splitter" //"github.com/aws/aws-sdk-go/service/s3"
 )
 
 func (b *Builder) Open() (ByteReadCloser, *Metadata, error) {

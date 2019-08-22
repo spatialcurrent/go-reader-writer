@@ -12,9 +12,7 @@ import (
 	"bufio"
 	"bytes"
 	"io"
-)
 
-import (
 	"github.com/pkg/errors"
 )
 

@@ -12,9 +12,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"io"
-)
 
-import (
 	"github.com/pkg/errors"
 )
 

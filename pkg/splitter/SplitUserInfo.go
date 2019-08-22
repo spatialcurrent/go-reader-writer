@@ -10,9 +10,7 @@ package splitter
 import (
 	"net/url"
 	"strings"
-)
 
-import (
 	"github.com/pkg/errors"
 )
 

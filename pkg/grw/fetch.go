@@ -12,9 +12,7 @@ package grw
 import (
 	"io"
 	"net/http"
-)
 
-import (
 	"github.com/pkg/errors"
 )
 

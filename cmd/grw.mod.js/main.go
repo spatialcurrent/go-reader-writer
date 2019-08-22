@@ -32,6 +32,7 @@ package main
 
 import (
 	"github.com/gopherjs/gopherjs/js"
+
 	"github.com/spatialcurrent/go-reader-writer/pkg/grwjs"
 )
 

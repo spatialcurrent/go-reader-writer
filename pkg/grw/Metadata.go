@@ -8,8 +8,9 @@
 package grw
 
 import (
-	"github.com/aws/aws-sdk-go/service/s3"
 	"time"
+
+	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 type Metadata struct {

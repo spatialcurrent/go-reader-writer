@@ -11,9 +11,7 @@ import (
 	"archive/zip"
 	"bufio"
 	"io"
-)
 
-import (
 	"github.com/pkg/errors"
 )
 

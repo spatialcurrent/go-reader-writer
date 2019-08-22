@@ -10,9 +10,7 @@ package grw
 import (
 	"bufio"
 	"io"
-)
 
-import (
 	"github.com/golang/snappy"
 	"github.com/pkg/errors"
 )

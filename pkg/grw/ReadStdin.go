@@ -13,9 +13,7 @@ import (
 	"compress/gzip"
 	"io"
 	"os"
-)
 
-import (
 	"github.com/golang/snappy"
 	"github.com/pkg/errors"
 )

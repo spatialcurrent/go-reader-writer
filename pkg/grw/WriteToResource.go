@@ -8,13 +8,12 @@
 package grw
 
 import (
+	"os"
+
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
-	"os"
-)
 
-import (
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 

@@ -11,13 +11,9 @@ package grw
 
 import (
 	"strings"
-)
 
-import (
 	"github.com/pkg/errors"
-)
 
-import (
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 

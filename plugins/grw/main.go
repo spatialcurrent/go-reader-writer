@@ -15,9 +15,11 @@ package main
 import (
 	"C"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/spatialcurrent/go-reader-writer/pkg/grw"
 	"strings"
+
+	"github.com/pkg/errors"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/grw"
 	//"unsafe"
 )
 

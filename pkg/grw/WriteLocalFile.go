@@ -12,9 +12,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-)
 
-import (
 	"github.com/pkg/errors"
 )
 

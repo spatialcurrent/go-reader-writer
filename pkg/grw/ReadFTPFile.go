@@ -15,14 +15,10 @@ import (
 	"io/ioutil"
 	"strings"
 	"time"
-)
 
-import (
 	"github.com/jlaffaye/ftp"
 	"github.com/pkg/errors"
-)
 
-import (
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 

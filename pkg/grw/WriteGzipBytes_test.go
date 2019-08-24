@@ -12,9 +12,7 @@ import (
 	"compress/gzip"
 	"io/ioutil"
 	"testing"
-)
 
-import (
 	"github.com/stretchr/testify/assert"
 )
 

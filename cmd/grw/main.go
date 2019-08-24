@@ -10,10 +10,12 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -46,7 +48,10 @@ const (
 	flagOutputBufferSize   string = "output-buffer-size"
 	flagOutputAppend       string = "output-append"
 	flagOutputOverwrite    string = "output-overwrite"
+	flagSplitLines         string = "split-lines"
 	flagVerbose            string = "verbose"
+
+	NumberReplacementCharacter string = "#"
 )
 
 func initFlags(flag *pflag.FlagSet) {
@@ -65,7 +70,47 @@ func initFlags(flag *pflag.FlagSet) {
 	flag.BoolP(flagOutputAppend, "a", false, "append to output files")
 	flag.BoolP(flagOutputOverwrite, "o", false, "overwrite output if it already exists")
 
+	flag.IntP(
+		flagSplitLines,
+		"l",
+		-1,
+		fmt.Sprintf("split output by a number of lines, replaces %q in output uri with file number starting with 1.", NumberReplacementCharacter),
+	)
+
 	flag.BoolP(flagVerbose, "v", false, "verbose output")
+}
+
+func initViper(flag *pflag.FlagSet) (*viper.Viper, error) {
+	v := viper.New()
+	err := v.BindPFlags(flag)
+	if err != nil {
+		return nil, err
+	}
+	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	v.AutomaticEnv()
+	return v, nil
+}
+
+func checkConfig(args []string, v *viper.Viper) error {
+
+	if len(args) != 2 {
+		return fmt.Errorf("expecting 2 arguments, found %d arguments", len(args))
+	}
+
+	outputUri := args[1]
+
+	splitLines := v.GetInt(flagSplitLines)
+	if splitLines > 0 {
+
+		if !strings.Contains(outputUri, NumberReplacementCharacter) {
+			return fmt.Errorf(
+				"when splitting by lines, you must include the number replacement character (%q) in the output uri",
+				NumberReplacementCharacter,
+			)
+		}
+
+	}
+	return nil
 }
 
 func main() {
@@ -85,16 +130,14 @@ func main() {
 
 			flag := cmd.Flags()
 
-			v := viper.New()
-			err = v.BindPFlags(flag)
+			v, err := initViper(flag)
+			if err != nil {
+				return errors.Wrap(err, "error initializing viper")
+			}
+
+			err = checkConfig(args, v)
 			if err != nil {
 				return err
-			}
-			v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-			v.AutomaticEnv()
-
-			if len(args) != 2 {
-				return fmt.Errorf("expecting 2 arguments, found %d arguments", len(args))
 			}
 
 			inputUri := args[0]
@@ -148,8 +191,11 @@ func main() {
 			}
 
 			outputCompression := v.GetString(flagOutputCompression)
+			outputOverwrite := v.GetBool(flagOutputOverwrite)
 			outputAppend := v.GetBool(flagOutputAppend)
 			outputBufferSize := v.GetInt(flagOutputBufferSize)
+
+			splitLines := v.GetInt(flagSplitLines)
 
 			var outputWriter grw.ByteWriteCloser
 			var outputBuffer grw.Buffer
@@ -165,7 +211,24 @@ func main() {
 					return errors.Wrapf(err, "error opening bytes buffer for %q", outputUri)
 				}
 			} else {
-				outputWriter, err = grw.WriteToResource(outputUri, outputCompression, outputAppend, s3Client)
+				uri := outputUri
+				if splitLines > 0 {
+					uri = strings.ReplaceAll(outputUri, NumberReplacementCharacter, "1")
+				}
+				if (!outputOverwrite) && (!outputAppend) {
+					exists, _, err := grw.Stat(uri)
+					if err != nil {
+						return errors.Wrapf(err, "error statting uri %q", uri)
+					}
+					if exists {
+						return fmt.Errorf("file already exists at uri %q and neither append or overwrite is set", uri)
+					}
+				}
+				outputWriter, err = grw.WriteToResource(
+					uri,
+					outputCompression,
+					outputAppend,
+					s3Client)
 				if err != nil {
 					return errors.Wrapf(err, "error opening resource at uri %q", outputUri)
 				}
@@ -197,38 +260,124 @@ func main() {
 			}()
 
 			brokenPipe := false
-			go func() {
-				eof := false
-				for (!updateGracefulShutdown(nil)) && (!eof) && (!brokenPipe) {
+			if splitLines > 0 {
+				go func() {
+					eof := false
 
-					b := make([]byte, outputBufferSize)
-					n, err := inputReader.Read(b)
-					if err != nil {
-						if err == io.EOF {
-							eof = true
-						} else {
-							fmt.Fprint(os.Stderr, errors.Wrapf(err, "error reading from resource at uri %q", inputUri).Error())
-						}
-					}
+					scanner := bufio.NewScanner(inputReader)
+					files := 1
+					lines := 0
 
-					if gracefulShutdown {
-						break
-					}
+					for (!updateGracefulShutdown(nil)) && (!eof) && (!brokenPipe) && scanner.Scan() {
 
-					_, err = outputWriter.Write(b[:n])
-					if err != nil {
-						if perr, ok := err.(*os.PathError); ok {
-							if perr.Err == syscall.EPIPE {
-								brokenPipe = true
+						if lines == splitLines {
+
+							err := outputWriter.Flush()
+							if err != nil {
+								fmt.Fprint(os.Stderr, errors.Wrapf(err, "error flushing resource at uri %q", strings.ReplaceAll(outputUri, NumberReplacementCharacter, strconv.Itoa(files))).Error())
 								break
 							}
+
+							err = outputWriter.Close()
+							if err != nil {
+								fmt.Fprint(os.Stderr, errors.Wrapf(err, "error closing resource at uri %q", strings.ReplaceAll(outputUri, NumberReplacementCharacter, strconv.Itoa(files))).Error())
+								break
+							}
+
+							// increment files number
+							files++
+
+							uri := strings.ReplaceAll(outputUri, NumberReplacementCharacter, strconv.Itoa(files))
+
+							if (!outputOverwrite) && (!outputAppend) {
+								exists, _, err := grw.Stat(uri)
+								if err != nil {
+									fmt.Fprint(os.Stderr, errors.Wrapf(err, "error statting uri %q", uri).Error())
+									break
+								}
+								if exists {
+									fmt.Fprint(os.Stderr, fmt.Errorf("file already exists at uri %q and neither append or overwrite is set", uri).Error())
+									break
+								}
+							}
+
+							ow, err := grw.WriteToResource(
+								uri,
+								outputCompression,
+								outputAppend,
+								s3Client)
+							if err != nil {
+								fmt.Fprint(os.Stderr, errors.Wrapf(err, "error opening resource at uri %q", outputUri).Error())
+								break
+							}
+
+							outputWriter = ow
+
+							lines = 0
 						}
-						fmt.Fprint(os.Stderr, errors.Wrapf(err, "error writing to resource at uri %q", outputUri).Error())
+
+						line := scanner.Text()
+
+						if gracefulShutdown {
+							break
+						}
+
+						_, err = outputWriter.WriteLine(line)
+						if err != nil {
+							if perr, ok := err.(*os.PathError); ok {
+								if perr.Err == syscall.EPIPE {
+									brokenPipe = true
+									break
+								}
+							}
+							fmt.Fprint(os.Stderr, errors.Wrapf(err, "error writing to resource at uri %q", outputUri).Error())
+							break
+						}
+
+						// increment counter
+						lines++
 					}
 
-				}
-				wg.Done()
-			}()
+					if err := scanner.Err(); err != nil {
+						fmt.Fprint(os.Stderr, errors.Wrapf(err, "error reading from resource at uri %q", inputUri).Error())
+					}
+
+					wg.Done()
+				}()
+			} else {
+				go func() {
+					eof := false
+					for (!updateGracefulShutdown(nil)) && (!eof) && (!brokenPipe) {
+
+						b := make([]byte, outputBufferSize)
+						n, err := inputReader.Read(b)
+						if err != nil {
+							if err == io.EOF {
+								eof = true
+							} else {
+								fmt.Fprint(os.Stderr, errors.Wrapf(err, "error reading from resource at uri %q", inputUri).Error())
+							}
+						}
+
+						if gracefulShutdown {
+							break
+						}
+
+						_, err = outputWriter.Write(b[:n])
+						if err != nil {
+							if perr, ok := err.(*os.PathError); ok {
+								if perr.Err == syscall.EPIPE {
+									brokenPipe = true
+									break
+								}
+							}
+							fmt.Fprint(os.Stderr, errors.Wrapf(err, "error writing to resource at uri %q", outputUri).Error())
+						}
+
+					}
+					wg.Done()
+				}()
+			}
 
 			wg.Wait() // wait until done writing or received signal for graceful shutdown
 
@@ -259,6 +408,7 @@ func main() {
 			if verbose && !brokenPipe {
 				fmt.Println("Done in " + elapsed.String())
 			}
+
 			return nil
 		},
 	}

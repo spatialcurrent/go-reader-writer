@@ -18,8 +18,8 @@ import (
 
 func (b *Builder) Open() (ByteReadCloser, *Metadata, error) {
 
-	if b.uri == "stdin" {
-		brc, err := ReadStdin(b.uri)
+	if b.uri == "stdin" || b.uri == "-" {
+		brc, err := ReadStdin(b.alg)
 		return brc, nil, err
 	}
 

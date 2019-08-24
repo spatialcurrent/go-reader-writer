@@ -19,7 +19,7 @@ main(int argc, char **argv) {
 
     printf("Schemes: %s\n", Schemes());
 
-    char *input_uri = "https://raw.githubusercontent.com/spatialcurrent/go-reader-writer/master/test/doc.txt";
+    char *input_uri = "https://raw.githubusercontent.com/spatialcurrent/go-reader-writer/master/testdata/doc.txt";
     char *input_alg = "none";
     char *output_string;
 

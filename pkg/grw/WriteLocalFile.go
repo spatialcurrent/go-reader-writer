@@ -8,7 +8,6 @@
 package grw
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -31,5 +30,5 @@ func WriteLocalFile(path string, flag int, parents bool) (ByteWriteCloser, error
 		return nil, errors.Wrap(err, fmt.Sprintf("error opening file for writing at path %q", path))
 	}
 
-	return NewWriterWithCloserAndFile(bufio.NewWriter(f), nil, f), nil
+	return NewBufferedWriterWithClosers(f, f), nil
 }

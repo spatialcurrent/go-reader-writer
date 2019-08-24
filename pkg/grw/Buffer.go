@@ -19,4 +19,5 @@ type Buffer interface {
 	WriteString(s string) (n int, err error)
 	Bytes() []byte
 	String() string
+	Len() int
 }

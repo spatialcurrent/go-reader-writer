@@ -37,7 +37,7 @@ write_string.restype = c_char_p
 
 # Define input and output variables
 # Output must be a ctypec_char_p
-input_uri = "https://raw.githubusercontent.com/spatialcurrent/go-reader-writer/master/test/doc.txt";
+input_uri = "https://raw.githubusercontent.com/spatialcurrent/go-reader-writer/master/testdata/doc.txt";
 input_alg = "none"
 output_string_pointer = c_char_p()
 

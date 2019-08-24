@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 
   // Since Go requires non-const values, we must define our parameters as variables
   // https://stackoverflow.com/questions/4044255/passing-a-string-literal-to-a-function-that-takes-a-stdstring
-  std::string input_uri("https://raw.githubusercontent.com/spatialcurrent/go-reader-writer/master/test/doc.txt.bz2");
+  std::string input_uri("https://raw.githubusercontent.com/spatialcurrent/go-reader-writer/master/testdata/doc.txt.bz2");
   std::string input_alg("bzip2");
   char *output_char_ptr;
 

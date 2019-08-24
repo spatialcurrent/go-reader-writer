@@ -15,6 +15,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Mkdirs create the directory at the given path and all parent directories, if they do not exist.
+// Mkdirs expands the home directory and resolves the path given.
 func Mkdirs(p string) error {
 
 	if len(p) == 0 {

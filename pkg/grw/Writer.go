@@ -193,19 +193,6 @@ func (w *Writer) Flush() error {
 //  - https://godoc.org/sync#Mutex
 func (w *Writer) FlushSafe() error {
 
-	/*
-		if w.Writer != nil {
-			w.Lock()
-			var err error
-			if flusher, ok := w.Writer.(Flusher); ok {
-				err = flusher.Flush()
-			}
-			w.Unlock()
-			if err != nil {
-				return errors.Wrap(err, "error flushing underlying writer")
-			}
-		}*/
-
 	if w.Flushers != nil {
 		w.Lock()
 		for i, f := range w.Flushers {

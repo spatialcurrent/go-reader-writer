@@ -116,10 +116,10 @@ func checkConfig(args []string, v *viper.Viper) error {
 func main() {
 
 	rootCommand := cobra.Command{
-		Use: "grw [flags] [-|stdin|INPUT_URI] [-|stdout|OUTPUT_URI]",
+		Use:                   "grw [flags] [-|stdin|INPUT_URI] [-|stdout|OUTPUT_URI]",
 		DisableFlagsInUseLine: true,
-		Short: "Read file from input and write to output",
-		Long:  "Read file from input and write to output",
+		Short:                 "Read file from input and write to output",
+		Long:                  "Read file from input and write to output",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			start := time.Now()
 

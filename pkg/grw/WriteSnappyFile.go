@@ -8,7 +8,6 @@
 package grw
 
 import (
-	"bufio"
 	"os"
 
 	"github.com/golang/snappy"
@@ -25,5 +24,5 @@ func WriteSnappyFile(path string, flag int) (ByteWriteCloser, error) {
 
 	sw := snappy.NewBufferedWriter(f)
 
-	return NewWriterWithCloserAndFile(bufio.NewWriter(sw), sw, f), nil
+	return NewBufferedWriterWithClosers(sw, sw, f), nil
 }

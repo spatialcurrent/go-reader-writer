@@ -8,14 +8,13 @@
 package grw
 
 import (
-	"bufio"
 	"bytes"
 	"compress/gzip"
 )
 
 // WriteGzipBytes returns a reader for reading the bytes from an input array, and an error if any.
-func WriteGzipBytes() (ByteWriteCloser, Buffer, error) {
+func WriteGzipBytes() (ByteWriteCloser, Buffer) {
 	buf := new(bytes.Buffer)
 	gw := gzip.NewWriter(buf)
-	return NewWriterWithCloser(bufio.NewWriter(gw), gw), buf, nil
+	return NewBufferedWriterWithClosers(gw, gw), buf
 }

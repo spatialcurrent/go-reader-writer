@@ -8,7 +8,6 @@
 package grw
 
 import (
-	"bufio"
 	"compress/gzip"
 	"os"
 
@@ -25,5 +24,5 @@ func WriteGzipFile(path string, flag int) (ByteWriteCloser, error) {
 
 	gw := gzip.NewWriter(f)
 
-	return NewWriterWithCloserAndFile(bufio.NewWriter(gw), gw, f), nil
+	return NewBufferedWriterWithClosers(gw, gw, f), nil
 }

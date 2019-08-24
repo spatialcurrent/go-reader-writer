@@ -18,7 +18,8 @@ func WriteBytes(alg string) (ByteWriteCloser, Buffer, error) {
 	case AlgorithmBzip2:
 		return nil, nil, &ErrWriterNotImplemented{Algorithm: alg}
 	case AlgorithmGzip:
-		return WriteGzipBytes()
+		writer, buffer := WriteGzipBytes()
+		return writer, buffer, nil
 	case AlgorithmSnappy:
 		writer, buffer := WriteSnappyBytes()
 		return writer, buffer, nil

@@ -8,7 +8,6 @@
 package grw
 
 import (
-	"bufio"
 	"compress/gzip"
 	"os"
 
@@ -29,14 +28,14 @@ func WriteStderr(alg string) (ByteWriteCloser, error) {
 		return nil, &ErrWriterNotImplemented{Algorithm: alg}
 	case "gzip":
 		gw := gzip.NewWriter(os.Stderr)
-		return NewWriterWithCloser(bufio.NewWriter(gw), gw), nil
+		return NewBufferedWriterWithClosers(gw, gw), nil
 	case "snappy":
 		sw := snappy.NewWriter(os.Stderr)
-		return NewWriterWithCloser(bufio.NewWriter(sw), sw), nil
+		return NewBufferedWriterWithClosers(sw, sw), nil
 	case "zip":
 		return nil, &ErrWriterNotImplemented{Algorithm: alg}
 	case "none", "":
-		return NewWriter(bufio.NewWriter(os.Stderr)), nil
+		return NewBufferedWriter(os.Stderr), nil
 	}
 
 	return nil, &ErrUnknownAlgorithm{Algorithm: alg}

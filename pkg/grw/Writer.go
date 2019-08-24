@@ -8,8 +8,8 @@
 package grw
 
 import (
+	"bufio"
 	"io"
-	"os"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -20,30 +20,67 @@ import (
 type Writer struct {
 	*sync.Mutex            // inherits Lock and Unlock Functions
 	Writer      ByteWriter // the instance of ByteWriter used for reading bytes
-	Closer      *Closer    // the underlying closers
+	Flushers    []Flusher
+	Closer      *Closer // the underlying closers
+}
+
+func NewBufferedWriterWithClosers(writer io.Writer, closers ...io.Closer) *Writer {
+	bw := bufio.NewWriter(writer)
+	flushers := []Flusher{bw}
+	if f, ok := writer.(Flusher); ok {
+		flushers = append(flushers, f)
+	}
+	return &Writer{
+		Writer:   bw,
+		Flushers: flushers,
+		Closer: &Closer{
+			Closers: closers,
+		},
+		Mutex: &sync.Mutex{},
+	}
+}
+
+func NewBufferedWriter(writer io.Writer) *Writer {
+	bw := bufio.NewWriter(writer)
+	flushers := []Flusher{bw}
+	if f, ok := writer.(Flusher); ok {
+		flushers = append(flushers, f)
+	}
+	return &Writer{
+		Writer:   bw,
+		Flushers: flushers,
+		Closer:   nil,
+		Mutex:    &sync.Mutex{},
+	}
 }
 
 func NewWriter(writer ByteWriter) *Writer {
+	flushers := make([]Flusher, 0)
+	if f, ok := writer.(Flusher); ok {
+		flushers = append(flushers, f)
+	}
 	return &Writer{
-		Writer: writer,
-		Closer: nil,
-		Mutex:  &sync.Mutex{}}
+		Writer:   writer,
+		Flushers: flushers,
+		Closer:   nil,
+		Mutex:    &sync.Mutex{}}
 }
 
-func NewWriterWithCloser(writer ByteWriter, closer io.Closer) *Writer {
+func NewWriterWithClosers(writer ByteWriter, closers ...io.Closer) *Writer {
+	flushers := make([]Flusher, 0)
+	if f, ok := writer.(Flusher); ok {
+		flushers = append(flushers, f)
+	}
+	for _, c := range closers {
+		if f, ok := c.(Flusher); ok {
+			flushers = append(flushers, f)
+		}
+	}
 	return &Writer{
-		Writer: writer,
+		Writer:   writer,
+		Flushers: flushers,
 		Closer: &Closer{
-			Closers: []io.Closer{closer},
-		},
-		Mutex: &sync.Mutex{}}
-}
-
-func NewWriterWithCloserAndFile(writer ByteWriter, closer io.Closer, file *os.File) *Writer {
-	return &Writer{
-		Writer: writer,
-		Closer: &Closer{
-			Closers: []io.Closer{closer, file},
+			Closers: closers,
 		},
 		Mutex: &sync.Mutex{}}
 }
@@ -138,11 +175,11 @@ func (w *Writer) WriteErrorSafe(e error) (n int, err error) {
 //  - https://godoc.org/io#Writer
 func (w *Writer) Flush() error {
 
-	if w.Writer != nil {
-		if flusher, ok := w.Writer.(Flusher); ok {
-			err := flusher.Flush()
+	if w.Flushers != nil {
+		for i, f := range w.Flushers {
+			err := f.Flush()
 			if err != nil {
-				return errors.Wrap(err, "error flushing underlying writer")
+				return errors.Wrapf(err, "error flushing underlying closer %d", i)
 			}
 		}
 	}
@@ -156,16 +193,29 @@ func (w *Writer) Flush() error {
 //  - https://godoc.org/sync#Mutex
 func (w *Writer) FlushSafe() error {
 
-	if w.Writer != nil {
+	/*
+		if w.Writer != nil {
+			w.Lock()
+			var err error
+			if flusher, ok := w.Writer.(Flusher); ok {
+				err = flusher.Flush()
+			}
+			w.Unlock()
+			if err != nil {
+				return errors.Wrap(err, "error flushing underlying writer")
+			}
+		}*/
+
+	if w.Flushers != nil {
 		w.Lock()
-		var err error
-		if flusher, ok := w.Writer.(Flusher); ok {
-			err = flusher.Flush()
+		for i, f := range w.Flushers {
+			err := f.Flush()
+			if err != nil {
+				w.Unlock()
+				return errors.Wrapf(err, "error flushing underlying closer %d", i)
+			}
 		}
 		w.Unlock()
-		if err != nil {
-			return errors.Wrap(err, "error flushing underlying writer")
-		}
 	}
 
 	return nil

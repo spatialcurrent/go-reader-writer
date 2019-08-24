@@ -29,6 +29,7 @@ func WriteToResource(uri string, alg string, appendFlag bool, s3_client *s3.S3) 
 	scheme, path := splitter.SplitUri(uri)
 	switch scheme {
 	case "none", "":
+
 		pathExpanded, err := homedir.Expand(path)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error expanding resource file path "+path)

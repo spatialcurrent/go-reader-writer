@@ -19,12 +19,12 @@ import (
 )
 
 type WriteBuffersInput struct {
-  Buffers map[string]Buffer
-  Algorithm string
-  Overwrite bool
-  Append bool
-  Mkdirs bool
-  S3Client *s3.S3
+	Buffers   map[string]Buffer
+	Algorithm string
+	Overwrite bool
+	Append    bool
+	Mkdirs    bool
+	S3Client  *s3.S3
 }
 
 // WriteBuffers writes a map of buffers to the resources defined by the keys.

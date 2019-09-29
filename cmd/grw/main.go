@@ -38,7 +38,7 @@ import (
 func main() {
 
 	rootCommand := cobra.Command{
-		Use:                   `grw [flags] [-|stdin|INPUT_URI] [-|stdout|OUTPUT_URI]
+		Use: `grw [flags] [-|stdin|INPUT_URI] [-|stdout|OUTPUT_URI]
   grw [flags] [-|stdin|INPUT_URI]
   grw [flags]`,
 		DisableFlagsInUseLine: true,
@@ -64,14 +64,14 @@ func main() {
 				return err
 			}
 
-      inputUri := "stdin"
-      outputUri := "stdout"
-      if len(args) > 0 {
-        inputUri = args[0]
-  			if len(args) > 1 {
-  			  outputUri = args[1]
-  			}
-      }
+			inputUri := "stdin"
+			outputUri := "stdout"
+			if len(args) > 0 {
+				inputUri = args[0]
+				if len(args) > 1 {
+					outputUri = args[1]
+				}
+			}
 
 			verbose := v.GetBool(cli.FlagVerbose)
 

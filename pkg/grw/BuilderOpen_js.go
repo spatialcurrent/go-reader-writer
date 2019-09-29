@@ -34,9 +34,21 @@ func (b *Builder) Open() (*Reader, *Metadata, error) {
 		if i == -1 {
 			return nil, nil, errors.New("path missing bucket")
 		}
-		return ReadS3Object(path[0:i], path[i+1:], b.alg, b.dict, b.bufferSize, b.s3Client)
+		return ReadS3Object(&ReadS3ObjectInput{
+			Bucket:     path[0:i],
+			Key:        path[i+1:],
+			Alg:        b.alg,
+			Dict:       b.dict,
+			BufferSize: b.bufferSize,
+			S3Client:   b.s3Client,
+		})
 	case SchemeFile, "none", "":
-		return b.wrapNoMetadata(ReadFromFilePath(path, b.alg, b.dict, b.bufferSize))
+		return b.wrapNoMetadata(ReadFromFilePath(&ReadFromFilePathInput{
+			Path:       path,
+			Alg:        b.alg,
+			Dict:       b.dict,
+			BufferSize: b.bufferSize,
+		}))
 	}
 	return nil, nil, &ErrUnknownScheme{Scheme: scheme}
 }

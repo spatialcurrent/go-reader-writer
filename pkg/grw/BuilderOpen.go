@@ -45,12 +45,16 @@ func (b *Builder) Open() (*Reader, *Metadata, error) {
 			S3Client:   b.s3Client,
 		})
 	case SchemeFile, "none", "":
-		return b.wrapNoMetadata(ReadFromFilePath(&ReadFromFilePathInput{
+		r, err := ReadFromFilePath(&ReadFromFilePathInput{
 			Path:       path,
 			Alg:        b.alg,
 			Dict:       b.dict,
 			BufferSize: b.bufferSize,
-		}))
+		})
+		if err != nil {
+			return nil, nil, errors.Wrapf(err, "error opening file at path %q", path)
+		}
+		return r, nil, nil
 	}
 	return nil, nil, &ErrUnknownScheme{Scheme: scheme}
 }

@@ -38,7 +38,7 @@ jobs:
       - run: sudo npm install --global source-map-support
       - run: make deps_gopherjs
       - run: make deps_javascript
-      #- run: npm run test:clean
+      - run: npm run test:clean
   examples:
     executor: base
     steps:

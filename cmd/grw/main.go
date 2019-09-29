@@ -23,105 +23,24 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 
 	awssession "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
+	"github.com/spatialcurrent/go-reader-writer/pkg/cli"
 	"github.com/spatialcurrent/go-reader-writer/pkg/grw"
 	"github.com/spatialcurrent/go-reader-writer/pkg/io"
 	"github.com/spatialcurrent/go-reader-writer/pkg/os"
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 
-const (
-	flagAWSProfile         string = "aws-profile"
-	flagAWSDefaultRegion   string = "aws-default-region"
-	flagAWSRegion          string = "aws-region"
-	flagAWSAccessKeyID     string = "aws-access-key-id"
-	flagAWSSecretAccessKey string = "aws-secret-access-key"
-	flagAWSSessionToken    string = "aws-session-token"
-	flagInputCompression   string = "input-compression"
-	flagInputDictionary    string = "input-dictionary"
-	flagInputBufferSize    string = "input-buffer-size"
-	flagOutputCompression  string = "output-compression"
-	flagOutputBufferSize   string = "output-buffer-size"
-	flagOutputAppend       string = "output-append"
-	flagOutputOverwrite    string = "output-overwrite"
-	flagOutputDictionary   string = "output-dictionary"
-	flagSplitLines         string = "split-lines"
-	flagVerbose            string = "verbose"
-
-	NumberReplacementCharacter string = "#"
-)
-
-func initFlags(flag *pflag.FlagSet) {
-	flag.String(flagAWSProfile, "", "AWS Profile")
-	flag.String(flagAWSDefaultRegion, "", "AWS Default Region")
-	flag.StringP(flagAWSRegion, "", "", "AWS Region (overrides default region)")
-	flag.StringP(flagAWSAccessKeyID, "", "", "AWS Access Key ID")
-	flag.StringP(flagAWSSecretAccessKey, "", "", "AWS Secret Access Key")
-	flag.StringP(flagAWSSessionToken, "", "", "AWS Session Token")
-
-	flag.StringP(flagInputCompression, "", "", "the input compression: "+strings.Join(grw.Algorithms, ", "))
-	flag.String(flagInputDictionary, "", "the input dictionary")
-	flag.Int(flagInputBufferSize, 4096, "the input reader buffer size")
-
-	flag.StringP(flagOutputCompression, "", "", "the output compression: "+strings.Join(grw.Algorithms, ", "))
-	flag.String(flagOutputDictionary, "", "the output dictionary")
-	flag.IntP(flagOutputBufferSize, "b", 4096, "the output writer buffer size")
-	flag.BoolP(flagOutputAppend, "a", false, "append to output files")
-	flag.BoolP(flagOutputOverwrite, "o", false, "overwrite output if it already exists")
-
-	flag.IntP(
-		flagSplitLines,
-		"l",
-		-1,
-		fmt.Sprintf("split output by a number of lines, replaces %q in output uri with file number starting with 1.", NumberReplacementCharacter),
-	)
-
-	flag.BoolP(flagVerbose, "v", false, "verbose output")
-}
-
-func initViper(flag *pflag.FlagSet) (*viper.Viper, error) {
-	v := viper.New()
-	err := v.BindPFlags(flag)
-	if err != nil {
-		return nil, err
-	}
-	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-	v.AutomaticEnv()
-	return v, nil
-}
-
-func checkConfig(args []string, v *viper.Viper) error {
-
-	if len(args) != 2 {
-		return fmt.Errorf("expecting 2 arguments, found %d arguments", len(args))
-	}
-
-	outputUri := args[1]
-
-	splitLines := v.GetInt(flagSplitLines)
-	if splitLines > 0 {
-
-		if !strings.Contains(outputUri, NumberReplacementCharacter) {
-			return fmt.Errorf(
-				"when splitting by lines, you must include the number replacement character (%q) in the output uri",
-				NumberReplacementCharacter,
-			)
-		}
-
-	}
-	return nil
-}
-
 func main() {
 
 	rootCommand := cobra.Command{
-		Use:                   "grw [flags] [-|stdin|INPUT_URI] [-|stdout|OUTPUT_URI]",
+		Use:                   `grw [flags] [-|stdin|INPUT_URI] [-|stdout|OUTPUT_URI]
+  grw [flags] [-|stdin|INPUT_URI]
+  grw [flags]`,
 		DisableFlagsInUseLine: true,
 		Short:                 "Read file from input and write to output",
 		Long:                  "Read file from input and write to output",
@@ -135,32 +54,38 @@ func main() {
 
 			flag := cmd.Flags()
 
-			v, err := initViper(flag)
+			v, err := cli.InitViper(flag)
 			if err != nil {
 				return errors.Wrap(err, "error initializing viper")
 			}
 
-			err = checkConfig(args, v)
+			err = cli.CheckConfig(args, v)
 			if err != nil {
 				return err
 			}
 
-			inputUri := args[0]
-			outputUri := args[1]
+      inputUri := "stdin"
+      outputUri := "stdout"
+      if len(args) > 0 {
+        inputUri = args[0]
+  			if len(args) > 1 {
+  			  outputUri = args[1]
+  			}
+      }
 
-			verbose := v.GetBool(flagVerbose)
+			verbose := v.GetBool(cli.FlagVerbose)
 
 			var session *awssession.Session
 			var s3Client *s3.S3
 
 			if strings.HasPrefix(inputUri, "s3://") || strings.HasPrefix(outputUri, "s3://") {
-				accessKeyID := v.GetString(flagAWSAccessKeyID)
-				secretAccessKey := v.GetString(flagAWSSecretAccessKey)
-				sessionToken := v.GetString(flagAWSSessionToken)
+				accessKeyID := v.GetString(cli.FlagAWSAccessKeyID)
+				secretAccessKey := v.GetString(cli.FlagAWSSecretAccessKey)
+				sessionToken := v.GetString(cli.FlagAWSSessionToken)
 
-				region := v.GetString(flagAWSRegion)
+				region := v.GetString(cli.FlagAWSRegion)
 				if len(region) == 0 {
-					if defaultRegion := v.GetString(flagAWSDefaultRegion); len(defaultRegion) > 0 {
+					if defaultRegion := v.GetString(cli.FlagAWSDefaultRegion); len(defaultRegion) > 0 {
 						region = defaultRegion
 					}
 				}
@@ -183,27 +108,27 @@ func main() {
 				s3Client = s3.New(session)
 			}
 
-			inputCompression := v.GetString(flagInputCompression)
-			inputDictionary := v.GetString(flagInputDictionary)
+			inputCompression := v.GetString(cli.FlagInputCompression)
+			inputDictionary := v.GetString(cli.FlagInputDictionary)
 
 			inputReader, _, err := grw.ReadFromResource(&grw.ReadFromResourceInput{
 				Uri:        inputUri,
 				Alg:        inputCompression,
 				Dict:       []byte(inputDictionary),
-				BufferSize: v.GetInt(flagInputBufferSize),
+				BufferSize: v.GetInt(cli.FlagInputBufferSize),
 				S3Client:   s3Client,
 			})
 			if err != nil {
 				return errors.Wrapf(err, "error opening resource at uri %q", inputUri)
 			}
 
-			outputCompression := v.GetString(flagOutputCompression)
-			outputDictionary := v.GetString(flagOutputDictionary)
-			outputOverwrite := v.GetBool(flagOutputOverwrite)
-			outputAppend := v.GetBool(flagOutputAppend)
-			outputBufferSize := v.GetInt(flagOutputBufferSize)
+			outputCompression := v.GetString(cli.FlagOutputCompression)
+			outputDictionary := v.GetString(cli.FlagOutputDictionary)
+			outputOverwrite := v.GetBool(cli.FlagOutputOverwrite)
+			outputAppend := v.GetBool(cli.FlagOutputAppend)
+			outputBufferSize := v.GetInt(cli.FlagOutputBufferSize)
 
-			splitLines := v.GetInt(flagSplitLines)
+			splitLines := v.GetInt(cli.FlagSplitLines)
 
 			var outputWriter io.ByteWriteCloser
 			var outputBuffer io.Buffer
@@ -221,7 +146,7 @@ func main() {
 			} else {
 				uri := outputUri
 				if splitLines > 0 {
-					uri = strings.ReplaceAll(outputUri, NumberReplacementCharacter, "1")
+					uri = strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, "1")
 				}
 				if (!outputOverwrite) && (!outputAppend) {
 					exists, _, err := os.Stat(uri)
@@ -284,20 +209,20 @@ func main() {
 
 							err := outputWriter.Flush()
 							if err != nil {
-								fmt.Fprint(os.Stderr, errors.Wrapf(err, "error flushing resource at uri %q", strings.ReplaceAll(outputUri, NumberReplacementCharacter, strconv.Itoa(files))).Error())
+								fmt.Fprint(os.Stderr, errors.Wrapf(err, "error flushing resource at uri %q", strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, strconv.Itoa(files))).Error())
 								break
 							}
 
 							err = outputWriter.Close()
 							if err != nil {
-								fmt.Fprint(os.Stderr, errors.Wrapf(err, "error closing resource at uri %q", strings.ReplaceAll(outputUri, NumberReplacementCharacter, strconv.Itoa(files))).Error())
+								fmt.Fprint(os.Stderr, errors.Wrapf(err, "error closing resource at uri %q", strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, strconv.Itoa(files))).Error())
 								break
 							}
 
 							// increment files number
 							files++
 
-							uri := strings.ReplaceAll(outputUri, NumberReplacementCharacter, strconv.Itoa(files))
+							uri := strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, strconv.Itoa(files))
 
 							if (!outputOverwrite) && (!outputAppend) {
 								exists, _, err := os.Stat(uri)
@@ -366,25 +291,30 @@ func main() {
 						if err != nil {
 							if err == io.EOF {
 								eof = true
+								// do not break
+								// if the input is less than the size of the buffer,
+								// will then use n > 0, n < len(b), and return EOF
 							} else {
 								fmt.Fprintln(os.Stderr, errors.Wrapf(err, "error reading from resource at uri %q", inputUri).Error())
+								break
 							}
-							break
 						}
 
 						if gracefulShutdown {
 							break
 						}
 
-						_, err = outputWriter.Write(b[:n])
-						if err != nil {
-							if perr, ok := err.(*stdos.PathError); ok {
-								if perr.Err == syscall.EPIPE {
-									brokenPipe = true
-									break
+						if n > 0 {
+							_, err = outputWriter.Write(b[:n])
+							if err != nil {
+								if perr, ok := err.(*stdos.PathError); ok {
+									if perr.Err == syscall.EPIPE {
+										brokenPipe = true
+										break
+									}
 								}
+								fmt.Fprintln(os.Stderr, errors.Wrapf(err, "error writing to resource at uri %q", outputUri).Error())
 							}
-							fmt.Fprintln(os.Stderr, errors.Wrapf(err, "error writing to resource at uri %q", outputUri).Error())
 						}
 
 					}
@@ -425,7 +355,7 @@ func main() {
 			return nil
 		},
 	}
-	initFlags(rootCommand.Flags())
+	cli.InitFlags(rootCommand.Flags())
 
 	if err := rootCommand.Execute(); err != nil {
 		panic(err)

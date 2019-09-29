@@ -71,6 +71,10 @@ vet: ## Vet Go source code
 test_go: ## Run Go tests
 	bash scripts/test.sh
 
+.PHONY: test_cli
+test_cli: ## Run CLI tests
+	bash scripts/test-cli.sh
+
 build: build_cli build_javascript build_so build_android  ## Build CLI, Shared Objects (.so), JavaScript, and Android
 
 install:  ## Install GRW CLI on current platform

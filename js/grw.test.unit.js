@@ -24,7 +24,7 @@ describe('grw', () => {
 
   it('checks the available compression algorithms', () => {
     expect(Array.isArray(algorithms)).toBe(true);
-    expect(algorithms.sort()).toEqual(["bzip2", "gzip", "none", "snappy", "zip"]);
+    expect(algorithms.sort()).toEqual(["bzip2", "flate", "gzip", "none", "snappy", "zip", "zlib"]);
   });
 
   describe('reader', () => {
@@ -62,6 +62,10 @@ describe('grw', () => {
       it('read from a local file and decompress using zip', done => {
         read("./testdata/doc.txt.zip", "zip", {"bufferSize": 4096}, callback(done));
       });
+      
+      it('read from a local file and decompress using zlib', done => {
+        read("./testdata/doc.txt.z", "snappy", {"bufferSize": 4096}, callback(done));
+      });
 
     });
 
@@ -85,6 +89,10 @@ describe('grw', () => {
 
       it('read from a remote file over HTTPS and decompress using zip', done => {
         read(base_https+"/doc.txt.zip", "zip", {"bufferSize": 4096}, callback(done));
+      });
+      
+      it('read from a remote file over HTTPS and decompress using zlib', done => {
+        read(base_https+"/doc.txt.z", "zip", {"bufferSize": 4096}, callback(done));
       });
 
     });

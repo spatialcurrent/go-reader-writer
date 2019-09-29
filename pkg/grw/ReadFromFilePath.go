@@ -48,7 +48,7 @@ func ReadFromFilePath(input *ReadFromFilePathInput) (*Reader, error) {
 	}
 
 	switch input.Alg {
-	case AlgorithmBzip2, AlgorithmFlate, AlgorithmGzip, AlgorithmSnappy, AlgorithmNone, "":
+	case AlgorithmBzip2, AlgorithmFlate, AlgorithmGzip, AlgorithmNone, AlgorithmSnappy, AlgorithmZlib, "":
 		f, err := os.OpenFile(pathAbsolute)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error opening file at path %q", pathAbsolute)

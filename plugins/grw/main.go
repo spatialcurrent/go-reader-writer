@@ -74,7 +74,7 @@ func ReadString(uri *C.char, alg *C.char, str **C.char) *C.char {
 //export WriteString
 func WriteString(uri *C.char, alg *C.char, appendFlag C.int, contents *C.char) *C.char {
 
-	w, err := grw.WriteToResource(*grw.WriteToResourceInput{
+	w, err := grw.WriteToResource(&grw.WriteToResourceInput{
 		Uri:    C.GoString(uri),
 		Alg:    C.GoString(alg),
 		Append: appendFlag > 0,

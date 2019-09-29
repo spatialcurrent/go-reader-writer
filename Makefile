@@ -64,7 +64,7 @@ imports: ## Update imports in Go source code
 	goimports -w -local github.com/spatialcurrent/go-reader-writer,github.com/spatialcurrent $$(find . -iname '*.go')
 
 vet: ## Vet Go source code
-	go vet github.com/spatialcurrent/go-reader-writer/pkg/... # vet packages
+  go vet github.com/spatialcurrent/go-reader-writer/pkg/... # vet packages
   go vet github.com/spatialcurrent/go-reader-writer/cmd/... # vet commands
   go vet github.com/spatialcurrent/go-reader-writer/plugins/... # vet plugins
 

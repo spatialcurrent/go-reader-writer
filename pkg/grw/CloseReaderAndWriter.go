@@ -9,6 +9,8 @@ package grw
 
 import (
 	"github.com/pkg/errors"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/io"
 )
 
 //CloseReaderAndWriter closes an input ByteReadCloser and output ByteWriteCloser,
@@ -16,7 +18,7 @@ import (
 // CloseReaderAndWriter will continue and close the writer even if closing the reader returned an error.
 //
 // The returns values are the errors returned when closing the reader and closing the writer, respectively.
-func CloseReaderAndWriter(inputReader ByteReadCloser, outputWriter ByteWriteCloser, brokenPipe bool) (error, error) {
+func CloseReaderAndWriter(inputReader io.Closer, outputWriter io.Closer, brokenPipe bool) (error, error) {
 	errorReader := inputReader.Close()
 	if errorReader != nil {
 		errorReader = errors.Wrap(errorReader, "error closing input resource")
@@ -31,9 +33,12 @@ func CloseReaderAndWriter(inputReader ByteReadCloser, outputWriter ByteWriteClos
 		return errorReader, errorWriter
 	}
 
-	errorFlusher := outputWriter.Flush()
-	if errorFlusher != nil {
-		errorFlusher = errors.Wrap(errorFlusher, "error flushing output resource")
+	var errorFlusher error
+	if f, ok := outputWriter.(io.Flusher); ok {
+		errorFlusher = f.Flush()
+		if errorFlusher != nil {
+			errorFlusher = errors.Wrap(errorFlusher, "error flushing output resource")
+		}
 	}
 
 	errorWriter := outputWriter.Close()

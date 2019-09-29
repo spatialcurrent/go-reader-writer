@@ -8,12 +8,21 @@
 package grw
 
 import (
-	"io"
 	"path/filepath"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/os"
 )
+
+// ReadFromFilePathInput contains the input parameters ReadFromFilePath.
+type ReadFromFilePathInput struct {
+	Path       string // the path to the file
+	Alg        string // the compression algorithm used
+	Dict       []byte // the dictionary for the compression algorithm, if applicable
+	BufferSize int    // the buffer size for the underlying reader
+}
 
 // ReadFromFilePath opens a ByteReadCloser for the given path, compression algorithm, and buffer size.
 // ReadFromFilePath returns the ByteReadCloser and error, if any.
@@ -22,15 +31,15 @@ import (
 // the file references by the path cannot be opened, or
 // the compression algorithm is invalid.
 //
-func ReadFromFilePath(path string, alg string, bufferSize int) (ByteReadCloser, error) {
+func ReadFromFilePath(input *ReadFromFilePathInput) (*Reader, error) {
 
-	if len(path) == 0 {
+	if len(input.Path) == 0 {
 		return nil, ErrPathMissing
 	}
 
-	pathExpanded, err := homedir.Expand(path)
+	pathExpanded, err := homedir.Expand(input.Path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error expanding file path %q", path)
+		return nil, errors.Wrapf(err, "error expanding file path %q", input.Path)
 	}
 
 	pathAbsolute, err := filepath.Abs(pathExpanded)
@@ -38,20 +47,20 @@ func ReadFromFilePath(path string, alg string, bufferSize int) (ByteReadCloser, 
 		return nil, errors.Wrapf(err, "error resolving file path %q", pathAbsolute)
 	}
 
-	switch alg {
-	case AlgorithmBzip2, AlgorithmGzip, AlgorithmSnappy, AlgorithmNone, "":
-		f, err := OpenFile(pathAbsolute)
+	switch input.Alg {
+	case AlgorithmBzip2, AlgorithmFlate, AlgorithmGzip, AlgorithmSnappy, AlgorithmNone, "":
+		f, err := os.OpenFile(pathAbsolute)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error opening file at path %q", pathAbsolute)
 		}
-		r, closers, err := WrapReader(f, []io.Closer{f}, alg, bufferSize)
+		r, err := WrapReader(f, input.Alg, input.Dict, input.BufferSize)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error wrapping reader for file at path %q", pathAbsolute)
 		}
-		return &Reader{Reader: r, Closer: &Closer{Closers: closers}}, nil
+		return &Reader{Reader: r}, nil
 	case AlgorithmZip:
 		return ReadZipFile(pathAbsolute)
 	}
 
-	return nil, &ErrUnknownAlgorithm{Algorithm: alg}
+	return nil, &ErrUnknownAlgorithm{Algorithm: input.Alg}
 }

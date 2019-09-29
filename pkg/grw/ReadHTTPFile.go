@@ -8,9 +8,6 @@
 package grw
 
 import (
-	//"bytes"
-	//"fmt"
-	"io"
 	"io/ioutil"
 
 	"github.com/pkg/errors"
@@ -24,7 +21,7 @@ import (
 //  - https://godoc.org/github.com/golang/snappy
 //  - https://golang.org/pkg/archive/zip/
 //
-func ReadHTTPFile(uri string, alg string, bufferSize int) (ByteReadCloser, *Metadata, error) {
+func ReadHTTPFile(uri string, alg string, dict []byte, bufferSize int) (*Reader, *Metadata, error) {
 
 	respBody, metadata, err := fetch(uri)
 	if err != nil {
@@ -53,11 +50,11 @@ func ReadHTTPFile(uri string, alg string, bufferSize int) (ByteReadCloser, *Meta
 
 	switch alg {
 	case AlgorithmBzip2, AlgorithmGzip, AlgorithmSnappy, AlgorithmNone, "":
-		r, closers, err := WrapReader(respBody, []io.Closer{respBody}, alg, bufferSize)
+		r, err := WrapReader(respBody, alg, dict, bufferSize)
 		if err != nil {
 			return nil, metadata, errors.Wrapf(err, "error wrapping reader for file at uri %q", uri)
 		}
-		return &Reader{Reader: r, Closer: &Closer{Closers: closers}}, metadata, nil
+		return &Reader{Reader: r}, metadata, nil
 	}
 
 	return nil, metadata, &ErrUnknownAlgorithm{Algorithm: alg}

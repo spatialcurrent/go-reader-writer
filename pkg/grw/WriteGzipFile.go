@@ -8,21 +8,19 @@
 package grw
 
 import (
-	"compress/gzip"
 	"os"
 
 	"github.com/pkg/errors"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
+	"github.com/spatialcurrent/go-reader-writer/pkg/compress/gzip"
 )
 
 // WriteGzipFile returns a ByteWriteCloser for writing to a local file
-func WriteGzipFile(path string, flag int) (ByteWriteCloser, error) {
-
+func WriteGzipFile(path string, flag int) (*Writer, error) {
 	f, err := os.OpenFile(path, flag, 0600)
 	if err != nil {
-		return nil, errors.Wrap(err, "error opening file at \""+path+"\" for writing")
+		return nil, errors.Wrapf(err, "error opening file at path %q for writing", path)
 	}
-
-	gw := gzip.NewWriter(f)
-
-	return NewBufferedWriterWithClosers(gw, gw, f), nil
+	return NewWriter(bufio.NewWriter(gzip.NewWriter(f))), nil
 }

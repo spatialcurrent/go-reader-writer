@@ -8,15 +8,13 @@
 package grw
 
 import (
-	"io"
-	"io/ioutil"
+	"github.com/spatialcurrent/go-reader-writer/pkg/io"
 )
 
 // Reader is a struct for normalizing reading of bytes from files with arbitrary compression and for closing underlying resources.
 // Reader implements the ByteReader interface by wrapping around a subordinate ByteReader.
 type Reader struct {
 	Reader io.Reader // the instance of ByteReader used for reading bytes
-	Closer *Closer   // the underlying closers
 }
 
 // Read reads a maximum len(p) bytes from the reader and returns an error, if any.
@@ -33,7 +31,7 @@ func (r *Reader) Read(p []byte) (n int, err error) {
 func (r *Reader) ReadByte() (byte, error) {
 
 	if r.Reader != nil {
-		if br, ok := r.Reader.(ByteReader); ok {
+		if br, ok := r.Reader.(io.ByteReader); ok {
 			return br.ReadByte()
 		}
 		return byte(0), &ErrFunctionNotImplemented{Function: "ReadBytes", Object: "Reader"}
@@ -45,7 +43,7 @@ func (r *Reader) ReadByte() (byte, error) {
 // ReadBytes returns all bytes up to an including the first occurrence of the delimiter "delim" and an error, if any.
 func (r *Reader) ReadBytes(delim byte) ([]byte, error) {
 	if r.Reader != nil {
-		if br, ok := r.Reader.(ByteReader); ok {
+		if br, ok := r.Reader.(io.ByteReader); ok {
 			return br.ReadBytes(delim)
 		}
 		return make([]byte, 0), &ErrFunctionNotImplemented{Function: "ReadBytes", Object: "Reader"}
@@ -55,11 +53,10 @@ func (r *Reader) ReadBytes(delim byte) ([]byte, error) {
 
 // ReadString returns a string of all the bytes to an including the first occurrence of the delimiter "delim" and an error, if any.
 func (r *Reader) ReadString(delim byte) (string, error) {
-	b, err := r.ReadBytes(delim)
-	if err != nil {
-		return "", err
+	if br, ok := r.Reader.(io.ByteReader); ok {
+		return io.ReadString(br, delim)
 	}
-	return string(b), err
+	return "", &ErrFunctionNotImplemented{Function: "ReadString", Object: "Reader"}
 }
 
 // ReadFirst is not implemented by Reader
@@ -84,24 +81,14 @@ func (r *Reader) ReadRange(start int, end int) ([]byte, error) {
 
 // ReadAll is not implemented by Reader
 func (r *Reader) ReadAll() ([]byte, error) {
-	return ioutil.ReadAll(r.Reader)
+	return io.ReadAll(r.Reader)
 }
 
 func (r *Reader) Close() error {
-	if r.Closer != nil {
-		return r.Closer.Close()
-	}
-	return nil
+	return io.Close(r.Reader)
 }
 
 // ReadAllAndClose reads all the bytes from the underlying reader and attempts to close the reader, even if there was an error reading.
 func (r *Reader) ReadAllAndClose() ([]byte, error) {
-	b, err := ioutil.ReadAll(r.Reader)
-	if err != nil {
-		// Attempt to close even if there is an error while reading
-		r.Close() // #nosec
-		return b, err
-	}
-	err = r.Close()
-	return b, err
+	return io.ReadAllAndClose(r.Reader)
 }

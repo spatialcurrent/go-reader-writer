@@ -5,17 +5,13 @@
 //
 // =================================================================
 
-package grw
+package io
 
 import (
 	"io"
 )
 
-// ByteReader is an interface that extends io.Reader and io.ByteReader.
-// ByteReader provides functions for reading bytes.
-type ByteReader interface {
-	io.Reader
-	io.ByteReader
-	ReadBytes(delim byte) ([]byte, error)
-	ReadString(delim byte) (string, error)
+// Writer is a copy of the standard library io.Writer interface.
+type Writer interface {
+	io.Writer
 }

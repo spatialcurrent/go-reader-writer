@@ -64,10 +64,12 @@ imports: ## Update imports in Go source code
 	goimports -w -local github.com/spatialcurrent/go-reader-writer,github.com/spatialcurrent $$(find . -iname '*.go')
 
 vet: ## Vet Go source code
-	go vet $$(go list ./...)
+	CGO_ENABLED=0 go vet github.com/spatialcurrent/go-reader-writer/pkg/... # vet packages
+  CGO_ENABLED=0 go vet github.com/spatialcurrent/go-reader-writer/cmd/... # vet commands
+  CGO_ENABLED=0 go vet github.com/spatialcurrent/go-reader-writer/plugins/... # vet plugins
 
 test_go: ## Run Go tests
-	bash scripts/test.sh
+	CGO_ENABLED=0 bash scripts/test.sh
 
 build: build_cli build_javascript build_so build_android  ## Build CLI, Shared Objects (.so), JavaScript, and Android
 

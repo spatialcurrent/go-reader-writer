@@ -5,15 +5,12 @@
 //
 // =================================================================
 
-package grw
+package io
 
-import (
-	"io"
-)
-
-// ByteWriter is an interface that extends io.Writer and io.ByteWriter.
-// ByteWriter provides functions for writing bytes.
-type ByteWriter interface {
-	io.Writer
-	io.ByteWriter
+// WriteError writes an error with a trailing newline to the writer and returns an error, if any.
+func WriteError(w Writer, err error) (int, error) {
+	if w == nil {
+		return 0, ErrMissingWriter
+	}
+	return WriteString(w, err.Error()+"\n")
 }

@@ -8,11 +8,11 @@
 package grw
 
 import (
-	"bufio"
-	"compress/gzip"
-	"io"
-
 	"github.com/pkg/errors"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
+	"github.com/spatialcurrent/go-reader-writer/pkg/compress/gzip"
+	"github.com/spatialcurrent/go-reader-writer/pkg/os"
 )
 
 // ReadGzipFile returns a reader for reading bytes from a gzip-compressed file
@@ -20,17 +20,17 @@ import (
 //
 //  - https://golang.org/pkg/compress/gzip/
 //
-func ReadGzipFile(path string, buffer_size int) (ByteReadCloser, error) {
+func ReadGzipFile(path string, bufferSize int) (*Reader, error) {
 
-	f, err := OpenFile(path)
+	f, err := os.OpenFile(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error opening gzip file")
+		return nil, errors.Wrapf(err, "error opening gzip file at path %q for reading", path)
 	}
 
-	gr, err := gzip.NewReader(bufio.NewReaderSize(f, buffer_size))
+	gr, err := gzip.NewReader(bufio.NewReaderSize(f, bufferSize))
 	if err != nil {
-		return nil, errors.Wrap(err, "Error creating gzip reader for file \""+path+"\"")
+		return nil, errors.Wrapf(err, "error creating gzip reader for file at path %q", path)
 	}
 
-	return &Reader{Reader: bufio.NewReaderSize(gr, buffer_size), Closer: &Closer{Closers: []io.Closer{gr, f}}}, nil
+	return &Reader{Reader: bufio.NewReader(gr)}, nil
 }

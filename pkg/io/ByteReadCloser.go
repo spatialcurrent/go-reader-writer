@@ -5,14 +5,13 @@
 //
 // =================================================================
 
-package grw
+package io
 
 import (
 	"io"
 )
 
-// ByteReader is an interface that extends io.Reader, io.ByteReader, and adds a range function.
-// ByteReader provides functions for reading bytes.
+// ByteReadCloser extends ByteReader, io.Closer, and io.ReaderAt interfaces, and provides functions for reading a range of bytes.
 type ByteReadCloser interface {
 	ByteReader
 	io.Closer

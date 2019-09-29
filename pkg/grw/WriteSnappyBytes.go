@@ -10,12 +10,12 @@ package grw
 import (
 	"bytes"
 
-	"github.com/golang/snappy"
+	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
+	"github.com/spatialcurrent/go-reader-writer/pkg/compress/snappy"
 )
 
-// WriteSnappyBytes returns a reader for reading the bytes from an input array, and an error if any.
-func WriteSnappyBytes() (ByteWriteCloser, *bytes.Buffer) {
+// WriteSnappyBytes returns a writer and buffer for writing snappy compressed bytes.
+func WriteSnappyBytes() (*Writer, *bytes.Buffer) {
 	buf := new(bytes.Buffer)
-	sw := snappy.NewBufferedWriter(buf)
-	return NewBufferedWriterWithClosers(sw, sw), buf
+	return NewWriter(bufio.NewWriter(snappy.NewBufferedWriter(buf))), buf
 }

@@ -8,12 +8,10 @@
 package grw
 
 import (
-	"bufio"
-	"bytes"
-	"compress/gzip"
-	"io"
-
 	"github.com/pkg/errors"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
+	"github.com/spatialcurrent/go-reader-writer/pkg/compress/gzip"
 )
 
 // GzipBytes returns a reader for reading gzip bytes from an input array.
@@ -21,10 +19,10 @@ import (
 //
 //  - https://golang.org/pkg/compress/gzip/
 //
-func ReadGzipBytes(b []byte) (ByteReadCloser, error) {
-	gr, err := gzip.NewReader(bytes.NewReader(b))
+func ReadGzipBytes(b []byte) (*Reader, error) {
+	gr, err := gzip.ReadBytes(b, true)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating gzip reader for memory block.")
 	}
-	return &Reader{Reader: bufio.NewReader(gr), Closer: &Closer{Closers: []io.Closer{gr}}}, nil
+	return &Reader{Reader: bufio.NewReader(gr)}, nil
 }

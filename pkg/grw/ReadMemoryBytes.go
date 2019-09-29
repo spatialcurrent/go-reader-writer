@@ -13,6 +13,6 @@ import (
 )
 
 // ReadMemoryBytes returns a reader for reading the bytes from an input array, and an error if any.
-func ReadMemoryBytes(b []byte) ByteReadCloser {
+func ReadMemoryBytes(b []byte) *Reader {
 	return &Reader{Reader: bufio.NewReader(bytes.NewReader(b))}
 }

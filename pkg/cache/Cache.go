@@ -5,24 +5,25 @@
 //
 // =================================================================
 
-package grw
+package cache
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 
 	"github.com/pkg/errors"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/io"
 )
 
 type Cache struct {
-	Reader   ByteReadCloser
+	Reader   io.ByteReadCloser
 	Cursor   int
 	Complete *bool
 	Content  *[]byte
 }
 
-func NewCache(r ByteReadCloser) *Cache {
+func NewCache(r io.ByteReadCloser) *Cache {
 	complete := false
 	content := make([]byte, 0)
 	return &Cache{
@@ -33,7 +34,7 @@ func NewCache(r ByteReadCloser) *Cache {
 	}
 }
 
-func NewCacheWithContent(r ByteReadCloser, c *[]byte, i int) *Cache {
+func NewCacheWithContent(r io.ByteReadCloser, c *[]byte, i int) *Cache {
 	complete := false
 	return &Cache{
 		Reader:   r,

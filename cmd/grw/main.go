@@ -10,10 +10,8 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"io"
-	"os"
+	stdos "os"
 	"os/signal"
 	"strconv"
 	"strings"
@@ -31,7 +29,10 @@ import (
 	awssession "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 
+	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 	"github.com/spatialcurrent/go-reader-writer/pkg/grw"
+	"github.com/spatialcurrent/go-reader-writer/pkg/io"
+	"github.com/spatialcurrent/go-reader-writer/pkg/os"
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 
@@ -43,11 +44,13 @@ const (
 	flagAWSSecretAccessKey string = "aws-secret-access-key"
 	flagAWSSessionToken    string = "aws-session-token"
 	flagInputCompression   string = "input-compression"
+	flagInputDictionary    string = "input-dictionary"
 	flagInputBufferSize    string = "input-buffer-size"
 	flagOutputCompression  string = "output-compression"
 	flagOutputBufferSize   string = "output-buffer-size"
 	flagOutputAppend       string = "output-append"
 	flagOutputOverwrite    string = "output-overwrite"
+	flagOutputDictionary   string = "output-dictionary"
 	flagSplitLines         string = "split-lines"
 	flagVerbose            string = "verbose"
 
@@ -63,9 +66,11 @@ func initFlags(flag *pflag.FlagSet) {
 	flag.StringP(flagAWSSessionToken, "", "", "AWS Session Token")
 
 	flag.StringP(flagInputCompression, "", "", "the input compression: "+strings.Join(grw.Algorithms, ", "))
+	flag.String(flagInputDictionary, "", "the input dictionary")
 	flag.Int(flagInputBufferSize, 4096, "the input reader buffer size")
 
 	flag.StringP(flagOutputCompression, "", "", "the output compression: "+strings.Join(grw.Algorithms, ", "))
+	flag.String(flagOutputDictionary, "", "the output dictionary")
 	flag.IntP(flagOutputBufferSize, "b", 4096, "the output writer buffer size")
 	flag.BoolP(flagOutputAppend, "a", false, "append to output files")
 	flag.BoolP(flagOutputOverwrite, "o", false, "overwrite output if it already exists")
@@ -179,34 +184,37 @@ func main() {
 			}
 
 			inputCompression := v.GetString(flagInputCompression)
+			inputDictionary := v.GetString(flagInputDictionary)
 
-			inputReader, _, err := grw.ReadFromResource(
-				inputUri,
-				inputCompression,
-				v.GetInt(flagInputBufferSize),
-				s3Client,
-			)
+			inputReader, _, err := grw.ReadFromResource(&grw.ReadFromResourceInput{
+				Uri:        inputUri,
+				Alg:        inputCompression,
+				Dict:       []byte(inputDictionary),
+				BufferSize: v.GetInt(flagInputBufferSize),
+				S3Client:   s3Client,
+			})
 			if err != nil {
 				return errors.Wrapf(err, "error opening resource at uri %q", inputUri)
 			}
 
 			outputCompression := v.GetString(flagOutputCompression)
+			outputDictionary := v.GetString(flagOutputDictionary)
 			outputOverwrite := v.GetBool(flagOutputOverwrite)
 			outputAppend := v.GetBool(flagOutputAppend)
 			outputBufferSize := v.GetInt(flagOutputBufferSize)
 
 			splitLines := v.GetInt(flagSplitLines)
 
-			var outputWriter grw.ByteWriteCloser
-			var outputBuffer grw.Buffer
+			var outputWriter io.ByteWriteCloser
+			var outputBuffer io.Buffer
 
 			if outputUri == "stdout" || outputUri == "-" {
-				outputWriter, err = grw.WriteStdout(outputCompression)
+				outputWriter, err = grw.WriteStdout(outputCompression, []byte(outputDictionary))
 				if err != nil {
 					return errors.Wrap(err, "error opening stdout")
 				}
 			} else if strings.HasPrefix(outputUri, "s3://") {
-				outputWriter, outputBuffer, err = grw.WriteBytes(outputCompression)
+				outputWriter, outputBuffer, err = grw.WriteBytes(outputCompression, []byte(outputDictionary))
 				if err != nil {
 					return errors.Wrapf(err, "error opening bytes buffer for %q", outputUri)
 				}
@@ -216,7 +224,7 @@ func main() {
 					uri = strings.ReplaceAll(outputUri, NumberReplacementCharacter, "1")
 				}
 				if (!outputOverwrite) && (!outputAppend) {
-					exists, _, err := grw.Stat(uri)
+					exists, _, err := os.Stat(uri)
 					if err != nil {
 						return errors.Wrapf(err, "error statting uri %q", uri)
 					}
@@ -224,11 +232,13 @@ func main() {
 						return fmt.Errorf("file already exists at uri %q and neither append or overwrite is set", uri)
 					}
 				}
-				outputWriter, err = grw.WriteToResource(
-					uri,
-					outputCompression,
-					outputAppend,
-					s3Client)
+				outputWriter, err = grw.WriteToResource(&grw.WriteToResourceInput{
+					Uri:      uri,
+					Alg:      outputCompression,
+					Dict:     []byte(outputDictionary),
+					Append:   outputAppend,
+					S3Client: s3Client,
+				})
 				if err != nil {
 					return errors.Wrapf(err, "error opening resource at uri %q", outputUri)
 				}
@@ -236,7 +246,7 @@ func main() {
 
 			var wg sync.WaitGroup
 			wg.Add(1)
-			signals := make(chan os.Signal, 1)
+			signals := make(chan stdos.Signal, 1)
 			signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGPIPE)
 
 			gracefulMutex := &sync.Mutex{}
@@ -290,7 +300,7 @@ func main() {
 							uri := strings.ReplaceAll(outputUri, NumberReplacementCharacter, strconv.Itoa(files))
 
 							if (!outputOverwrite) && (!outputAppend) {
-								exists, _, err := grw.Stat(uri)
+								exists, _, err := os.Stat(uri)
 								if err != nil {
 									fmt.Fprint(os.Stderr, errors.Wrapf(err, "error statting uri %q", uri).Error())
 									break
@@ -301,11 +311,13 @@ func main() {
 								}
 							}
 
-							ow, err := grw.WriteToResource(
-								uri,
-								outputCompression,
-								outputAppend,
-								s3Client)
+							ow, err := grw.WriteToResource(&grw.WriteToResourceInput{
+								Uri:      uri,
+								Alg:      outputCompression,
+								Dict:     []byte(outputDictionary),
+								Append:   outputAppend,
+								S3Client: s3Client,
+							})
 							if err != nil {
 								fmt.Fprint(os.Stderr, errors.Wrapf(err, "error opening resource at uri %q", outputUri).Error())
 								break
@@ -324,7 +336,7 @@ func main() {
 
 						_, err = outputWriter.WriteLine(line)
 						if err != nil {
-							if perr, ok := err.(*os.PathError); ok {
+							if perr, ok := err.(*stdos.PathError); ok {
 								if perr.Err == syscall.EPIPE {
 									brokenPipe = true
 									break
@@ -355,8 +367,9 @@ func main() {
 							if err == io.EOF {
 								eof = true
 							} else {
-								fmt.Fprint(os.Stderr, errors.Wrapf(err, "error reading from resource at uri %q", inputUri).Error())
+								fmt.Fprintln(os.Stderr, errors.Wrapf(err, "error reading from resource at uri %q", inputUri).Error())
 							}
+							break
 						}
 
 						if gracefulShutdown {
@@ -365,13 +378,13 @@ func main() {
 
 						_, err = outputWriter.Write(b[:n])
 						if err != nil {
-							if perr, ok := err.(*os.PathError); ok {
+							if perr, ok := err.(*stdos.PathError); ok {
 								if perr.Err == syscall.EPIPE {
 									brokenPipe = true
 									break
 								}
 							}
-							fmt.Fprint(os.Stderr, errors.Wrapf(err, "error writing to resource at uri %q", outputUri).Error())
+							fmt.Fprintln(os.Stderr, errors.Wrapf(err, "error writing to resource at uri %q", outputUri).Error())
 						}
 
 					}

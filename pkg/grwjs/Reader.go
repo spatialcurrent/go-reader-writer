@@ -8,15 +8,16 @@
 package grwjs
 
 import (
-	"github.com/spatialcurrent/go-reader-writer/pkg/grw"
+	//"github.com/spatialcurrent/go-reader-writer/pkg/grw"
+	"github.com/spatialcurrent/go-reader-writer/pkg/io"
 )
 
 type Reader struct {
-	Reader grw.ByteReadCloser
+	reader io.ByteReadCloser
 }
 
 func (r *Reader) Read(p []byte) map[string]interface{} {
-	n, err := r.Reader.Read(p)
+	n, err := r.reader.Read(p)
 	return map[string]interface{}{
 		"n":   n,
 		"err": err,
@@ -24,7 +25,7 @@ func (r *Reader) Read(p []byte) map[string]interface{} {
 }
 
 func (r *Reader) ReadByte() map[string]interface{} {
-	b, err := r.Reader.ReadByte()
+	b, err := r.reader.ReadByte()
 	return map[string]interface{}{
 		"b":   b,
 		"err": err,
@@ -32,7 +33,7 @@ func (r *Reader) ReadByte() map[string]interface{} {
 }
 
 func (r *Reader) ReadAt(p []byte, off int64) map[string]interface{} {
-	n, err := r.Reader.ReadAt(p, off)
+	n, err := r.reader.ReadAt(p, off)
 	return map[string]interface{}{
 		"n":   n,
 		"err": err,
@@ -40,7 +41,7 @@ func (r *Reader) ReadAt(p []byte, off int64) map[string]interface{} {
 }
 
 func (r *Reader) ReadAll() map[string]interface{} {
-	data, err := r.Reader.ReadAll()
+	data, err := r.reader.ReadAll()
 	return map[string]interface{}{
 		"data": data,
 		"err":  err,
@@ -48,14 +49,14 @@ func (r *Reader) ReadAll() map[string]interface{} {
 }
 
 func (r *Reader) Close() map[string]interface{} {
-	err := r.Reader.Close()
+	err := r.reader.Close()
 	return map[string]interface{}{
 		"err": err,
 	}
 }
 
 func (r *Reader) ReadAllAndClose() map[string]interface{} {
-	data, err := r.Reader.ReadAllAndClose()
+	data, err := r.reader.ReadAllAndClose()
 	return map[string]interface{}{
 		"data": data,
 		"err":  err,

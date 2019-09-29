@@ -5,9 +5,5 @@
 //
 // =================================================================
 
-package grw
-
-// Flusher is an interface that provides a function to flush a buffer to an underlying writer.
-type Flusher interface {
-	Flush() error
-}
+// Package bzip2 provides a reader and writer that propagate calls to Close.
+package bzip2

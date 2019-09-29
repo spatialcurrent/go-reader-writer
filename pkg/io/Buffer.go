@@ -5,15 +5,18 @@
 //
 // =================================================================
 
-package grw
+package io
 
 import (
 	"io"
 )
 
+// Buffer is an interface that supports common buffer methods, including those from the bytes.Buffer struct.
+// Buffer extends io.Reader, io.Writer, and io.ByteWriter interfaces.
+// It supports other buffer implementations, too.
 type Buffer interface {
 	io.Reader
-	io.Writer
+	Writer
 	io.ByteWriter
 	WriteRune(r rune) (n int, err error)
 	WriteString(s string) (n int, err error)

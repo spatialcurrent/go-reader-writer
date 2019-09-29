@@ -9,15 +9,14 @@ package grw
 
 import (
 	"bufio"
-	"bytes"
 
-	"github.com/golang/snappy"
+	"github.com/spatialcurrent/go-reader-writer/pkg/compress/snappy"
 )
 
 // SnappyBytes returns a reader for an input of snappy-compressed bytes, and an error if any.
 //
 //  - https://godoc.org/github.com/golang/snappy
 //
-func ReadSnappyBytes(b []byte) (ByteReadCloser, error) {
-	return &Reader{Reader: bufio.NewReader(snappy.NewReader(bytes.NewReader(b)))}, nil
+func ReadSnappyBytes(b []byte) (*Reader, error) {
+	return &Reader{Reader: bufio.NewReader(snappy.ReadBytes(b))}, nil
 }

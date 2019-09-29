@@ -14,7 +14,13 @@ import (
 )
 
 func TestReadFromResourceDocTxt(t *testing.T) {
-	brc, metadata, err := ReadFromResource("../../testdata/doc.txt", AlgorithmNone, 4096, nil)
+	brc, metadata, err := ReadFromResource(&ReadFromResourceInput{
+		Uri:        "../../testdata/doc.txt",
+		Alg:        AlgorithmNone,
+		Dict:       NoDict,
+		BufferSize: 4096,
+		S3Client:   nil,
+	})
 	assert.NoError(t, err)
 	assert.NotNil(t, brc)
 	assert.Nil(t, metadata)
@@ -25,7 +31,13 @@ func TestReadFromResourceDocTxt(t *testing.T) {
 }
 
 func TestReadFromResourceDocTxtBz2(t *testing.T) {
-	brc, metadata, err := ReadFromResource("../../testdata/doc.txt.bz2", AlgorithmBzip2, 4096, nil)
+	brc, metadata, err := ReadFromResource(&ReadFromResourceInput{
+		Uri:        "../../testdata/doc.txt.bz2",
+		Alg:        AlgorithmBzip2,
+		Dict:       NoDict,
+		BufferSize: 4096,
+		S3Client:   nil,
+	})
 	assert.NoError(t, err)
 	assert.NotNil(t, brc)
 	assert.Nil(t, metadata)
@@ -36,7 +48,13 @@ func TestReadFromResourceDocTxtBz2(t *testing.T) {
 }
 
 func TestReadFromResourceDocTxtGzip(t *testing.T) {
-	brc, metadata, err := ReadFromResource("../../testdata/doc.txt.gz", AlgorithmGzip, 4096, nil)
+	brc, metadata, err := ReadFromResource(&ReadFromResourceInput{
+		Uri:        "../../testdata/doc.txt.gz",
+		Alg:        AlgorithmGzip,
+		Dict:       NoDict,
+		BufferSize: 4096,
+		S3Client:   nil,
+	})
 	assert.NoError(t, err)
 	assert.NotNil(t, brc)
 	assert.Nil(t, metadata)
@@ -47,7 +65,13 @@ func TestReadFromResourceDocTxtGzip(t *testing.T) {
 }
 
 func TestReadFromResourceDocTxtSnappy(t *testing.T) {
-	brc, metadata, err := ReadFromResource("../../testdata/doc.txt.sz", AlgorithmSnappy, 4096, nil)
+	brc, metadata, err := ReadFromResource(&ReadFromResourceInput{
+		Uri:        "../../testdata/doc.txt.sz",
+		Alg:        AlgorithmSnappy,
+		Dict:       NoDict,
+		BufferSize: 4096,
+		S3Client:   nil,
+	})
 	assert.NoError(t, err)
 	assert.NotNil(t, brc)
 	assert.Nil(t, metadata)
@@ -58,7 +82,13 @@ func TestReadFromResourceDocTxtSnappy(t *testing.T) {
 }
 
 func TestReadFromResourceDocTxtZip(t *testing.T) {
-	brc, metadata, err := ReadFromResource("../../testdata/doc.txt.zip", AlgorithmZip, 4096, nil)
+	brc, metadata, err := ReadFromResource(&ReadFromResourceInput{
+		Uri:        "../../testdata/doc.txt.zip",
+		Alg:        AlgorithmZip,
+		Dict:       NoDict,
+		BufferSize: 4096,
+		S3Client:   nil,
+	})
 	assert.NoError(t, err)
 	assert.NotNil(t, brc)
 	assert.Nil(t, metadata)

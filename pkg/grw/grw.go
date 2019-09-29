@@ -60,10 +60,12 @@ import (
 
 const (
 	AlgorithmBzip2  = "bzip2"  // bzip2
+	AlgorithmFlate  = "flate"  // flate aka DEFLATE
 	AlgorithmGzip   = "gzip"   // gzip
-	AlgorithmNone   = "none"   // No compression
-	AlgorithmSnappy = "snappy" // Snappy compression
-	AlgorithmZip    = "zip"    // Zip archive
+	AlgorithmNone   = "none"   // no compressions
+	AlgorithmSnappy = "snappy" // snappy
+	AlgorithmZip    = "zip"    // zip archive
+	AlgorithmZlib   = "zlib"   // zlib
 
 	SchemeFile  = "file"
 	SchemeFtp   = "ftp"
@@ -75,12 +77,16 @@ const (
 var (
 	Algorithms = []string{
 		AlgorithmBzip2,
+		AlgorithmFlate,
 		AlgorithmGzip,
 		AlgorithmNone,
 		AlgorithmSnappy,
 		AlgorithmZip,
+		AlgorithmZlib,
 	}
+)
 
+var (
 	Schemes = []string{
 		SchemeFile,
 		SchemeFtp,
@@ -88,6 +94,16 @@ var (
 		SchemeHTTPS,
 		SchemeS3,
 	}
+)
 
+var (
 	ErrPathMissing = errors.New("path is missing")
+)
+
+var (
+	DefaultBufferSize = 4096
+)
+
+var (
+	NoDict = []byte{} // no dictionary
 )

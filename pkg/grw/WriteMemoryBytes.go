@@ -8,13 +8,13 @@
 package grw
 
 import (
-	"bufio"
 	"bytes"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 )
 
-// WriteMemoryBytes returns a reader for reading the bytes from an input array, and an error if any.
-func WriteMemoryBytes() (ByteWriteCloser, Buffer) {
+// WriteSnappyBytes returns a writer and buffer for writing uncompressed bytes.
+func WriteMemoryBytes() (*Writer, *bytes.Buffer) {
 	buf := new(bytes.Buffer)
-	bw := bufio.NewWriter(buf)
-	return NewWriter(bw), buf
+	return NewWriter(bufio.NewWriter(buf)), buf
 }

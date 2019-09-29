@@ -17,10 +17,10 @@ import (
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 
-func (b *Builder) Open() (ByteReadCloser, *Metadata, error) {
+func (b *Builder) Open() (*Reader, *Metadata, error) {
 
 	if b.uri == "stdin" {
-		brc, err := ReadStdin(b.uri)
+		brc, err := ReadStdin(b.alg, b.dict, b.bufferSize)
 		return brc, nil, err
 	}
 
@@ -28,15 +28,15 @@ func (b *Builder) Open() (ByteReadCloser, *Metadata, error) {
 
 	switch scheme {
 	case SchemeHTTP, SchemeHTTPS:
-		return ReadHTTPFile(b.uri, b.alg, b.bufferSize)
+		return ReadHTTPFile(b.uri, b.alg, b.dict, b.bufferSize)
 	case SchemeS3:
 		i := strings.Index(path, "/")
 		if i == -1 {
 			return nil, nil, errors.New("path missing bucket")
 		}
-		return ReadS3Object(path[0:i], path[i+1:], b.alg, b.bufferSize, b.s3Client)
+		return ReadS3Object(path[0:i], path[i+1:], b.alg, b.dict, b.bufferSize, b.s3Client)
 	case SchemeFile, "none", "":
-		return b.wrapNoMetadata(ReadFromFilePath(path, b.alg, b.bufferSize))
+		return b.wrapNoMetadata(ReadFromFilePath(path, b.alg, b.dict, b.bufferSize))
 	}
 	return nil, nil, &ErrUnknownScheme{Scheme: scheme}
 }

@@ -11,7 +11,6 @@ package grw
 
 import (
 	"bytes"
-	//"fmt"
 	"io"
 
 	"github.com/gopherjs/gopherjs/js"
@@ -31,5 +30,5 @@ func fetch(url string) (io.ReadCloser, *Metadata, error) {
 	}
 	b := js.Global.Get("Uint8Array").New(req.Response).Interface().([]byte)
 	//fmt.Println(fmt.Sprintf("Data: %x", req.ResponseText))
-	return &Reader{Reader: bytes.NewReader(b), Closer: nil}, nil, nil
+	return &Reader{Reader: bytes.NewReader(b)}, nil, nil
 }

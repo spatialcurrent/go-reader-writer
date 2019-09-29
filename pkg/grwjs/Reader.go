@@ -8,7 +8,6 @@
 package grwjs
 
 import (
-	//"github.com/spatialcurrent/go-reader-writer/pkg/grw"
 	"github.com/spatialcurrent/go-reader-writer/pkg/io"
 )
 

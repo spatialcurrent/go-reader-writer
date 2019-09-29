@@ -5,8 +5,6 @@
 //
 // =================================================================
 
-// +build !js
-
 // Package grw provides the interfaces, embedded structs, and implementing code
 // for normalizing the reading/writing of a stream of bytes from archive/compressed files.
 // This package supports the bzip2, gzip, snappy, and zip archive/compression algorithms.  No compression can be identified as "none" or a blank string.

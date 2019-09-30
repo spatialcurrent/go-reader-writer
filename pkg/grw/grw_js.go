@@ -5,7 +5,7 @@
 //
 // =================================================================
 
-// +build !js
+// +build js
 
 // Package grw provides the interfaces, embedded structs, and implementing code
 // for normalizing the reading/writing of a stream of bytes from archive/compressed files.
@@ -68,7 +68,6 @@ const (
 	AlgorithmZlib   = "zlib"   // zlib
 
 	SchemeFile  = "file"
-	SchemeFtp   = "ftp"
 	SchemeHTTP  = "http"
 	SchemeHTTPS = "https"
 	SchemeS3    = "s3"
@@ -89,7 +88,6 @@ var (
 var (
 	Schemes = []string{
 		SchemeFile,
-		SchemeFtp,
 		SchemeHTTP,
 		SchemeHTTPS,
 		SchemeS3,

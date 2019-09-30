@@ -42,9 +42,11 @@ func ReadFromFilePath(input *ReadFromFilePathInput) (*Reader, error) {
 		return nil, errors.Wrapf(err, "error expanding file path %q", input.Path)
 	}
 
-	pathAbsolute, err := filepath.Abs(pathExpanded)
+	pathCleaned := filepath.Clean(pathExpanded)
+
+	pathAbsolute, err := filepath.Abs(pathCleaned)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error resolving file path %q", pathAbsolute)
+		return nil, errors.Wrapf(err, "error resolving file path %q", pathCleaned)
 	}
 
 	switch input.Alg {

@@ -43,31 +43,31 @@ describe('grw', () => {
     describe('local file', () => {
 
       it('read from a local file', done => {
-        read("./testdata/doc.txt", "none", {"bufferSize": 4096}, callback(done));
+        read(__dirname+"/../testdata/doc.txt", "none", {"bufferSize": 4096}, callback(done));
       });
 
       it('read from a local file and decompress using bzip2', done => {
-        read("./testdata/doc.txt.bz2", "bzip2", {"bufferSize": 4096}, callback(done));
+        read(__dirname+"/../testdata/doc.txt.bz2", "bzip2", {"bufferSize": 4096}, callback(done));
       });
       
       it('read from a local file and decompress using flate', done => {
-        read("./testdata/doc.txt.f", "flate", {"bufferSize": 4096}, callback(done));
+        read(__dirname+"/../testdata/doc.txt.f", "flate", {"bufferSize": 4096}, callback(done));
       });
 
       it('read from a local file and decompress using gzip', done => {
-        read("./testdata/doc.txt.gz", "gzip", {"bufferSize": 4096}, callback(done));
+        read(__dirname+"/../testdata/doc.txt.gz", "gzip", {"bufferSize": 4096}, callback(done));
       });
 
       it('read from a local file and decompress using snappy', done => {
-        read("./testdata/doc.txt.sz", "snappy", {"bufferSize": 4096}, callback(done));
+        read(__dirname+"/../testdata/doc.txt.sz", "snappy", {"bufferSize": 4096}, callback(done));
       });
 
       it('read from a local file and decompress using zip', done => {
-        read("./testdata/doc.txt.zip", "zip", {"bufferSize": 4096}, callback(done));
+        read(__dirname+"/../testdata/doc.txt.zip", "zip", {"bufferSize": 4096}, callback(done));
       });
       
       it('read from a local file and decompress using zlib', done => {
-        read("./testdata/doc.txt.z", "zlib", {"bufferSize": 4096}, callback(done));
+        read(__dirname+"/../testdata/doc.txt.z", "zlib", {"bufferSize": 4096}, callback(done));
       });
 
     });

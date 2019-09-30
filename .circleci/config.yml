@@ -48,7 +48,16 @@ jobs:
       - run: sudo npm install --global source-map-support
       - run: make deps_gopherjs
       - run: make deps_javascript
-      - run: npm run test:clean
+      - run:
+          name: Install support for syscalls 
+          command: |
+            cd /go/src/github.com/gopherjs/gopherjs/node-syscall
+            echo '{"engines" : {"node" : ">=11.15.0 <12.0.0"},"dependencies": {"node-gyp": "^5.0.3"}}' > package.json
+            npm install .
+            node_modules/node-gyp/bin/node-gyp.js rebuild
+            mkdir -p ~/.node_libraries/
+            cp build/Release/syscall.node ~/.node_libraries/syscall.node
+      - run: npm run test:unit:clean
   examples:
     executor: base
     steps:
@@ -60,9 +69,18 @@ jobs:
       - run: make deps_gopherjs
       - run: make deps_javascript
       - run: npm run build:clean
+      - run:
+          name: Install support for syscalls
+          command: |
+            cd /go/src/github.com/gopherjs/gopherjs/node-syscall
+            echo '{"engines" : {"node" : ">=11.15.0 <12.0.0"},"dependencies": {"node-gyp": "^5.0.3"}}' > package.json
+            npm install .
+            node_modules/node-gyp/bin/node-gyp.js rebuild
+            mkdir -p ~/.node_libraries/
+            cp build/Release/syscall.node ~/.node_libraries/syscall.node
       - run: make run_example_c
       - run: make run_example_cpp
-      #- run: make run_example_javascript
+      - run: make run_example_javascript
       - run: make run_example_python
   build_cli:
     executor: base

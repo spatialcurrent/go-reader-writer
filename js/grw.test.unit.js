@@ -72,7 +72,7 @@ describe('grw', () => {
 
     });
     
-    if(GRW_TESTDATA_HTTPS != undefined) {
+    if(base_https != undefined) {
       describe('https', () => {
 
         it('read from a remote file over HTTPS', done => {

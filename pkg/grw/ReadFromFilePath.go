@@ -44,24 +44,19 @@ func ReadFromFilePath(input *ReadFromFilePathInput) (*Reader, error) {
 
 	pathCleaned := filepath.Clean(pathExpanded)
 
-	pathAbsolute, err := filepath.Abs(pathCleaned)
-	if err != nil {
-		return nil, errors.Wrapf(err, "error resolving file path %q", pathCleaned)
-	}
-
 	switch input.Alg {
 	case AlgorithmBzip2, AlgorithmFlate, AlgorithmGzip, AlgorithmNone, AlgorithmSnappy, AlgorithmZlib, "":
-		f, err := os.OpenFile(pathAbsolute)
+		f, err := os.OpenFile(pathCleaned)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error opening file at path %q", pathAbsolute)
+			return nil, errors.Wrapf(err, "error opening file at path %q", pathCleaned)
 		}
 		r, err := WrapReader(f, input.Alg, input.Dict, input.BufferSize)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error wrapping reader for file at path %q", pathAbsolute)
+			return nil, errors.Wrapf(err, "error wrapping reader for file at path %q", pathCleaned)
 		}
 		return &Reader{Reader: r}, nil
 	case AlgorithmZip:
-		return ReadZipFile(pathAbsolute)
+		return ReadZipFile(pathCleaned)
 	}
 
 	return nil, &ErrUnknownAlgorithm{Algorithm: input.Alg}

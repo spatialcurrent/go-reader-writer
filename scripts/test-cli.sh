@@ -90,37 +90,61 @@ testReadFileZip() {
 # Test Reading S3 Objects
 #
 
-if [[ ! -z "${testdata_s3}" ]]; then
-  
-  testReadS3None() {
+testReadS3None() {
+  if [[ ! -z "${testdata_s3}" ]]; then
     _testRead 'none' "${testdata_s3}/doc.txt"
-  }
-  
-  testReadS3Bzip2() {
+  else
+    echo "* skipping"
+  fi
+}
+
+testReadS3Bzip2() {
+  if [[ ! -z "${testdata_s3}" ]]; then
     _testRead 'bzip2' "${testdata_s3}/doc.txt.bz2"
-  }
-  
-  testReadS3Gzip() {
+  else
+    echo "* skipping"
+  fi
+}
+
+testReadS3Gzip() {
+  if [[ ! -z "${testdata_s3}" ]]; then
     _testRead 'gzip' "${testdata_s3}/doc.txt.gz"
-  }
-  
-  testReadS3Flate() {
+  else
+    echo "* skipping"
+  fi
+}
+
+testReadS3Flate() {
+  if [[ ! -z "${testdata_s3}" ]]; then
     _testRead 'flate' "${testdata_s3}/doc.txt.f"
-  }
-  
-  testReadS3Snappy() {
+  else
+    echo "* skipping"
+  fi
+}
+
+testReadS3Snappy() {
+  if [[ ! -z "${testdata_s3}" ]]; then
     _testRead 'snappy' "${testdata_s3}/doc.txt.sz"
-  }
-  
-  testReadS3Zlib() {
+  else
+    echo "* skipping"
+  fi
+}
+
+testReadS3Zlib() {
+  if [[ ! -z "${testdata_s3}" ]]; then
     _testRead 'zlib' "${testdata_s3}/doc.txt.z"
-  }
-  
-  testReadS3Zip() {
-    _testRead 'zip' "${testdata_s3}/doc.txt.zip"
-  }
-  
-fi
+  else
+    echo "* skipping"
+  fi
+}
+
+testReadS3Zip() {
+  if [[ ! -z "${testdata_s3}" ]]; then
+   _testRead 'zip' "${testdata_s3}/doc.txt.zip"
+  else
+    echo "* skipping"
+  fi
+}
 
 oneTimeSetUp() {
   echo "Using temporary directory at ${SHUNIT_TMPDIR}"

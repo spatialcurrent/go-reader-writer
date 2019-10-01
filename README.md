@@ -7,7 +7,7 @@
 **go-reader-writer** (aka GRW) is a simple library for reading and writing compressed resource by uri.  GRW supports the following compression algorithms.
 
 | Algorithm | Read |  Write |
-| ---- | ------ |
+| ---- | ------ |  ------ |
 | bzip2 | ✓ | - |
 | flate | ✓ | ✓ |
 | gzip | ✓ | ✓ |
@@ -86,23 +86,9 @@ A variant of the reader and writer functions are exported in a Shared Object fil
 
 ## Examples
 
-### Go
+For the CLI, see the examples in the [CLI.md](docs/CLI.md) document.
 
-See the examples in the [grw](https://godoc.org/github.com/spatialcurrent/go-reader-writer/pkg/grw) package documentation.
-
-### CLI
-
-To download a file over https and write to stdout.
-
-```shell
-grw https://github.com/spatialcurrent/go-reader-writer/releases/download/0.0.1/grw.h -
-```
-
-To download a file from AWS S3, compress as gzip, and save locally.
-
-```shell
-grw --output-compression gzip s3://path/to/file /local/file
-```
+For GO, see the examples in the [grw](https://godoc.org/github.com/spatialcurrent/go-reader-writer/pkg/grw) package documentation.
 
 ## Building
 

@@ -16,7 +16,7 @@ The command line tool, `grw`, can be used to easily read and write compressed re
 The following compression algorithms are supported.  Pull requests to support other algorithms are welcome!
 
 | Algorithm | Read |  Write |
-| ---- | ------ |
+| ---- | ------ |  ------ |
 | bzip2 | ✓ | - |
 | flate | ✓ | ✓ |
 | gzip | ✓ | ✓ |
@@ -55,8 +55,16 @@ The following platforms are supported.  Pull requests to support other platforms
 
 # Examples
 
-```shell
+To download a file over https and write to stdout.
 
+```shell
+grw https://github.com/spatialcurrent/go-reader-writer/releases/download/0.0.1/grw.h -
+```
+
+To download a file from AWS S3, compress as gzip, and save locally.
+
+```shell
+grw --output-compression gzip s3://path/to/file /local/file
 ```
 
 # Building

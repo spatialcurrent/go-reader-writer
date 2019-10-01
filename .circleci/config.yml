@@ -66,6 +66,9 @@ jobs:
           keys:
             - v1-go-src-{{ .Branch }}-{{ .Revision }}
       - run: sudo npm install -g n
+      - run:
+          name: Install Node 11.15.0
+          command: sudo n 11.15.0
       - run: make deps_gopherjs
       - run: make deps_javascript
       - run: npm run build:clean

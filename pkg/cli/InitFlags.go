@@ -28,6 +28,8 @@ func InitFlags(flag *pflag.FlagSet) {
 	flag.StringP(FlagOutputCompression, "", "", "the output compression")
 	flag.String(FlagOutputDictionary, "", "the output dictionary")
 	flag.IntP(FlagOutputBufferSize, "b", DefaultBufferSize, "the output writer buffer size")
+
+	flag.BoolP(FlagOutputMkdirs, "m", false, "make directories if missing for output file")
 	flag.BoolP(FlagOutputAppend, "a", false, "append to output files")
 	flag.BoolP(FlagOutputOverwrite, "o", false, "overwrite output if it already exists")
 

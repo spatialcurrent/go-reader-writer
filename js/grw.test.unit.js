@@ -8,8 +8,6 @@
 const { TextDecoder } = require('text-encoding');
 const { read, algorithms, schemes } = global.grw;
 
-const base_https = process.env.GRW_TESTDATA_HTTPS;
-
 function log(str) {
   console.log(str.replace(/\n/g, "\\n").replace(/\t/g, "\\t").replace(/"/g, "\\\""));
 }
@@ -71,40 +69,6 @@ describe('grw', () => {
       });
 
     });
-    
-    if(base_https != undefined) {
-      describe('https', () => {
-
-        it('read from a remote file over HTTPS', done => {
-          read(base_https+"/doc.txt", "none", {"bufferSize": 4096}, callback(done));
-        });
-  
-        it('read from a remote file over HTTPS and decompress using bzip2', done => {
-          read(base_https+"/doc.txt.bz2", "bzip2", {"bufferSize": 4096}, callback(done));
-        });
-        
-        it('read from a remote file over HTTPS and decompress using flate', done => {
-          read(base_https+"/doc.txt.f", "flate", {"bufferSize": 4096}, callback(done));
-        });
-  
-        it('read from a remote file over HTTPS and decompress using gzip', done => {
-          read(base_https+"/doc.txt.gz", "gzip", {"bufferSize": 4096}, callback(done));
-        });
-  
-        it('read from a remote file over HTTPS and decompress using snappy', done => {
-          read(base_https+"/doc.txt.sz", "snappy", {"bufferSize": 4096}, callback(done));
-        });
-  
-        it('read from a remote file over HTTPS and decompress using zip', done => {
-          read(base_https+"/doc.txt.zip", "zip", {"bufferSize": 4096}, callback(done));
-        });
-        
-        it('read from a remote file over HTTPS and decompress using zlib', done => {
-          read(base_https+"/doc.txt.z", "zlib", {"bufferSize": 4096}, callback(done));
-        });
-  
-      });
-    }
 
   });
 

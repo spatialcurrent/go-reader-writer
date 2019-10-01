@@ -8,24 +8,25 @@
 package cli
 
 const (
-	FlagAWSProfile         string = "aws-profile"
-	FlagAWSDefaultRegion   string = "aws-default-region"
-	FlagAWSRegion          string = "aws-region"
-	FlagAWSAccessKeyID     string = "aws-access-key-id"
-	FlagAWSSecretAccessKey string = "aws-secret-access-key"
-	FlagAWSSessionToken    string = "aws-session-token"
-	FlagInputCompression   string = "input-compression"
-	FlagInputDictionary    string = "input-dictionary"
-	FlagInputBufferSize    string = "input-buffer-size"
-	FlagOutputCompression  string = "output-compression"
-	FlagOutputBufferSize   string = "output-buffer-size"
-	FlagOutputAppend       string = "output-append"
-	FlagOutputOverwrite    string = "output-overwrite"
-	FlagOutputDictionary   string = "output-dictionary"
-	FlagSplitLines         string = "split-lines"
-	FlagVerbose            string = "verbose"
+	FlagAWSProfile         = "aws-profile"
+	FlagAWSDefaultRegion   = "aws-default-region"
+	FlagAWSRegion          = "aws-region"
+	FlagAWSAccessKeyID     = "aws-access-key-id"
+	FlagAWSSecretAccessKey = "aws-secret-access-key"
+	FlagAWSSessionToken    = "aws-session-token"
+	FlagInputCompression   = "input-compression"
+	FlagInputDictionary    = "input-dictionary"
+	FlagInputBufferSize    = "input-buffer-size"
+	FlagOutputCompression  = "output-compression"
+	FlagOutputBufferSize   = "output-buffer-size"
+	FlagOutputAppend       = "output-append"
+	FlagOutputMkdirs       = "output-mkdirs"
+	FlagOutputOverwrite    = "output-overwrite"
+	FlagOutputDictionary   = "output-dictionary"
+	FlagSplitLines         = "split-lines"
+	FlagVerbose            = "verbose"
 
 	DefaultBufferSize = 4096
 
-	NumberReplacementCharacter string = "#"
+	NumberReplacementCharacter = "#"
 )

@@ -13,6 +13,7 @@ import (
 	"fmt"
 	stdos "os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -148,24 +149,41 @@ func main() {
 				if splitLines > 0 {
 					uri = strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, "1")
 				}
-				if (!outputOverwrite) && (!outputAppend) {
-					exists, _, err := os.Stat(uri)
+				scheme, path := splitter.SplitUri(uri)
+				if scheme == "file" || scheme == "" {
+					if (!outputOverwrite) && (!outputAppend) {
+						exists, _, err := os.Stat(path)
+						if err != nil {
+							return errors.Wrapf(err, "error statting uri %q", uri)
+						}
+						if exists {
+							return fmt.Errorf("file already exists at uri %q and neither append or overwrite is set", uri)
+						}
+					}
+					if v.GetBool(cli.FlagOutputMkdirs) {
+						exists, _, err := os.Stat(filepath.Dir(path))
+						if err != nil {
+							return errors.Wrapf(err, "error statting uri %q", uri)
+						}
+						if !exists {
+							err := os.MkdirAll(filepath.Dir(path), 0770)
+							if err != nil {
+								return errors.Wrapf(err, "error creating parent directories for uri %q", uri)
+							}
+						}
+					}
+					outputWriter, err = grw.WriteToResource(&grw.WriteToResourceInput{
+						Uri:      uri,
+						Alg:      outputCompression,
+						Dict:     []byte(outputDictionary),
+						Append:   outputAppend,
+						S3Client: s3Client,
+					})
 					if err != nil {
-						return errors.Wrapf(err, "error statting uri %q", uri)
+						return errors.Wrapf(err, "error opening resource at uri %q", outputUri)
 					}
-					if exists {
-						return fmt.Errorf("file already exists at uri %q and neither append or overwrite is set", uri)
-					}
-				}
-				outputWriter, err = grw.WriteToResource(&grw.WriteToResourceInput{
-					Uri:      uri,
-					Alg:      outputCompression,
-					Dict:     []byte(outputDictionary),
-					Append:   outputAppend,
-					S3Client: s3Client,
-				})
-				if err != nil {
-					return errors.Wrapf(err, "error opening resource at uri %q", outputUri)
+				} else {
+					return errors.Errorf("unknown scheme for uri %q", outputUri)
 				}
 			}
 
@@ -224,31 +242,49 @@ func main() {
 
 							uri := strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, strconv.Itoa(files))
 
-							if (!outputOverwrite) && (!outputAppend) {
-								exists, _, err := os.Stat(uri)
+							scheme, path := splitter.SplitUri(uri)
+							if scheme == "file" || scheme == "" {
+								if (!outputOverwrite) && (!outputAppend) {
+									exists, _, err := os.Stat(path)
+									if err != nil {
+										fmt.Fprint(os.Stderr, errors.Wrapf(err, "error statting uri %q", uri).Error())
+										break
+									}
+									if exists {
+										fmt.Fprint(os.Stderr, fmt.Errorf("file already exists at uri %q and neither append or overwrite is set", uri).Error())
+										break
+									}
+								}
+								if v.GetBool(cli.FlagOutputMkdirs) {
+									exists, _, err := os.Stat(filepath.Dir(path))
+									if err != nil {
+										fmt.Fprint(os.Stderr, errors.Wrapf(err, "error statting uri %q", uri).Error())
+										break
+									}
+									if !exists {
+										err := os.MkdirAll(filepath.Dir(path), 0770)
+										if err != nil {
+											fmt.Fprint(os.Stderr, errors.Wrapf(err, "error creating parent directories for uri %q", uri).Error())
+											break
+										}
+									}
+								}
+								ow, err := grw.WriteToResource(&grw.WriteToResourceInput{
+									Uri:      uri,
+									Alg:      outputCompression,
+									Dict:     []byte(outputDictionary),
+									Append:   outputAppend,
+									S3Client: s3Client,
+								})
 								if err != nil {
-									fmt.Fprint(os.Stderr, errors.Wrapf(err, "error statting uri %q", uri).Error())
+									fmt.Fprint(os.Stderr, errors.Wrapf(err, "error opening resource at uri %q", outputUri).Error())
 									break
 								}
-								if exists {
-									fmt.Fprint(os.Stderr, fmt.Errorf("file already exists at uri %q and neither append or overwrite is set", uri).Error())
-									break
-								}
-							}
-
-							ow, err := grw.WriteToResource(&grw.WriteToResourceInput{
-								Uri:      uri,
-								Alg:      outputCompression,
-								Dict:     []byte(outputDictionary),
-								Append:   outputAppend,
-								S3Client: s3Client,
-							})
-							if err != nil {
-								fmt.Fprint(os.Stderr, errors.Wrapf(err, "error opening resource at uri %q", outputUri).Error())
+								outputWriter = ow
+							} else {
+								fmt.Fprintf(os.Stderr, "unknown scheme for uri %q", outputUri)
 								break
 							}
-
-							outputWriter = ow
 
 							lines = 0
 						}

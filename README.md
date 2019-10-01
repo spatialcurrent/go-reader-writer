@@ -59,7 +59,7 @@ A variant of the reader and writer functions are exported in a Shared Object fil
 
 ## Releases
 
-**go-reader-writer** is currently in **alpha**.  See releases at https://github.com/spatialcurrent/go-reader-writer/releases.  See the **Building** section below to build from scratch.
+**go-reader-writer** is currently in **alpha**.  Find releases at [https://github.com/spatialcurrent/go-reader-writer/releases](https://github.com/spatialcurrent/go-reader-writer/releases).  See the **Building** section below to build from scratch.
 
 **JavaScript**
 

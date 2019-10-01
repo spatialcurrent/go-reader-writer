@@ -1,5 +1,6 @@
 # CLI
 
+- [Algorithms](#algorithms) - list of supported compression algorithms
 - [Platforms](#platforms) - list of supported platforms
 - [Releases](#releases) - where to find an executable
 - [Examples](#examples)  - detailed usage exampels
@@ -38,7 +39,7 @@ The following platforms are supported.  Pull requests to support other platforms
 
 ## Releases
 
-**grw** is currently in **alpha**.  See releases at [https://github.com/spatialcurrent/grw/releases]([https://github.com/spatialcurrent/grw/releases].  See the **Building** section below to build from scratch.
+**grw** is currently in **alpha**.  Find releases at [https://github.com/spatialcurrent/go-reader-writer/releases](https://github.com/spatialcurrent/go-reader-writer/releases).  See the **Building** section below to build from scratch.
 
 **Darwin**
 
@@ -90,7 +91,7 @@ TMPDIR="/usr/local/tmp" make test_cli
 #### Example
 
 ```text
-Error: error processing as stream: error writing buffers to files: error opening output file for path %q: error opening file for writing at path %q: open %q: no such file or directory
+error opening resource at uri %q: error opening file for writing at path %q: open %s: no such file or directory
 ```
 
 #### Solution

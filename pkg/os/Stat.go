@@ -30,7 +30,7 @@ func Stat(uri string) (bool, Info, error) {
 
 	if uri == "stdin" {
 		info, err := os.Stdin.Stat()
-		return true, info, err
+		return info.Mode()&os.ModeNamedPipe != 0, info, err
 	} else if uri == "stdout" {
 		info, err := os.Stdout.Stat()
 		return true, info, err

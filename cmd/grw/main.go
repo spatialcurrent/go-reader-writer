@@ -45,6 +45,8 @@ func main() {
 		DisableFlagsInUseLine: true,
 		Short:                 "Read file from input and write to output",
 		Long:                  "Read file from input and write to output",
+		SilenceErrors:         true,
+		SilenceUsage:          true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			start := time.Now()
 
@@ -111,6 +113,15 @@ func main() {
 
 			inputCompression := v.GetString(cli.FlagInputCompression)
 			inputDictionary := v.GetString(cli.FlagInputDictionary)
+
+			exists, _, err := os.Stat(inputUri)
+			if err != nil {
+				return errors.Wrapf(err, "error stating resource at uri %q", inputUri)
+			}
+
+			if !exists {
+				return errors.Errorf("resource at input uri %q does not exist", inputUri)
+			}
 
 			inputReader, _, err := grw.ReadFromResource(&grw.ReadFromResourceInput{
 				Uri:        inputUri,
@@ -394,6 +405,7 @@ func main() {
 	cli.InitFlags(rootCommand.Flags())
 
 	if err := rootCommand.Execute(); err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, "grw: "+err.Error())
+		fmt.Fprintln(os.Stderr, "Try grw --help for more information.")
 	}
 }

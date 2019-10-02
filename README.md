@@ -4,7 +4,7 @@
 
 ## Description
 
-**go-reader-writer** (aka GRW) is a simple library for reading and writing compressed resource by uri.  GRW supports the following compression algorithms.
+**go-reader-writer** (aka GRW) is a simple library for reading and writing compressed resources by uri.  GRW supports the following compression algorithms.
 
 | Algorithm | Read |  Write |
 | ---- | ------ |  ------ |

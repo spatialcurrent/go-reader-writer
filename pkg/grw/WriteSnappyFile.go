@@ -10,19 +10,17 @@ package grw
 import (
 	"os"
 
-	"github.com/golang/snappy"
 	"github.com/pkg/errors"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
+	"github.com/spatialcurrent/go-reader-writer/pkg/compress/snappy"
 )
 
 // WriteSnappyFile returns a ByteWriteCloser for writing to a local file
-func WriteSnappyFile(path string, flag int) (ByteWriteCloser, error) {
-
+func WriteSnappyFile(path string, flag int) (*Writer, error) {
 	f, err := os.OpenFile(path, flag, 0600)
 	if err != nil {
-		return nil, errors.Wrap(err, "error opening file at \""+path+"\" for writing")
+		return nil, errors.Wrapf(err, "error opening file at path %q for writing", path)
 	}
-
-	sw := snappy.NewBufferedWriter(f)
-
-	return NewBufferedWriterWithClosers(sw, sw, f), nil
+	return NewWriter(bufio.NewWriter(snappy.NewBufferedWriter(f))), nil
 }

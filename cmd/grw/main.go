@@ -10,11 +10,10 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"io"
-	"os"
+	stdos "os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -25,101 +24,32 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 
 	awssession "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 
+	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
+	"github.com/spatialcurrent/go-reader-writer/pkg/cli"
 	"github.com/spatialcurrent/go-reader-writer/pkg/grw"
+	"github.com/spatialcurrent/go-reader-writer/pkg/io"
+	"github.com/spatialcurrent/go-reader-writer/pkg/os"
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
-
-const (
-	flagAWSProfile         string = "aws-profile"
-	flagAWSDefaultRegion   string = "aws-default-region"
-	flagAWSRegion          string = "aws-region"
-	flagAWSAccessKeyID     string = "aws-access-key-id"
-	flagAWSSecretAccessKey string = "aws-secret-access-key"
-	flagAWSSessionToken    string = "aws-session-token"
-	flagInputCompression   string = "input-compression"
-	flagInputBufferSize    string = "input-buffer-size"
-	flagOutputCompression  string = "output-compression"
-	flagOutputBufferSize   string = "output-buffer-size"
-	flagOutputAppend       string = "output-append"
-	flagOutputOverwrite    string = "output-overwrite"
-	flagSplitLines         string = "split-lines"
-	flagVerbose            string = "verbose"
-
-	NumberReplacementCharacter string = "#"
-)
-
-func initFlags(flag *pflag.FlagSet) {
-	flag.String(flagAWSProfile, "", "AWS Profile")
-	flag.String(flagAWSDefaultRegion, "", "AWS Default Region")
-	flag.StringP(flagAWSRegion, "", "", "AWS Region (overrides default region)")
-	flag.StringP(flagAWSAccessKeyID, "", "", "AWS Access Key ID")
-	flag.StringP(flagAWSSecretAccessKey, "", "", "AWS Secret Access Key")
-	flag.StringP(flagAWSSessionToken, "", "", "AWS Session Token")
-
-	flag.StringP(flagInputCompression, "", "", "the input compression: "+strings.Join(grw.Algorithms, ", "))
-	flag.Int(flagInputBufferSize, 4096, "the input reader buffer size")
-
-	flag.StringP(flagOutputCompression, "", "", "the output compression: "+strings.Join(grw.Algorithms, ", "))
-	flag.IntP(flagOutputBufferSize, "b", 4096, "the output writer buffer size")
-	flag.BoolP(flagOutputAppend, "a", false, "append to output files")
-	flag.BoolP(flagOutputOverwrite, "o", false, "overwrite output if it already exists")
-
-	flag.IntP(
-		flagSplitLines,
-		"l",
-		-1,
-		fmt.Sprintf("split output by a number of lines, replaces %q in output uri with file number starting with 1.", NumberReplacementCharacter),
-	)
-
-	flag.BoolP(flagVerbose, "v", false, "verbose output")
-}
-
-func initViper(flag *pflag.FlagSet) (*viper.Viper, error) {
-	v := viper.New()
-	err := v.BindPFlags(flag)
-	if err != nil {
-		return nil, err
-	}
-	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-	v.AutomaticEnv()
-	return v, nil
-}
-
-func checkConfig(args []string, v *viper.Viper) error {
-
-	if len(args) != 2 {
-		return fmt.Errorf("expecting 2 arguments, found %d arguments", len(args))
-	}
-
-	outputUri := args[1]
-
-	splitLines := v.GetInt(flagSplitLines)
-	if splitLines > 0 {
-
-		if !strings.Contains(outputUri, NumberReplacementCharacter) {
-			return fmt.Errorf(
-				"when splitting by lines, you must include the number replacement character (%q) in the output uri",
-				NumberReplacementCharacter,
-			)
-		}
-
-	}
-	return nil
-}
 
 func main() {
 
 	rootCommand := cobra.Command{
-		Use:                   "grw [flags] [-|stdin|INPUT_URI] [-|stdout|OUTPUT_URI]",
+		Use: `grw [flags] [-|stdin|INPUT_URI] [-|stdout|OUTPUT_URI]
+  grw [flags] [-|stdin|INPUT_URI]
+  grw [flags]`,
 		DisableFlagsInUseLine: true,
-		Short:                 "Read file from input and write to output",
-		Long:                  "Read file from input and write to output",
+		Short:                 "grw is a simple tool for reading and writing compressed resources by uri.",
+		Long: `grw is a simple tool for reading and writing compressed resources by uri.
+By default, reads from stdin and writes to stdout.
+If the output uri is a device, then the append flag is not required.
+Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, ", "),
+		SilenceErrors: true,
+		SilenceUsage:  true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			start := time.Now()
 
@@ -130,32 +60,44 @@ func main() {
 
 			flag := cmd.Flags()
 
-			v, err := initViper(flag)
+			v, err := cli.InitViper(flag)
 			if err != nil {
 				return errors.Wrap(err, "error initializing viper")
 			}
 
-			err = checkConfig(args, v)
+			err = cli.CheckConfig(args, v)
 			if err != nil {
 				return err
 			}
 
-			inputUri := args[0]
-			outputUri := args[1]
+			inputUri := "stdin"
+			outputUri := "stdout"
+			if len(args) > 0 {
+				inputUri = args[0]
+				if inputUri == "-" {
+					inputUri = "stdin"
+				}
+				if len(args) > 1 {
+					outputUri = args[1]
+					if outputUri == "-" {
+						outputUri = "stdout"
+					}
+				}
+			}
 
-			verbose := v.GetBool(flagVerbose)
+			verbose := v.GetBool(cli.FlagVerbose)
 
 			var session *awssession.Session
 			var s3Client *s3.S3
 
 			if strings.HasPrefix(inputUri, "s3://") || strings.HasPrefix(outputUri, "s3://") {
-				accessKeyID := v.GetString(flagAWSAccessKeyID)
-				secretAccessKey := v.GetString(flagAWSSecretAccessKey)
-				sessionToken := v.GetString(flagAWSSessionToken)
+				accessKeyID := v.GetString(cli.FlagAWSAccessKeyID)
+				secretAccessKey := v.GetString(cli.FlagAWSSecretAccessKey)
+				sessionToken := v.GetString(cli.FlagAWSSessionToken)
 
-				region := v.GetString(flagAWSRegion)
+				region := v.GetString(cli.FlagAWSRegion)
 				if len(region) == 0 {
-					if defaultRegion := v.GetString(flagAWSDefaultRegion); len(defaultRegion) > 0 {
+					if defaultRegion := v.GetString(cli.FlagAWSDefaultRegion); len(defaultRegion) > 0 {
 						region = defaultRegion
 					}
 				}
@@ -178,65 +120,100 @@ func main() {
 				s3Client = s3.New(session)
 			}
 
-			inputCompression := v.GetString(flagInputCompression)
+			inputCompression := v.GetString(cli.FlagInputCompression)
+			inputDictionary := v.GetString(cli.FlagInputDictionary)
 
-			inputReader, _, err := grw.ReadFromResource(
-				inputUri,
-				inputCompression,
-				v.GetInt(flagInputBufferSize),
-				s3Client,
-			)
+			exists, fileInfo, err := os.Stat(inputUri)
+			if err != nil {
+				return errors.Wrapf(err, "error stating resource at uri %q", inputUri)
+			}
+
+			if !exists {
+				return errors.Errorf("resource at input uri %q does not exist", inputUri)
+			}
+
+			if !(fileInfo.IsRegular() || fileInfo.IsNamedPipe()) {
+				return errors.Errorf("resource at input uri %q is neither a regular file or named pipe", inputUri)
+			}
+
+			inputReader, _, err := grw.ReadFromResource(&grw.ReadFromResourceInput{
+				Uri:        inputUri,
+				Alg:        inputCompression,
+				Dict:       []byte(inputDictionary),
+				BufferSize: v.GetInt(cli.FlagInputBufferSize),
+				S3Client:   s3Client,
+			})
 			if err != nil {
 				return errors.Wrapf(err, "error opening resource at uri %q", inputUri)
 			}
 
-			outputCompression := v.GetString(flagOutputCompression)
-			outputOverwrite := v.GetBool(flagOutputOverwrite)
-			outputAppend := v.GetBool(flagOutputAppend)
-			outputBufferSize := v.GetInt(flagOutputBufferSize)
+			outputCompression := v.GetString(cli.FlagOutputCompression)
+			outputDictionary := v.GetString(cli.FlagOutputDictionary)
+			outputOverwrite := v.GetBool(cli.FlagOutputOverwrite)
+			outputAppend := v.GetBool(cli.FlagOutputAppend)
+			outputBufferSize := v.GetInt(cli.FlagOutputBufferSize)
 
-			splitLines := v.GetInt(flagSplitLines)
+			splitLines := v.GetInt(cli.FlagSplitLines)
 
-			var outputWriter grw.ByteWriteCloser
-			var outputBuffer grw.Buffer
+			var outputWriter io.ByteWriteCloser
+			var outputBuffer io.Buffer
 
 			if outputUri == "stdout" || outputUri == "-" {
-				outputWriter, err = grw.WriteStdout(outputCompression)
+				outputWriter, err = grw.WriteStdout(outputCompression, []byte(outputDictionary))
 				if err != nil {
 					return errors.Wrap(err, "error opening stdout")
 				}
 			} else if strings.HasPrefix(outputUri, "s3://") {
-				outputWriter, outputBuffer, err = grw.WriteBytes(outputCompression)
+				outputWriter, outputBuffer, err = grw.WriteBytes(outputCompression, []byte(outputDictionary))
 				if err != nil {
 					return errors.Wrapf(err, "error opening bytes buffer for %q", outputUri)
 				}
 			} else {
 				uri := outputUri
 				if splitLines > 0 {
-					uri = strings.ReplaceAll(outputUri, NumberReplacementCharacter, "1")
+					uri = strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, "1")
 				}
-				if (!outputOverwrite) && (!outputAppend) {
-					exists, _, err := grw.Stat(uri)
+				scheme, path := splitter.SplitUri(uri)
+				if scheme == "file" || scheme == "" {
+					if (!outputOverwrite) && (!outputAppend) {
+						exists, fileInfo, err := os.Stat(path)
+						if err != nil {
+							return errors.Wrapf(err, "error statting uri %q", uri)
+						}
+						if exists && (!fileInfo.IsDevice()) && (!fileInfo.IsNamedPipe()) {
+							return fmt.Errorf("file already exists at uri %q and neither append or overwrite is set", uri)
+						}
+					}
+					if v.GetBool(cli.FlagOutputMkdirs) {
+						exists, _, err := os.Stat(filepath.Dir(path))
+						if err != nil {
+							return errors.Wrapf(err, "error statting uri %q", uri)
+						}
+						if !exists {
+							err := os.MkdirAll(filepath.Dir(path), 0770)
+							if err != nil {
+								return errors.Wrapf(err, "error creating parent directories for uri %q", uri)
+							}
+						}
+					}
+					outputWriter, err = grw.WriteToResource(&grw.WriteToResourceInput{
+						Uri:      uri,
+						Alg:      outputCompression,
+						Dict:     []byte(outputDictionary),
+						Append:   outputAppend,
+						S3Client: s3Client,
+					})
 					if err != nil {
-						return errors.Wrapf(err, "error statting uri %q", uri)
+						return errors.Wrapf(err, "error opening resource at uri %q", outputUri)
 					}
-					if exists {
-						return fmt.Errorf("file already exists at uri %q and neither append or overwrite is set", uri)
-					}
-				}
-				outputWriter, err = grw.WriteToResource(
-					uri,
-					outputCompression,
-					outputAppend,
-					s3Client)
-				if err != nil {
-					return errors.Wrapf(err, "error opening resource at uri %q", outputUri)
+				} else {
+					return errors.Errorf("unknown scheme for uri %q", outputUri)
 				}
 			}
 
 			var wg sync.WaitGroup
 			wg.Add(1)
-			signals := make(chan os.Signal, 1)
+			signals := make(chan stdos.Signal, 1)
 			signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGPIPE)
 
 			gracefulMutex := &sync.Mutex{}
@@ -274,44 +251,64 @@ func main() {
 
 							err := outputWriter.Flush()
 							if err != nil {
-								fmt.Fprint(os.Stderr, errors.Wrapf(err, "error flushing resource at uri %q", strings.ReplaceAll(outputUri, NumberReplacementCharacter, strconv.Itoa(files))).Error())
+								fmt.Fprint(os.Stderr, errors.Wrapf(err, "error flushing resource at uri %q", strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, strconv.Itoa(files))).Error())
 								break
 							}
 
 							err = outputWriter.Close()
 							if err != nil {
-								fmt.Fprint(os.Stderr, errors.Wrapf(err, "error closing resource at uri %q", strings.ReplaceAll(outputUri, NumberReplacementCharacter, strconv.Itoa(files))).Error())
+								fmt.Fprint(os.Stderr, errors.Wrapf(err, "error closing resource at uri %q", strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, strconv.Itoa(files))).Error())
 								break
 							}
 
 							// increment files number
 							files++
 
-							uri := strings.ReplaceAll(outputUri, NumberReplacementCharacter, strconv.Itoa(files))
+							uri := strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, strconv.Itoa(files))
 
-							if (!outputOverwrite) && (!outputAppend) {
-								exists, _, err := grw.Stat(uri)
+							scheme, path := splitter.SplitUri(uri)
+							if scheme == "file" || scheme == "" {
+								if (!outputOverwrite) && (!outputAppend) {
+									exists, fileInfo, err := os.Stat(path)
+									if err != nil {
+										fmt.Fprint(os.Stderr, errors.Wrapf(err, "error statting uri %q", uri).Error())
+										break
+									}
+									if exists && (!fileInfo.IsDevice()) && (!fileInfo.IsNamedPipe()) {
+										fmt.Fprintln(os.Stderr, fmt.Errorf("file already exists at uri %q and neither append or overwrite is set", uri).Error())
+										break
+									}
+								}
+								if v.GetBool(cli.FlagOutputMkdirs) {
+									exists, _, err := os.Stat(filepath.Dir(path))
+									if err != nil {
+										fmt.Fprint(os.Stderr, errors.Wrapf(err, "error statting uri %q", uri).Error())
+										break
+									}
+									if !exists {
+										err := os.MkdirAll(filepath.Dir(path), 0770)
+										if err != nil {
+											fmt.Fprint(os.Stderr, errors.Wrapf(err, "error creating parent directories for uri %q", uri).Error())
+											break
+										}
+									}
+								}
+								ow, err := grw.WriteToResource(&grw.WriteToResourceInput{
+									Uri:      uri,
+									Alg:      outputCompression,
+									Dict:     []byte(outputDictionary),
+									Append:   outputAppend,
+									S3Client: s3Client,
+								})
 								if err != nil {
-									fmt.Fprint(os.Stderr, errors.Wrapf(err, "error statting uri %q", uri).Error())
+									fmt.Fprint(os.Stderr, errors.Wrapf(err, "error opening resource at uri %q", outputUri).Error())
 									break
 								}
-								if exists {
-									fmt.Fprint(os.Stderr, fmt.Errorf("file already exists at uri %q and neither append or overwrite is set", uri).Error())
-									break
-								}
-							}
-
-							ow, err := grw.WriteToResource(
-								uri,
-								outputCompression,
-								outputAppend,
-								s3Client)
-							if err != nil {
-								fmt.Fprint(os.Stderr, errors.Wrapf(err, "error opening resource at uri %q", outputUri).Error())
+								outputWriter = ow
+							} else {
+								fmt.Fprintf(os.Stderr, "unknown scheme for uri %q", outputUri)
 								break
 							}
-
-							outputWriter = ow
 
 							lines = 0
 						}
@@ -324,7 +321,7 @@ func main() {
 
 						_, err = outputWriter.WriteLine(line)
 						if err != nil {
-							if perr, ok := err.(*os.PathError); ok {
+							if perr, ok := err.(*stdos.PathError); ok {
 								if perr.Err == syscall.EPIPE {
 									brokenPipe = true
 									break
@@ -354,8 +351,12 @@ func main() {
 						if err != nil {
 							if err == io.EOF {
 								eof = true
+								// do not break
+								// if the input is less than the size of the buffer,
+								// will then use n > 0, n < len(b), and return EOF
 							} else {
-								fmt.Fprint(os.Stderr, errors.Wrapf(err, "error reading from resource at uri %q", inputUri).Error())
+								fmt.Fprintln(os.Stderr, errors.Wrapf(err, "error reading from resource at uri %q", inputUri).Error())
+								break
 							}
 						}
 
@@ -363,15 +364,17 @@ func main() {
 							break
 						}
 
-						_, err = outputWriter.Write(b[:n])
-						if err != nil {
-							if perr, ok := err.(*os.PathError); ok {
-								if perr.Err == syscall.EPIPE {
-									brokenPipe = true
-									break
+						if n > 0 {
+							_, err = outputWriter.Write(b[:n])
+							if err != nil {
+								if perr, ok := err.(*stdos.PathError); ok {
+									if perr.Err == syscall.EPIPE {
+										brokenPipe = true
+										break
+									}
 								}
+								fmt.Fprintln(os.Stderr, errors.Wrapf(err, "error writing to resource at uri %q", outputUri).Error())
 							}
-							fmt.Fprint(os.Stderr, errors.Wrapf(err, "error writing to resource at uri %q", outputUri).Error())
 						}
 
 					}
@@ -412,9 +415,11 @@ func main() {
 			return nil
 		},
 	}
-	initFlags(rootCommand.Flags())
+	cli.InitFlags(rootCommand.Flags())
 
 	if err := rootCommand.Execute(); err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, "grw: "+err.Error())
+		fmt.Fprintln(os.Stderr, "Try grw --help for more information.")
+		os.Exit(1)
 	}
 }

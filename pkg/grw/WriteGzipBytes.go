@@ -9,12 +9,13 @@ package grw
 
 import (
 	"bytes"
-	"compress/gzip"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
+	"github.com/spatialcurrent/go-reader-writer/pkg/compress/gzip"
 )
 
 // WriteGzipBytes returns a reader for reading the bytes from an input array, and an error if any.
-func WriteGzipBytes() (ByteWriteCloser, Buffer) {
+func WriteGzipBytes() (*Writer, *bytes.Buffer) {
 	buf := new(bytes.Buffer)
-	gw := gzip.NewWriter(buf)
-	return NewBufferedWriterWithClosers(gw, gw), buf
+	return NewWriter(bufio.NewWriter(gzip.NewWriter(buf))), buf
 }

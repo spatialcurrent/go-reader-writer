@@ -12,14 +12,28 @@ import (
 	"github.com/pkg/errors"
 )
 
-func ReadAllAndClose(uri string, alg string, s3Client *s3.S3) ([]byte, error) {
-	r, _, err := ReadFromResource(uri, alg, 4096, s3Client)
+type ReadAllAndCloseInput struct {
+	Uri        string
+	Alg        string
+	Dict       []byte
+	BufferSize int
+	S3Client   *s3.S3
+}
+
+func ReadAllAndClose(input *ReadAllAndCloseInput) ([]byte, error) {
+	r, _, err := ReadFromResource(&ReadFromResourceInput{
+		Uri:        input.Uri,
+		Alg:        input.Alg,
+		Dict:       input.Dict,
+		BufferSize: input.BufferSize,
+		S3Client:   input.S3Client,
+	})
 	if err != nil {
-		return make([]byte, 0), errors.Wrapf(err, "error opening resource at uri %q", uri)
+		return make([]byte, 0), errors.Wrapf(err, "error opening resource at uri %q", input.Uri)
 	}
 	b, err := r.ReadAllAndClose()
 	if err != nil {
-		return make([]byte, 0), errors.Wrapf(err, "error reading from resource at uri %q", uri)
+		return make([]byte, 0), errors.Wrapf(err, "error reading from resource at uri %q", input.Uri)
 	}
 	return b, nil
 }

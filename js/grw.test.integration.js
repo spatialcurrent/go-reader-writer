@@ -11,8 +11,9 @@ const { TextDecoder } = require('text-encoding');
 
 const { read, algorithms, schemes } = global.grw;
 
-const base_s3 = process.env.GRW_TESTDATA_S3
-expect(base_s3).toBeDefined();
+const base_https = process.env.GRW_TESTDATA_HTTPS;
+
+const base_s3 = process.env.GRW_TESTDATA_S3;
 
 var options = {
   "AWS_DEFAULT_REGION": process.env.AWS_DEFAULT_REGION,
@@ -41,30 +42,74 @@ describe('grw', () => {
         done();
       };
     };
+    
+    if(base_https != undefined) {
+      describe('https', () => {
 
-    describe('s3', () => {
-
-      it('read from a file on S3', done => {
-        read(base_s3+"/doc.txt", "none", options, callback(done));
+        it('read from a remote file over HTTPS', done => {
+          read(base_https+"/doc.txt", "none", {"bufferSize": 4096}, callback(done));
+        });
+  
+        it('read from a remote file over HTTPS and decompress using bzip2', done => {
+          read(base_https+"/doc.txt.bz2", "bzip2", {"bufferSize": 4096}, callback(done));
+        });
+        
+        it('read from a remote file over HTTPS and decompress using flate', done => {
+          read(base_https+"/doc.txt.f", "flate", {"bufferSize": 4096}, callback(done));
+        });
+  
+        it('read from a remote file over HTTPS and decompress using gzip', done => {
+          read(base_https+"/doc.txt.gz", "gzip", {"bufferSize": 4096}, callback(done));
+        });
+  
+        it('read from a remote file over HTTPS and decompress using snappy', done => {
+          read(base_https+"/doc.txt.sz", "snappy", {"bufferSize": 4096}, callback(done));
+        });
+  
+        it('read from a remote file over HTTPS and decompress using zip', done => {
+          read(base_https+"/doc.txt.zip", "zip", {"bufferSize": 4096}, callback(done));
+        });
+        
+        it('read from a remote file over HTTPS and decompress using zlib', done => {
+          read(base_https+"/doc.txt.z", "zlib", {"bufferSize": 4096}, callback(done));
+        });
+  
       });
-
-      it('read from a file on S3 and decompress using bzip2', done => {
-        read(base_s3+"/doc.txt.bz2", "bzip2", options, callback(done));
+    }
+    
+    if(base_s3 != undefined) {
+      describe('s3', () => {
+  
+        it('read from a file on S3', done => {
+          read(base_s3+"/doc.txt", "none", options, callback(done));
+        });
+  
+        it('read from a file on S3 and decompress using bzip2', done => {
+          read(base_s3+"/doc.txt.bz2", "bzip2", options, callback(done));
+        });
+        
+        it('read from a file on S3 and decompress using flate', done => {
+          read(base_s3+"/doc.txt.f", "flate", options, callback(done));
+        });
+  
+        it('read from a file on S3 and decompress using gzip', done => {
+          read(base_s3+"/doc.txt.gz", "gzip", options, callback(done));
+        });
+  
+        it('read from a file on S3 and decompress using snappy', done => {
+          read(base_s3+"/doc.txt.sz", "snappy", options, callback(done));
+        });
+  
+        it('read from a file on S3 and decompress using zip', done => {
+          read(base_s3+"/doc.txt.zip", "zip", options, callback(done));
+        });
+        
+        it('read from a file on S3 and decompress using zlib', done => {
+          read(base_s3+"/doc.txt.z", "zlib", options, callback(done));
+        });
+  
       });
-
-      it('read from a file on S3 and decompress using gzip', done => {
-        read(base_s3+"/doc.txt.gz", "gzip", options, callback(done));
-      });
-
-      it('read from a file on S3 and decompress using snappy', done => {
-        read(base_s3+"/doc.txt.sz", "snappy", options, callback(done));
-      });
-
-      it('read from a file on S3 and decompress using zip', done => {
-        read(base_s3+"/doc.txt.zip", "zip", options, callback(done));
-      });
-
-    });
+    }
 
   });
 

@@ -4,7 +4,16 @@
 
 ## Description
 
-**go-reader-writer** (aka GRW) is a simple library for reading and writing resource by uri.  GRW can read from `bzip2`, `gzip`, `snappy`, and `zip` resources and write to `gzip` and `snappy` resources.
+**go-reader-writer** (aka GRW) is a simple library for reading and writing compressed resources by uri.  GRW supports the following compression algorithms.
+
+| Algorithm | Read |  Write |
+| ---- | ------ |  ------ |
+| bzip2 | ✓ | - |
+| flate | ✓ | ✓ |
+| gzip | ✓ | ✓ |
+| snappy | ✓ | ✓ |
+| zip | ✓ | - |
+| zlib | ✓ | ✓ |
 
 Using cross compilers, this library can also be called by other languages.  This library is cross compiled into a Shared Object file (`*.so`).  The Shared Object file can be called by `C`, `C++`, and `Python` on Linux machines.  See the examples folder for patterns that you can use.  This library is also compiled to pure `JavaScript` using [GopherJS](https://github.com/gopherjs/gopherjs).
 
@@ -12,7 +21,7 @@ Using cross compilers, this library can also be called by other languages.  This
 
 **CLI**
 
-The command line tool, `grw`, can be used to easily covert data between formats.  We currently support the following platforms.
+The command line tool, `grw`, can be used to easily read and write compressed resources by uri.  We currently support the following platforms.
 
 | GOOS | GOARCH |
 | ---- | ------ |
@@ -21,7 +30,7 @@ The command line tool, `grw`, can be used to easily covert data between formats.
 | windows | amd64 |
 | linux | arm64 |
 
-Pull requests to support other platforms are welcome!  See the [examples](#examples) section below for usage.
+Pull requests to support other platforms are welcome!  See the [CLI.md](docs/CLI.md) document for detailed usage and examples.
 
 **Go**
 
@@ -30,14 +39,6 @@ You can install the go-reader-writer packages with.
 
 ```shell
 go get -u -d github.com/spatialcurrent/go-reader-writer/...
-```
-
-You can then import the `grw` package with:
-
-```go
-import (
-  "github.com/spatialcurrent/go-reader-writer/pkg/grw"
-)
 ```
 
 See [grw](https://godoc.org/github.com/spatialcurrent/go-reader-writer/pkg/grw) in GoDoc for information on how to use Go API.
@@ -58,7 +59,7 @@ A variant of the reader and writer functions are exported in a Shared Object fil
 
 ## Releases
 
-**go-reader-writer** is currently in **alpha**.  See releases at https://github.com/spatialcurrent/go-reader-writer/releases.  See the **Building** section below to build from scratch.
+**go-reader-writer** is currently in **alpha**.  Find releases at [https://github.com/spatialcurrent/go-reader-writer/releases](https://github.com/spatialcurrent/go-reader-writer/releases).  See the **Building** section below to build from scratch.
 
 **JavaScript**
 
@@ -85,23 +86,9 @@ A variant of the reader and writer functions are exported in a Shared Object fil
 
 ## Examples
 
-### Go
+For the CLI, see the examples in the [CLI.md](docs/CLI.md) document.
 
-See the examples in the [grw](https://godoc.org/github.com/spatialcurrent/go-reader-writer/pkg/grw) package documentation.
-
-### CLI
-
-To download a file over https and write to stdout.
-
-```shell
-grw https://github.com/spatialcurrent/go-reader-writer/releases/download/0.0.1/grw.h -
-```
-
-To download a file from AWS S3, compress as gzip, and save locally.
-
-```shell
-grw --output-compression gzip s3://path/to/file /local/file
-```
+For Go, see the examples in the [grw](https://godoc.org/github.com/spatialcurrent/go-reader-writer/pkg/grw) package documentation.
 
 ## Building
 
@@ -124,6 +111,14 @@ The `make build_so` script is used to build Shared Objects (`*.so`), which can b
 The default destination for build artifacts is `go-reader-writer/bin`, but you can change the destination with an environment variable.  For building on a Chromebook consider saving the artifacts in `/usr/local/go/bin`, e.g., `DEST=/usr/local/go/bin make build_cli`
 
 ## Testing
+
+**CLI**
+
+To run CLI testes use `make test_cli`, which uses [shUnit2](https://github.com/kward/shunit2).  If you recive a `shunit2:FATAL Please declare TMPDIR with path on partition with exec permission.` error, you can modify the `TMPDIR` environment variable in line or with `export TMPDIR=<YOUR TEMP DIRECTORY HERE>`. For example:
+
+```
+TMPDIR="/usr/local/tmp" make test_cli
+```
 
 **Go**
 

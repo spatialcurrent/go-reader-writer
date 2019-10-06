@@ -53,7 +53,10 @@ func Schemes() *C.char {
 //export ReadString
 func ReadString(uri *C.char, alg *C.char, str **C.char) *C.char {
 
-	r, _, err := grw.ReadFromResource(C.GoString(uri), C.GoString(alg), 4096, nil)
+	r, _, err := grw.ReadFromResource(&grw.ReadFromResourceInput{
+		Uri: C.GoString(uri),
+		Alg: C.GoString(alg),
+	})
 	if err != nil {
 		return C.CString(errors.Wrapf(err, "error opening resource at uri %q", C.GoString(uri)).Error())
 	}
@@ -71,7 +74,11 @@ func ReadString(uri *C.char, alg *C.char, str **C.char) *C.char {
 //export WriteString
 func WriteString(uri *C.char, alg *C.char, appendFlag C.int, contents *C.char) *C.char {
 
-	w, err := grw.WriteToResource(C.GoString(uri), C.GoString(alg), appendFlag > 0, nil)
+	w, err := grw.WriteToResource(&grw.WriteToResourceInput{
+		Uri:    C.GoString(uri),
+		Alg:    C.GoString(alg),
+		Append: appendFlag > 0,
+	})
 	if err != nil {
 		return C.CString(errors.Wrap(err, "error opening resource from uri "+C.GoString(uri)).Error())
 	}

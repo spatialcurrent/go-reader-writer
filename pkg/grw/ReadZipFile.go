@@ -8,11 +8,10 @@
 package grw
 
 import (
-	"archive/zip"
-	"bufio"
-	"io"
-
 	"github.com/pkg/errors"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/archive/zip"
+	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 )
 
 // ReadZipFile returns a ByteReadCloser for reading bytes from a zip-compressed file
@@ -20,7 +19,7 @@ import (
 //
 //  - https://golang.org/pkg/archive/zip/
 //
-func ReadZipFile(path string) (ByteReadCloser, error) {
+func ReadZipFile(path string) (*Reader, error) {
 
 	zr, err := zip.OpenReader(path)
 	if err != nil {
@@ -36,5 +35,5 @@ func ReadZipFile(path string) (ByteReadCloser, error) {
 		return nil, errors.Wrap(err, "error opening internal file for zip.")
 	}
 
-	return &Reader{Reader: bufio.NewReader(zfr), Closer: &Closer{Closers: []io.Closer{zfr, zr}}}, nil
+	return &Reader{Reader: bufio.NewReader(zfr)}, nil
 }

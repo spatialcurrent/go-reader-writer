@@ -69,19 +69,26 @@ var Exports = map[string]interface{}{
 					callback(nil, errors.Wrapf(err, "error creating s3 client").Error())
 					return
 				}
-				reader, _, err := grw.ReadFromResource(uri, alg, 4096, s3Client)
+				reader, _, err := grw.ReadFromResource(&grw.ReadFromResourceInput{
+					Uri:      uri,
+					Alg:      alg,
+					S3Client: s3Client,
+				})
 				if err != nil {
 					callback(nil, errors.Wrapf(err, "error opening reader for uri %q with compression algorithm %q", uri, alg).Error())
 					return
 				}
-				callback(js.MakeWrapper(&Reader{Reader: reader}), nil)
+				callback(js.MakeWrapper(&Reader{reader: reader}), nil)
 			case grw.SchemeFile, grw.SchemeHTTP, grw.SchemeHTTPS, "":
-				reader, _, err := grw.ReadFromResource(uri, alg, 4096, nil)
+				reader, _, err := grw.ReadFromResource(&grw.ReadFromResourceInput{
+					Uri: uri,
+					Alg: alg,
+				})
 				if err != nil {
 					callback(nil, errors.Wrapf(err, "error opening reader for uri %q with compression algorithm %q", uri, alg).Error())
 					return
 				}
-				callback(js.MakeWrapper(&Reader{Reader: reader}), nil)
+				callback(js.MakeWrapper(&Reader{reader: reader}), nil)
 			default:
 				callback(nil, fmt.Sprintf("error opening reader for uri %q: scheme %q is not supported", uri, scheme))
 			}

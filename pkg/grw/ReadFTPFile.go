@@ -11,14 +11,13 @@ package grw
 
 import (
 	"fmt"
-	"io"
-	"io/ioutil"
 	"strings"
 	"time"
 
 	"github.com/jlaffaye/ftp"
 	"github.com/pkg/errors"
 
+	"github.com/spatialcurrent/go-reader-writer/pkg/io"
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 
@@ -31,7 +30,7 @@ import (
 // the file cannot be retrieved, or
 // the compression algorithm is invalid.
 //
-func ReadFTPFile(uri string, alg string, bufferSize int) (ByteReadCloser, error) {
+func ReadFTPFile(uri string, alg string, dict []byte, bufferSize int) (*Reader, error) {
 
 	_, fullpath := splitter.SplitUri(uri)
 
@@ -67,7 +66,7 @@ func ReadFTPFile(uri string, alg string, bufferSize int) (ByteReadCloser, error)
 	}
 
 	if alg == AlgorithmZip {
-		body, err := ioutil.ReadAll(resp)
+		body, err := io.ReadAll(resp)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error reading bytes from zip-compressed http fileat uri %q", uri)
 		}
@@ -80,11 +79,11 @@ func ReadFTPFile(uri string, alg string, bufferSize int) (ByteReadCloser, error)
 
 	switch alg {
 	case AlgorithmBzip2, AlgorithmGzip, AlgorithmSnappy, AlgorithmNone, "":
-		r, closers, err := WrapReader(resp, []io.Closer{resp}, alg, bufferSize)
+		r, err := WrapReader(resp, alg, dict, bufferSize)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error wrapping reader for ftp file at uri %q", uri)
 		}
-		return &Reader{Reader: r, Closer: &Closer{Closers: closers}}, nil
+		return &Reader{Reader: r}, nil
 	}
 
 	return nil, &ErrUnknownAlgorithm{Algorithm: alg}

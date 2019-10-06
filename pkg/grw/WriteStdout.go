@@ -8,35 +8,24 @@
 package grw
 
 import (
-	"compress/gzip"
 	"os"
 
-	"github.com/golang/snappy"
+	"github.com/pkg/errors"
 )
 
-// WriteStdout returns a ByteWriteCloser for stderr with the given compression.
+// WriteStderr returns a ByteWriteCloser for stderr with the given compression.
 // alg may be "bzip2", "gzip", "snappy", "zip", or "".
 //
 //  - https://golang.org/pkg/compress/bzip2/
+//  - https://golang.org/pkg/compress/flate/
 //  - https://golang.org/pkg/compress/gzip/
 //  - https://godoc.org/github.com/golang/snappy
 //  - https://golang.org/pkg/archive/zip/
 //
-func WriteStdout(alg string) (ByteWriteCloser, error) {
-	switch alg {
-	case AlgorithmBzip2:
-		return nil, &ErrWriterNotImplemented{Algorithm: alg}
-	case AlgorithmGzip:
-		gw := gzip.NewWriter(os.Stdout)
-		return NewBufferedWriterWithClosers(gw, gw), nil
-	case AlgorithmSnappy:
-		sw := snappy.NewWriter(os.Stdout)
-		return NewBufferedWriterWithClosers(sw, sw), nil
-	case AlgorithmZip:
-		return nil, &ErrWriterNotImplemented{Algorithm: alg}
-	case AlgorithmNone, "":
-		return NewBufferedWriter(os.Stdout), nil
+func WriteStdout(alg string, dict []byte) (*Writer, error) {
+	w, err := WrapWriter(os.Stdout, alg, dict)
+	if err != nil {
+		return nil, errors.Wrap(err, "error wrapping stdout")
 	}
-
-	return nil, &ErrUnknownAlgorithm{Algorithm: alg}
+	return w, nil
 }

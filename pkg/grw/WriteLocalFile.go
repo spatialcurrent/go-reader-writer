@@ -8,27 +8,20 @@
 package grw
 
 import (
-	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/pkg/errors"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 )
 
 // WriteLocalFile returns a ByteWriteCloser for writing to a local file
-func WriteLocalFile(path string, flag int, parents bool) (ByteWriteCloser, error) {
-
-	if parents {
-		err := os.MkdirAll(filepath.Dir(path), 0700)
-		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error creating parent directories for %q", path))
-		}
-	}
+func WriteLocalFile(path string, flag int) (*Writer, error) {
 
 	f, err := os.OpenFile(path, flag, 0600)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("error opening file for writing at path %q", path))
+		return nil, errors.Wrapf(err, "error opening file for writing at path %q", path)
 	}
 
-	return NewBufferedWriterWithClosers(f, f), nil
+	return NewWriter(bufio.NewWriter(f)), nil
 }

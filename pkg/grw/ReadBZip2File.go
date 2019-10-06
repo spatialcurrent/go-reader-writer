@@ -8,11 +8,11 @@
 package grw
 
 import (
-	"bufio"
-	"compress/bzip2"
-	"io"
-
 	"github.com/pkg/errors"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
+	"github.com/spatialcurrent/go-reader-writer/pkg/compress/bzip2"
+	"github.com/spatialcurrent/go-reader-writer/pkg/os"
 )
 
 // ReadBzip2File returns a reader for reading bytes from a bzip2-compressed file
@@ -20,18 +20,12 @@ import (
 //
 //  - https://golang.org/pkg/compress/gzip/
 //
-func ReadBzip2File(path string, buffer_size int) (ByteReadCloser, error) {
+func ReadBzip2File(path string, bufferSize int) (*Reader, error) {
 
-	f, err := OpenFile(path)
+	f, err := os.OpenFile(path)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error opening bzip2 file")
 	}
 
-	r := &Reader{
-		Reader: bufio.NewReaderSize(bzip2.NewReader(bufio.NewReaderSize(f, buffer_size)), buffer_size),
-		Closer: &Closer{
-			Closers: []io.Closer{f},
-		},
-	}
-	return r, nil
+	return &Reader{Reader: bufio.NewReader(bzip2.NewReader(bufio.NewReaderSize(f, bufferSize)))}, nil
 }

@@ -14,7 +14,7 @@ import (
 )
 
 func TestReadFromFilePathDocTxt(t *testing.T) {
-	brc, err := ReadFromFilePath("../../testdata/doc.txt", AlgorithmNone, 4096)
+	brc, err := ReadFromFilePath(&ReadFromFilePathInput{Path: "../../testdata/doc.txt", Alg: AlgorithmNone, BufferSize: 4096})
 	assert.NoError(t, err)
 	assert.NotNil(t, brc)
 
@@ -24,7 +24,7 @@ func TestReadFromFilePathDocTxt(t *testing.T) {
 }
 
 func TestReadFromFilePathDocTxtBz2(t *testing.T) {
-	brc, err := ReadFromFilePath("../../testdata/doc.txt.bz2", AlgorithmBzip2, 4096)
+	brc, err := ReadFromFilePath(&ReadFromFilePathInput{Path: "../../testdata/doc.txt.bz2", Alg: AlgorithmBzip2, BufferSize: 4096})
 	assert.NoError(t, err)
 	assert.NotNil(t, brc)
 
@@ -34,7 +34,7 @@ func TestReadFromFilePathDocTxtBz2(t *testing.T) {
 }
 
 func TestReadFromFilePathDocTxtGzip(t *testing.T) {
-	brc, err := ReadFromFilePath("../../testdata/doc.txt.gz", AlgorithmGzip, 4096)
+	brc, err := ReadFromFilePath(&ReadFromFilePathInput{Path: "../../testdata/doc.txt.gz", Alg: AlgorithmGzip, BufferSize: 4096})
 	assert.NoError(t, err)
 	assert.NotNil(t, brc)
 
@@ -44,7 +44,7 @@ func TestReadFromFilePathDocTxtGzip(t *testing.T) {
 }
 
 func TestReadFromFilePathDocTxtSnappy(t *testing.T) {
-	brc, err := ReadFromFilePath("../../testdata/doc.txt.sz", AlgorithmSnappy, 4096)
+	brc, err := ReadFromFilePath(&ReadFromFilePathInput{Path: "../../testdata/doc.txt.sz", Alg: AlgorithmSnappy, BufferSize: 4096})
 	assert.NoError(t, err)
 	assert.NotNil(t, brc)
 
@@ -54,7 +54,7 @@ func TestReadFromFilePathDocTxtSnappy(t *testing.T) {
 }
 
 func TestReadFromFilePathDocTxtZip(t *testing.T) {
-	brc, err := ReadFromFilePath("../../testdata/doc.txt.zip", AlgorithmZip, 4096)
+	brc, err := ReadFromFilePath(&ReadFromFilePathInput{Path: "../../testdata/doc.txt.zip", Alg: AlgorithmZip, BufferSize: 4096})
 	assert.NoError(t, err)
 	assert.NotNil(t, brc)
 

@@ -9,22 +9,23 @@ package grw
 
 import (
 	"fmt"
-	"io"
-	"path/filepath"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/pkg/errors"
 
+	"github.com/spatialcurrent/go-reader-writer/pkg/io"
+	"github.com/spatialcurrent/go-reader-writer/pkg/os"
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 
 type WriteBuffersInput struct {
-	Buffers   map[string]Buffer
-	Algorithm string
-	Overwrite bool
-	Append    bool
-	Mkdirs    bool
-	S3Client  *s3.S3
+	Buffers    map[string]io.Buffer
+	Algorithm  string
+	Dictionary []byte
+	Overwrite  bool
+	Append     bool
+	Mkdirs     bool
+	S3Client   *s3.S3
 }
 
 // WriteBuffers writes a map of buffers to the resources defined by the keys.
@@ -39,17 +40,8 @@ func WriteBuffers(input *WriteBuffersInput) error {
 		scheme, path := splitter.SplitUri(uri)
 
 		if scheme == "" || scheme == "file" {
-
-			// If output is a file, then create parent directories if mkdirs is true
-			if input.Mkdirs {
-				err := Mkdirs(filepath.Dir(path))
-				if err != nil {
-					return errors.Wrapf(err, "error creating parent directories for path %q", uri)
-				}
-			}
-
 			if (!input.Overwrite) && (!input.Append) {
-				exists, _, err := Stat(uri)
+				exists, _, err := os.Stat(path)
 				if err != nil {
 					return errors.Wrapf(err, "error statting uri %q", uri)
 				}
@@ -59,7 +51,14 @@ func WriteBuffers(input *WriteBuffersInput) error {
 			}
 		}
 
-		writer, err := WriteToResource(uri, input.Algorithm, input.Append, input.S3Client)
+		writer, err := WriteToResource(&WriteToResourceInput{
+			Uri:      uri,
+			Alg:      input.Algorithm,
+			Dict:     input.Dictionary,
+			Append:   input.Append,
+			Parents:  input.Mkdirs,
+			S3Client: input.S3Client,
+		})
 		if err != nil {
 			return errors.Wrapf(err, "error opening output file for path %q", uri)
 		}

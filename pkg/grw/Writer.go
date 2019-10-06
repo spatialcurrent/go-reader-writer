@@ -8,81 +8,22 @@
 package grw
 
 import (
-	"bufio"
-	"io"
 	"sync"
 
 	"github.com/pkg/errors"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/io"
 )
 
 // Writer is a struct for normalizing reading of bytes from files with arbitrary compression and for closing underlying resources.
 // Writer implements the ByteWriter interface by wrapping around a subordinate ByteWriter.
 type Writer struct {
-	*sync.Mutex            // inherits Lock and Unlock Functions
-	Writer      ByteWriter // the instance of ByteWriter used for reading bytes
-	Flushers    []Flusher
-	Closer      *Closer // the underlying closers
+	*sync.Mutex               // inherits Lock and Unlock Functions
+	Writer      io.ByteWriter // the instance of ByteWriter used for reading bytes
 }
 
-func NewBufferedWriterWithClosers(writer io.Writer, closers ...io.Closer) *Writer {
-	bw := bufio.NewWriter(writer)
-	flushers := []Flusher{bw}
-	if f, ok := writer.(Flusher); ok {
-		flushers = append(flushers, f)
-	}
-	return &Writer{
-		Writer:   bw,
-		Flushers: flushers,
-		Closer: &Closer{
-			Closers: closers,
-		},
-		Mutex: &sync.Mutex{},
-	}
-}
-
-func NewBufferedWriter(writer io.Writer) *Writer {
-	bw := bufio.NewWriter(writer)
-	flushers := []Flusher{bw}
-	if f, ok := writer.(Flusher); ok {
-		flushers = append(flushers, f)
-	}
-	return &Writer{
-		Writer:   bw,
-		Flushers: flushers,
-		Closer:   nil,
-		Mutex:    &sync.Mutex{},
-	}
-}
-
-func NewWriter(writer ByteWriter) *Writer {
-	flushers := make([]Flusher, 0)
-	if f, ok := writer.(Flusher); ok {
-		flushers = append(flushers, f)
-	}
-	return &Writer{
-		Writer:   writer,
-		Flushers: flushers,
-		Closer:   nil,
-		Mutex:    &sync.Mutex{}}
-}
-
-func NewWriterWithClosers(writer ByteWriter, closers ...io.Closer) *Writer {
-	flushers := make([]Flusher, 0)
-	if f, ok := writer.(Flusher); ok {
-		flushers = append(flushers, f)
-	}
-	for _, c := range closers {
-		if f, ok := c.(Flusher); ok {
-			flushers = append(flushers, f)
-		}
-	}
-	return &Writer{
-		Writer:   writer,
-		Flushers: flushers,
-		Closer: &Closer{
-			Closers: closers,
-		},
-		Mutex: &sync.Mutex{}}
+func NewWriter(w io.ByteWriter) *Writer {
+	return &Writer{Writer: w, Mutex: &sync.Mutex{}}
 }
 
 // WriteString writes a slice of bytes to the underlying writer and returns an error, if any.
@@ -122,7 +63,7 @@ func (w *Writer) WriteString(s string) (n int, err error) {
 func (w *Writer) WriteLine(s string) (n int, err error) {
 
 	if w.Writer != nil {
-		return io.WriteString(w.Writer, s+"\n")
+		return io.WriteLine(w.Writer, s)
 	}
 
 	return 0, nil
@@ -136,7 +77,7 @@ func (w *Writer) WriteLineSafe(s string) (n int, err error) {
 
 	if w.Writer != nil {
 		w.Lock()
-		n, err := io.WriteString(w.Writer, s+"\n")
+		n, err := io.WriteLine(w.Writer, s)
 		w.Unlock()
 		return n, err
 	}
@@ -149,7 +90,7 @@ func (w *Writer) WriteLineSafe(s string) (n int, err error) {
 func (w *Writer) WriteError(e error) (n int, err error) {
 
 	if w.Writer != nil {
-		return io.WriteString(w.Writer, e.Error()+"\n")
+		return io.WriteError(w.Writer, e)
 	}
 
 	return 0, nil
@@ -163,7 +104,7 @@ func (w *Writer) WriteErrorSafe(e error) (n int, err error) {
 
 	if w.Writer != nil {
 		w.Lock()
-		n, err := io.WriteString(w.Writer, e.Error()+"\n")
+		n, err := io.WriteError(w.Writer, e)
 		w.Unlock()
 		return n, err
 	}
@@ -171,19 +112,15 @@ func (w *Writer) WriteErrorSafe(e error) (n int, err error) {
 	return 0, nil
 }
 
-// Flush flushes any intermediate writer.
+// Flush recursively flushes all the underlying writers.
 //  - https://godoc.org/io#Writer
 func (w *Writer) Flush() error {
-
-	if w.Flushers != nil {
-		for i, f := range w.Flushers {
-			err := f.Flush()
-			if err != nil {
-				return errors.Wrapf(err, "error flushing underlying closer %d", i)
-			}
+	if f, ok := w.Writer.(io.Flusher); ok {
+		err := f.Flush()
+		if err != nil {
+			return errors.Wrapf(err, "error flushing underlying writer")
 		}
 	}
-
 	return nil
 }
 
@@ -193,14 +130,12 @@ func (w *Writer) Flush() error {
 //  - https://godoc.org/sync#Mutex
 func (w *Writer) FlushSafe() error {
 
-	if w.Flushers != nil {
+	if f, ok := w.Writer.(io.Flusher); ok {
 		w.Lock()
-		for i, f := range w.Flushers {
-			err := f.Flush()
-			if err != nil {
-				w.Unlock()
-				return errors.Wrapf(err, "error flushing underlying closer %d", i)
-			}
+		err := f.Flush()
+		if err != nil {
+			w.Unlock()
+			return errors.Wrapf(err, "error flushing underlying writer")
 		}
 		w.Unlock()
 	}
@@ -208,12 +143,15 @@ func (w *Writer) FlushSafe() error {
 	return nil
 }
 
-// Close flushes the writer and then closes all the underlying io.Closer sequentially.
+// Close recursively closes all the underlying writers.
 func (w *Writer) Close() error {
-	if w.Closer == nil {
-		return nil
+	if c, ok := w.Writer.(io.Closer); ok {
+		err := c.Close()
+		if err != nil {
+			return errors.Wrapf(err, "error closing underlying writer")
+		}
 	}
-	return w.Closer.Close()
+	return nil
 }
 
 // CloseSafe closes the Closer and the underlying *os.File if not nil.

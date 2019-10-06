@@ -8,33 +8,23 @@
 package grw
 
 import (
-	"archive/zip"
 	"bufio"
-	"bytes"
-	"io"
 
 	"github.com/pkg/errors"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/archive/zip"
 )
 
 // ReadZipBytes returns a reader for reading from zip-compressed bytes.
 //
 //  - https://godoc.org/github.com/golang/snappy
 //
-func ReadZipBytes(b []byte) (ByteReadCloser, error) {
+func ReadZipBytes(b []byte) (*Reader, error) {
 
-	zr, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
+	zfr, err := zip.ReadBytes(b)
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating reader for zip bytes")
+		return nil, errors.Wrap(err, "error reading zip bytes")
 	}
 
-	if len(zr.File) != 1 {
-		return nil, errors.New("error zip file has more than one internal file")
-	}
-
-	zfr, err := zr.File[0].Open()
-	if err != nil {
-		return nil, errors.Wrap(err, "error opening internal file for zip")
-	}
-
-	return &Reader{Reader: bufio.NewReader(zfr), Closer: &Closer{Closers: []io.Closer{zfr}}}, nil
+	return &Reader{Reader: bufio.NewReader(zfr)}, nil
 }

@@ -34,12 +34,25 @@ _testRead() {
 # Test Reading/Writing Devices
 #
 
+
+testDevicePath() {
+  local expected='hello world'
+  local output=$(echo 'hello world' | grw /dev/stdin /dev/stdout)
+  assertEquals "unexpected output" "${expected}" "${output}"
+}
+
+testDeviceName() {
+  local expected='hello world'
+  local output=$(echo 'hello world' | grw stdin stdout)
+  assertEquals "unexpected output" "${expected}" "${output}"
+}
+
 testDeviceNone() {
   _testDevice 'none'
 }
 
 testDeviceGzip() {
-  _testDevice 'gzip'
+  _testDevice 'gzip' - -
 }
 
 testDeviceFlate() {
@@ -52,6 +65,18 @@ testDeviceSnappy() {
 
 testDeviceZlib() {
   _testDevice 'zlib'
+}
+
+testDeviceDashes() {
+  local expected='hello world'
+  local output=$(echo 'hello world' | grw - -)
+  assertEquals "unexpected output" "${expected}" "${output}"
+}
+
+testDeviceAbsolutePath() {
+  local expected='hello world'
+  local output=$(echo 'hello world' | grw '/dev/stdin' '/dev/stdout')
+  assertEquals "unexpected output" "${expected}" "${output}"
 }
 
 #
@@ -85,6 +110,19 @@ testReadFileZlib() {
 testReadFileZip() {
   _testRead 'zip' "${testdata_local}/doc.txt.zip"
 }
+
+#
+# Test Splitting Input
+#
+
+testSplit() {
+  local input='hello\nbeautiful\nworld'
+  local expected='hello world'
+  echo -e "${input}" | grw --split-lines 1 - "${SHUNIT_TMPDIR}/test_split_#.txt"
+  local output=$(cat "${SHUNIT_TMPDIR}/test_split_1.txt" "${SHUNIT_TMPDIR}/test_split_2.txt" "${SHUNIT_TMPDIR}/test_split_3.txt")
+  assertEquals "unexpected output" "$(echo -e "${output}")" "${output}"
+}
+
 
 #
 # Test Reading S3 Objects

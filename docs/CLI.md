@@ -1,32 +1,58 @@
 # CLI
 
+- [Usage](#usage) - basic usage
 - [Algorithms](#algorithms) - list of supported compression algorithms
 - [Platforms](#platforms) - list of supported platforms
 - [Releases](#releases) - where to find an executable
 - [Examples](#examples)  - detailed usage exampels
-- [Examples](#building) - how to build the CLI
+- [Building](#building) - how to build the CLI
 - [Testing](#testing) - test the CLI
 - [Troubleshooting](#Troubleshooting) - how to troubleshoot common errors
 
 ## Usage
 
-The command line tool, `grw`, can be used to easily read and write compressed resources by uri.
+The command line tool, `grw`, can be used to easily read and write compressed resources by uri.  By default `grw`, reads from stdin and outputs to stdout.  The `--input-compression` and `--output-compression` flags are optional.
 
-### Algorithms
+```shell
+grw [--input-compression INPUT_COMPRESSION] [--output-compression OUTPUT_COMPRESSION] [flags]
+```
 
-The following compression algorithms are supported.  Pull requests to support other algorithms are welcome!
+To read from a resource provided by a URI use the first positional argument.
 
-| Algorithm | Read |  Write |
-| ---- | ------ |  ------ |
-| bzip2 | ✓ | - |
-| flate | ✓ | ✓ |
-| gzip | ✓ | ✓ |
-| snappy | ✓ | ✓ |
-| zip | ✓ | - |
-| zlib | ✓ | ✓ |
+```shell
+grw [--input-compression INPUT_COMPRESSION] [--output-compression OUTPUT_COMPRESSION] [flags] [-|stdin|INPUT_URI]
+```
+
+To write to a resource located by a URI, use the second positional argument.
 
 
-### Platforms
+```shell
+grw [--input-compression INPUT_COMPRESSION] [--output-compression OUTPUT_COMPRESSION] [flags] [-|stdin|INPUT_URI] [-|stdout|OUTPUT_URI]
+```
+
+
+For more information use the help flag.
+
+```shell
+grw --help
+```
+
+
+## Algorithms
+
+The following compression algorithms are supported.  Pull requests to support other compression algorithms are welcome!
+
+| Algorithm | Read |  Write | Stream | Description |
+| ---- | ------ | ------ | ------ | ------ |
+| bzip2 | ✓ | - | ✓ | [bzip2](https://en.wikipedia.org/wiki/Bzip2) |
+| flate | ✓ | ✓ | ✓ | [DEFLATE Compressed Data Format](https://tools.ietf.org/html/rfc1951) |
+| gzip | ✓ | ✓ | ✓ | [gzip](https://en.wikipedia.org/wiki/Gzip) |
+| snappy | ✓ | ✓ | ✓ | [snappy](https://github.com/google/snappy) |
+| zip | ✓ | - | - | [zip](https://en.wikipedia.org/wiki/Zip_%28file_format%29) |
+| zlib | ✓ | ✓ | ✓ | [zlib](https://en.wikipedia.org/wiki/Zlib) |
+
+
+## Platforms
 
 The following platforms are supported.  Pull requests to support other platforms are welcome!
 
@@ -68,7 +94,7 @@ To download a file from AWS S3, compress as gzip, and save locally.
 grw --output-compression gzip s3://path/to/file /local/file
 ```
 
-# Building
+## Building
 
 Use `make build_cli` to build executables for Linux and Windows.
 

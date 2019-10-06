@@ -88,7 +88,7 @@ A variant of the reader and writer functions are exported in a Shared Object fil
 
 For the CLI, see the examples in the [CLI.md](docs/CLI.md) document.
 
-For GO, see the examples in the [grw](https://godoc.org/github.com/spatialcurrent/go-reader-writer/pkg/grw) package documentation.
+For Go, see the examples in the [grw](https://godoc.org/github.com/spatialcurrent/go-reader-writer/pkg/grw) package documentation.
 
 ## Building
 
@@ -111,7 +111,6 @@ The `make build_so` script is used to build Shared Objects (`*.so`), which can b
 The default destination for build artifacts is `go-reader-writer/bin`, but you can change the destination with an environment variable.  For building on a Chromebook consider saving the artifacts in `/usr/local/go/bin`, e.g., `DEST=/usr/local/go/bin make build_cli`
 
 ## Testing
-
 
 **CLI**
 

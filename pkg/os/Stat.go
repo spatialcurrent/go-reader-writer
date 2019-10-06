@@ -17,7 +17,12 @@ import (
 
 // Info is a simple interface for returning file info.
 type Info interface {
+	IsRegular() bool
+	IsDevice() bool
+	IsCharacterDevice() bool
+	IsNamedPipe() bool
 	Mode() os.FileMode
+	Perm() os.FileMode
 	Size() int64
 }
 
@@ -30,13 +35,13 @@ func Stat(uri string) (bool, Info, error) {
 
 	if uri == "stdin" {
 		info, err := os.Stdin.Stat()
-		return info.Mode()&os.ModeNamedPipe != 0, info, err
+		return info.Mode()&os.ModeNamedPipe != 0, &FileInfo{FileInfo: info}, err
 	} else if uri == "stdout" {
 		info, err := os.Stdout.Stat()
-		return true, info, err
+		return true, &FileInfo{FileInfo: info}, err
 	} else if uri == "stderr" {
 		info, err := os.Stderr.Stat()
-		return true, info, err
+		return true, &FileInfo{FileInfo: info}, err
 	}
 
 	scheme, path := splitter.SplitUri(uri)
@@ -50,7 +55,7 @@ func Stat(uri string) (bool, Info, error) {
 			}
 			return false, nil, err
 		}
-		return true, info, err
+		return true, &FileInfo{FileInfo: info}, err
 	}
 
 	return false, nil, errors.Errorf("could not stat path %q: unsupported scheme %q", path, scheme)

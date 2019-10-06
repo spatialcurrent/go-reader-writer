@@ -79,7 +79,7 @@ test_go: ## Run Go tests
 test_cli: ## Run CLI tests
 	bash scripts/test-cli.sh
 
-.PHONY: buil
+.PHONY: build
 build: build_cli build_javascript build_so build_android  ## Build CLI, Shared Objects (.so), JavaScript, and Android
 
 .PHONY: install

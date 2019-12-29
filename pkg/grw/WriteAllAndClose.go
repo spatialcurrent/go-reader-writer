@@ -9,10 +9,12 @@ package grw
 
 import (
 	"bytes"
+	"strings"
+	
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/pkg/errors"
+	
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
-	"strings"
 )
 
 // WriteAllAndCloseInput contains the input parameters for WriteAllAndClose.

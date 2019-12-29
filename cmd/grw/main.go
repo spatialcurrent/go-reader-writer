@@ -384,7 +384,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 
 			wg.Wait() // wait until done writing or received signal for graceful shutdown
 
-			errorReader, errorWriter := grw.CloseReaderAndWriter(inputReader, outputWriter, brokenPipe)
+			errorReader, errorWriter := io.CloseReaderAndWriter(inputReader, outputWriter, brokenPipe)
 			if errorReader != nil || errorWriter != nil {
 				if errorReader != nil {
 					fmt.Fprint(os.Stderr, errorReader.Error())

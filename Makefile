@@ -18,7 +18,6 @@ DEST=bin
 endif
 
 .PHONY: help
-
 help:  ## Print the help documentation
 	@grep -E '^[a-zA-Z0-9_-\]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
@@ -102,6 +101,7 @@ bin/grw_windows_amd64.exe:  ## Build GRW CLI for Windows / amd64
 bin/grw_linux_arm64: ## Build GRW CLI for Linux / arm64
 	GOOS=linux GOARCH=arm64 go build -o $(DEST)/grw_linux_arm64 -gcflags="$(GCFLAGS)" -ldflags="$(LDFLAGS)" github.com/spatialcurrent/go-reader-writer/cmd/grw
 
+.PHONY: build_cli
 build_cli: bin/grw_darwin_amd64 bin/grw_linux_amd64 bin/grw_windows_amd64.exe bin/grw_linux_arm64  ## Build command line programs
 
 #
@@ -133,6 +133,7 @@ bin/grw_linux_armv8.so:   ## Compile Shared Object for Linux / ARMv8
 	# Dependencies - https://www.96boards.org/blog/cross-compile-files-x86-linux-to-96boards/
 	GOOS=linux GOARCH=arm64 CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc go build -ldflags "-linkmode external -extldflags -static" -o $(DEST)/grw_linux_armv8.so -buildmode=c-shared -ldflags "$(LDFLAGS)" -gcflags="$(GCFLAGS)" github.com/spatialcurrent/go-reader-writer/plugins/grw
 
+.PHONY: build_so
 build_so: bin/grw_linux_amd64.so bin/grw_linux_armv7.so bin/grw_linux_armv8.so  ## Build Shared Objects (.so)
 
 #
@@ -192,6 +193,7 @@ run_example_javascript: dist/grw.mod.js  ## Run JavaScript module example
 
 ## Clean
 
+.PHONY: clean
 clean:  ## Clean artifacts
 	rm -fr bin
 	rm -fr dist

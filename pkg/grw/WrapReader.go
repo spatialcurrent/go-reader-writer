@@ -8,7 +8,7 @@
 package grw
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 	"github.com/spatialcurrent/go-reader-writer/pkg/compress/bzip2"
@@ -19,41 +19,43 @@ import (
 	"github.com/spatialcurrent/go-reader-writer/pkg/io"
 )
 
-func WrapReader(r io.Reader, alg string, dict []byte, bufferSize int) (io.ByteReader, error) {
-	var br io.ByteReader
+func WrapReader(r io.Reader, alg string, dict []byte, bufferSize int) (io.Reader, error) {
 	switch alg {
 	case AlgorithmBzip2:
-		br = bufio.NewReader(bzip2.NewReader(bufio.NewReaderSize(r, bufferSize)))
+		return bufio.NewReader(bzip2.NewReader(bufio.NewReaderSize(r, bufferSize))), nil
 	case AlgorithmFlate:
 		if len(dict) > 0 {
-			br = bufio.NewReader(flate.NewReaderDict(bufio.NewReaderSize(r, bufferSize), dict))
-		} else {
-			br = bufio.NewReader(flate.NewReader(bufio.NewReaderSize(r, bufferSize)))
+			return bufio.NewReader(flate.NewReaderDict(bufio.NewReaderSize(r, bufferSize), dict)), nil
 		}
+		return bufio.NewReader(flate.NewReader(bufio.NewReaderSize(r, bufferSize))), nil
 	case AlgorithmGzip:
 		gr, err := gzip.NewReader(bufio.NewReaderSize(r, bufferSize))
 		if err != nil {
-			return nil, errors.Wrap(err, "error creating gzip reader for reader")
+			return nil, fmt.Errorf("error creating gzip reader for reader: %w", err)
 		}
-		br = bufio.NewReader(gr)
+		return bufio.NewReader(gr), nil
 	case AlgorithmSnappy:
-		br = bufio.NewReader(snappy.NewReader(bufio.NewReaderSize(r, bufferSize)))
+		return bufio.NewReader(snappy.NewReader(bufio.NewReaderSize(r, bufferSize))), nil
 	case AlgorithmZlib:
 		if len(dict) > 0 {
 			zr, err := zlib.NewReaderDict(bufio.NewReaderSize(r, bufferSize), dict)
 			if err != nil {
-				return nil, errors.Wrap(err, "error creating zlib reader with dictionary for reader")
+				return nil, fmt.Errorf("error creating zlib reader with dictionary for reader: %w", err)
 			}
-			br = bufio.NewReader(zr)
+			return bufio.NewReader(zr), nil
 		} else {
 			zr, err := zlib.NewReader(bufio.NewReaderSize(r, bufferSize))
 			if err != nil {
-				return nil, errors.Wrap(err, "error creating zlib reader for reader")
+				return nil, fmt.Errorf("error creating zlib reader for reader: %w", err)
 			}
-			br = bufio.NewReader(zr)
+			return bufio.NewReader(zr), nil
 		}
 	case AlgorithmNone, "":
-		br = bufio.NewReaderSize(r, bufferSize)
+		// if buffer size is zero, then don't wrap with bufio
+		if bufferSize == 0 {
+			return r, nil
+		}
+		return bufio.NewReaderSize(r, bufferSize), nil
 	}
-	return br, nil
+	return nil, fmt.Errorf("unsupported compression algorith %q", alg)
 }

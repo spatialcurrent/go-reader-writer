@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -24,6 +24,7 @@ const (
 	FlagOutputOverwrite    = "output-overwrite"
 	FlagOutputDictionary   = "output-dictionary"
 	FlagSplitLines         = "split-lines"
+	FlagVersion            = "version"
 	FlagVerbose            = "verbose"
 
 	DefaultBufferSize = 4096

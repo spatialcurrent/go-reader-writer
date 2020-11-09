@@ -18,7 +18,7 @@ export "testdata_s3"="${GRW_TESTDATA_S3:-}"
 _testDevice() {
   local algorithm=$1
   local expected='hello world'
-  local output=$(echo 'hello world' | grw --output-compression $algorithm | grw --input-compression $algorithm)
+  local output=$(echo 'hello world' | "${DIR}/../bin/grw" --output-compression $algorithm | "${DIR}/../bin/grw" --input-compression $algorithm)
   assertEquals "unexpected output" "${expected}" "${output}"
 }
 
@@ -26,8 +26,16 @@ _testRead() {
   local algorithm=$1
   local filePath=$2
   local expected='hello world'
-  local output=$(grw --input-compression ${algorithm} ${filePath} -)
+  local output=$("${DIR}/../bin/grw" --input-compression ${algorithm} ${filePath} -)
   assertEquals "unexpected output" "${expected}" "${output}"
+}
+
+#
+# Test Help
+#
+
+testHelp() {
+  "${DIR}/../bin/grw" --help
 }
 
 #
@@ -37,13 +45,13 @@ _testRead() {
 
 testDevicePath() {
   local expected='hello world'
-  local output=$(echo 'hello world' | grw /dev/stdin /dev/stdout)
+  local output=$(echo 'hello world' | "${DIR}/../bin/grw" /dev/stdin /dev/stdout)
   assertEquals "unexpected output" "${expected}" "${output}"
 }
 
 testDeviceName() {
   local expected='hello world'
-  local output=$(echo 'hello world' | grw stdin stdout)
+  local output=$(echo 'hello world' | "${DIR}/../bin/grw" stdin stdout)
   assertEquals "unexpected output" "${expected}" "${output}"
 }
 
@@ -69,13 +77,13 @@ testDeviceZlib() {
 
 testDeviceDashes() {
   local expected='hello world'
-  local output=$(echo 'hello world' | grw - -)
+  local output=$(echo 'hello world' | "${DIR}/../bin/grw" - -)
   assertEquals "unexpected output" "${expected}" "${output}"
 }
 
 testDeviceAbsolutePath() {
   local expected='hello world'
-  local output=$(echo 'hello world' | grw '/dev/stdin' '/dev/stdout')
+  local output=$(echo 'hello world' | "${DIR}/../bin/grw" '/dev/stdin' '/dev/stdout')
   assertEquals "unexpected output" "${expected}" "${output}"
 }
 
@@ -118,7 +126,7 @@ testReadFileZip() {
 testSplit() {
   local input='hello\nbeautiful\nworld'
   local expected='hello world'
-  echo -e "${input}" | grw --split-lines 1 - "${SHUNIT_TMPDIR}/test_split_#.txt"
+  echo -e "${input}" | "${DIR}/../bin/grw" --split-lines 1 - "${SHUNIT_TMPDIR}/test_split_#.txt"
   local output=$(cat "${SHUNIT_TMPDIR}/test_split_1.txt" "${SHUNIT_TMPDIR}/test_split_2.txt" "${SHUNIT_TMPDIR}/test_split_3.txt")
   assertEquals "unexpected output" "$(echo -e "${output}")" "${output}"
 }

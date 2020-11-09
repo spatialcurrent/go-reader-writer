@@ -17,6 +17,23 @@
 
 Using cross compilers, this library can also be called by other languages.  This library is cross compiled into a Shared Object file (`*.so`).  The Shared Object file can be called by `C`, `C++`, and `Python` on Linux machines.  See the examples folder for patterns that you can use.  This library is also compiled to pure `JavaScript` using [GopherJS](https://github.com/gopherjs/gopherjs).
 
+## Platforms
+
+The following platforms are supported.  Pull requests to support other platforms are welcome!
+
+| GOOS | 386 | amd64 | arm | arm64 |
+| ---- | --- | ----- | --- | ----- |
+| darwin | - | ✓ | - | - |
+| freebsd | ✓ | ✓ | ✓ | - |
+| linux | ✓ | ✓ | ✓ | ✓ |
+| openbsd | ✓ | ✓ | - | - |
+| solaris | - | ✓ | - | - |
+| windows | ✓ | ✓ | - | - |
+
+## Releases
+
+Find releases for the supported platforms at [https://github.com/spatialcurrent/go-reader-writer/releases](https://github.com/spatialcurrent/go-reader-writer/releases).  See the **Building** section below to build for another platform from source.
+
 ## Usage
 
 **CLI**

@@ -55,54 +55,73 @@ deps_javascript:  ## Install dependencies for JavaScript tests
 # Go building, formatting, testing, and installing
 #
 
-.PHONY: fmt
 fmt:  ## Format Go source code
 	go fmt $$(go list ./... )
 
 .PHONY: imports
-imports: ## Update imports in Go source code
+imports: bin/goimports ## Update imports in Go source code
 	# If missing, install goimports with: go get golang.org/x/tools/cmd/goimports
-	goimports -w -local github.com/spatialcurrent/go-reader-writer,github.com/spatialcurrent $$(find . -iname '*.go')
+	bin/goimports -w -local github.com/spatialcurrent/go-reader-writer,github.com/spatialcurrent $$(find . -iname '*.go')
 
-.PHONY: vet
 vet: ## Vet Go source code
 	go vet github.com/spatialcurrent/go-reader-writer/pkg/... # vet packages
 	go vet github.com/spatialcurrent/go-reader-writer/cmd/... # vet commands
 	go vet github.com/spatialcurrent/go-reader-writer/plugins/... # vet plugins
 
+tidy: ## Tidy Go source code
+	go mod tidy
+
 .PHONY: test_go
-test_go: ## Run Go tests
+test_go: bin/errcheck bin/ineffassign bin/misspell bin/staticcheck bin/shadow ## Run Go tests
 	bash scripts/test.sh
 
 .PHONY: test_cli
-test_cli: ## Run CLI tests
+test_cli: bin/grw ## Run CLI tests
 	bash scripts/test-cli.sh
 
-.PHONY: build
-build: build_cli build_javascript build_so build_android  ## Build CLI, Shared Objects (.so), JavaScript, and Android
+install:  ## Install gocat CLI on current platform
+	go install github.com/spatialcurrent/gocat/cmd/gocat
 
-.PHONY: install
-install:  ## Install GRW CLI on current platform
-	go install -gcflags="$(GCFLAGS)" -ldflags="$(LDFLAGS)" github.com/spatialcurrent/go-reader-writer/cmd/grw
+#.PHONY: build
+#build: build_cli build_javascript build_so build_android  ## Build CLI, Shared Objects (.so), JavaScript, and Android
 
 #
 # Command line Programs
 #
 
-bin/grw_darwin_amd64: ## Build GRW CLI for Darwin / amd64
-	GOOS=darwin GOARCH=amd64 go build -o $(DEST)/grw_darwin_amd64 -gcflags="$(GCFLAGS)" -ldflags="$(LDFLAGS)" github.com/spatialcurrent/go-reader-writer/cmd/grw
+bin/errcheck:
+	go build -o bin/errcheck github.com/kisielk/errcheck
 
-bin/grw_linux_amd64: ## Build GRW CLI for Linux / amd64
-	GOOS=linux GOARCH=amd64 go build -o $(DEST)/grw_linux_amd64 -gcflags="$(GCFLAGS)" -ldflags="$(LDFLAGS)" github.com/spatialcurrent/go-reader-writer/cmd/grw
+bin/goimports:
+	go build -o bin/goimports golang.org/x/tools/cmd/goimports
 
-bin/grw_windows_amd64.exe:  ## Build GRW CLI for Windows / amd64
-	GOOS=windows GOARCH=amd64 go build -o $(DEST)/grw_windows_amd64.exe -gcflags="$(GCFLAGS)" -ldflags="$(LDFLAGS)" github.com/spatialcurrent/go-reader-writer/cmd/grw
+bin/gox:
+	go build -o bin/gox github.com/mitchellh/gox
 
-bin/grw_linux_arm64: ## Build GRW CLI for Linux / arm64
-	GOOS=linux GOARCH=arm64 go build -o $(DEST)/grw_linux_arm64 -gcflags="$(GCFLAGS)" -ldflags="$(LDFLAGS)" github.com/spatialcurrent/go-reader-writer/cmd/grw
+bin/ineffassign:
+	go build -o bin/ineffassign github.com/gordonklaus/ineffassign
 
-.PHONY: build_cli
-build_cli: bin/grw_darwin_amd64 bin/grw_linux_amd64 bin/grw_windows_amd64.exe bin/grw_linux_arm64  ## Build command line programs
+bin/misspell:
+	go build -o bin/misspell github.com/client9/misspell/cmd/misspell
+
+bin/staticcheck:
+	go build -o bin/staticcheck honnef.co/go/tools/cmd/staticcheck
+
+bin/shadow:
+	go build -o bin/shadow golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow
+
+bin/grw: ## Build grw CLI for Darwin / amd64
+	go build -o bin/grw github.com/spatialcurrent/go-reader-writer/cmd/grw
+
+bin/grw_linux_amd64: bin/gox ## Build grw CLI for Darwin / amd64
+	scripts/build-release linux amd64
+
+.PHONY: build
+build: bin/grw
+
+.PHONY: build_release
+build_release: bin/gox
+	scripts/build-release
 
 #
 # Shared Objects

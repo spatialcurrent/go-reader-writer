@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -40,5 +40,6 @@ func InitFlags(flag *pflag.FlagSet) {
 		fmt.Sprintf("split output by a number of lines, replaces %q in output uri with file number starting with 1.", NumberReplacementCharacter),
 	)
 
+	flag.Bool(FlagVersion, false, "show version")
 	flag.BoolP(FlagVerbose, "v", false, "verbose output")
 }

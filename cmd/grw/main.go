@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -36,6 +36,10 @@ import (
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 
+const (
+	GRWVersion = "v0.0.3"
+)
+
 func main() {
 
 	rootCommand := cobra.Command{
@@ -63,6 +67,11 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 			v, err := cli.InitViper(flag)
 			if err != nil {
 				return errors.Wrap(err, "error initializing viper")
+			}
+
+			if v.GetBool(cli.FlagVersion) {
+				fmt.Println(GRWVersion)
+				return nil
 			}
 
 			err = cli.CheckConfig(args, v)

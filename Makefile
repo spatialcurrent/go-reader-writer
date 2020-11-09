@@ -79,8 +79,8 @@ test_go: bin/errcheck bin/ineffassign bin/misspell bin/staticcheck bin/shadow ##
 test_cli: bin/grw ## Run CLI tests
 	bash scripts/test-cli.sh
 
-install:  ## Install gocat CLI on current platform
-	go install github.com/spatialcurrent/gocat/cmd/gocat
+install:  ## Install grw CLI on current platform
+	go install github.com/spatialcurrent/go-reader-writer/cmd/grw
 
 #.PHONY: build
 #build: build_cli build_javascript build_so build_android  ## Build CLI, Shared Objects (.so), JavaScript, and Android

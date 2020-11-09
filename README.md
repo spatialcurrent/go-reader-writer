@@ -38,16 +38,7 @@ Find releases for the supported platforms at [https://github.com/spatialcurrent/
 
 **CLI**
 
-The command line tool, `grw`, can be used to easily read and write compressed resources by uri.  We currently support the following platforms.
-
-| GOOS | GOARCH |
-| ---- | ------ |
-| darwin | amd64 |
-| linux | amd64 |
-| windows | amd64 |
-| linux | arm64 |
-
-Pull requests to support other platforms are welcome!  See the [CLI.md](docs/CLI.md) document for detailed usage and examples.
+The command line tool, `grw`, can be used to easily read and write compressed resources by uri.  See the [CLI.md](docs/CLI.md) document for detailed usage and examples.
 
 **Go**
 

@@ -11,7 +11,7 @@ executors:
     docker:
       - image: cimg/base:2020.07
 
-  # `macos` uses the Windows machine image.
+  # `macos` uses the macOS machine image.
   macos:
     macos:
       xcode: 11.5.0
@@ -50,29 +50,8 @@ jobs:
       - run: make bin/grw
       - run: make test_cli
 
-  # `test_javascript` tests the GRW JavaScript library.
-  test_javascript:
-    executor: main
-    steps:
-      - run: sudo chown -R circleci /go/src
-      - run: sudo npm install -g n
-      - run: sudo n v11.15.0
-      - run: sudo npm install --global source-map-support
-      - run: make deps_gopherjs
-      - run: make deps_javascript
-      - run:
-          name: Install support for syscalls
-          command: |
-            cd /go/src/github.com/gopherjs/gopherjs/node-syscall
-            echo '{"engines" : {"node" : ">=11.15.0 <12.0.0"},"dependencies": {"node-gyp": "^5.0.3"}}' > package.json
-            npm install .
-            node_modules/node-gyp/bin/node-gyp.js rebuild
-            mkdir -p ~/.node_libraries/
-            cp build/Release/syscall.node ~/.node_libraries/syscall.node
-      - run: npm run test:unit:clean
-
-  # `build_cli` builds the GRW executable.
-  build_cli:
+  # `build` builds the GRW executables and libraries.
+  build:
     executor: main
     steps:
       - checkout
@@ -102,25 +81,8 @@ jobs:
     executor: base
     steps:
       - run: sudo chown -R circleci /go/src
-      - run: sudo npm install -g n
-      - run:
-          name: Install Node 11.15.0
-          command: sudo n 11.15.0
-      - run: make deps_gopherjs
-      - run: make deps_javascript
-      - run: npm run build:clean
-      - run:
-          name: Install support for syscalls
-          command: |
-            cd /go/src/github.com/gopherjs/gopherjs/node-syscall
-            echo '{"engines" : {"node" : ">=11.15.0 <12.0.0"},"dependencies": {"node-gyp": "^5.0.3"}}' > package.json
-            npm install .
-            node_modules/node-gyp/bin/node-gyp.js rebuild
-            mkdir -p ~/.node_libraries/
-            cp build/Release/syscall.node ~/.node_libraries/syscall.node
       - run: make run_example_c
       - run: make run_example_cpp
-      - run: make run_example_javascript
       - run: make run_example_python
 
   # `verify_linux` verifys the linux build
@@ -155,7 +117,6 @@ workflows:
     jobs:
       - test_go
       - test_cli
-      - test_javascript
       - build
       - verify_linux:
           requires:

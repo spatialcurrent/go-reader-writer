@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# =================================================================
+#
+# Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
+# Released as open source under the MIT License.  See LICENSE file.
+#
+# =================================================================
+
+set -euo pipefail
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+XC_OS=${1}
+XC_ARCH=${2}
+XC_ARM=${3:-}
+
+export GOOS=${XC_OS}
+export GOARCH=${XC_ARCH}
+
+# The GOARM environment variable is only used when GOARCH is set to "arm",
+# and not used when GOARCH is set to "arm64".
+# See the following for more details.
+# - https://github.com/golang/go/wiki/GoArm
+
+if [[ ${GOARCH} == "arm" ]]; then
+  export GOARM=${XC_ARM}
+  if [[ ${GOARM} -eq 7 ]]; then
+    export CC=arm-linux-gnueabi-gcc
+  fi
+  O=bin/grw_${GOOS}_${GOARCH}_v${GOARM}.so
+elif [[ ${GOARCH} == "arm64" ]]; then
+  export CC=aarch64-linux-gnu-gcc
+  O=bin/grw_${GOOS}_${GOARCH}.so
+else
+  O=bin/grw_${GOOS}_${GOARCH}.so
+fi
+
+export CGO_ENABLED=1
+
+go build \
+-o ${O} \
+-buildmode=c-shared \
+-ldflags "${LDFLAGS:-}" \
+-gcflags="${GCFLAGS:-}" \
+github.com/spatialcurrent/go-reader-writer/plugins/grw

@@ -51,16 +51,6 @@ go get -u -d github.com/spatialcurrent/go-reader-writer/...
 
 See [grw](https://godoc.org/github.com/spatialcurrent/go-reader-writer/pkg/grw) in GoDoc for information on how to use Go API.
 
-**Node**
-
-GRW is built as a module.  In modern JavaScript, the module can be imported using [destructuring assignment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment).
-
-```javascript
-const { read, algorithms, schemes } = require('./dist/grw.mod.min.js');
-```
-
-In legacy JavaScript, you can use the `grw.global.js` file that simply adds `grw` to the global scope.
-
 **C**
 
 A variant of the reader and writer functions are exported in a Shared Object file (`*.so`), which can be called by `C`, `C++`, and `Python` programs on Linux machines.  For complete patterns for `C`, `C++`, and `Python`, see the `examples` folder in this repo.
@@ -69,12 +59,6 @@ A variant of the reader and writer functions are exported in a Shared Object fil
 
 **go-reader-writer** is currently in **alpha**.  Find releases at [https://github.com/spatialcurrent/go-reader-writer/releases](https://github.com/spatialcurrent/go-reader-writer/releases).  See the **Building** section below to build from scratch.
 
-**JavaScript**
-
-- `grw.global.js`, `grw.global.js.map` - JavaScript global build  with source map
-- `grw.global.min.js`, `grw.global.min.js.map` - Minified JavaScript global build with source map
-- `grw.mod.js`, `grw.mod.js.map` - JavaScript module build  with source map
-- `grw.mod.min.js`, `grw.mod.min.js.map` - Minified JavaScript module with source map
 
 **Darwin**
 
@@ -113,10 +97,6 @@ You can compile GRW to pure JavaScript with the `make build_javascript` script.
 **Shared Object**
 
 The `make build_so` script is used to build Shared Objects (`*.so`), which can be called by `C`, `C++`, and `Python` on Linux machines.
-
-**Changing Destination**
-
-The default destination for build artifacts is `go-reader-writer/bin`, but you can change the destination with an environment variable.  For building on a Chromebook consider saving the artifacts in `/usr/local/go/bin`, e.g., `DEST=/usr/local/go/bin make build_cli`
 
 ## Testing
 

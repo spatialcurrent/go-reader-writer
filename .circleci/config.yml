@@ -69,7 +69,7 @@ jobs:
       - run: sudo make deps_arm
 
       # Build Linux / AMD64 Shared Library
-      - run: bin/grw_linux_amd64.so
+      - run: make bin/grw_linux_amd64.so
 
       # Build Linux / 386 Shared Library
       # Install gcc-multilib to support building 32-bit shared libraries.

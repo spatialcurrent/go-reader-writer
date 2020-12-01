@@ -62,6 +62,7 @@ jobs:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: false
+      - run: sudo apt-get update
       - run: make tidy
       - run: make build_release
       - run: rm -f bin/gox

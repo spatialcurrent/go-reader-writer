@@ -22,10 +22,12 @@ help:  ## Print the help documentation
 #
 
 deps_arm:  ## Install dependencies to cross-compile to ARM
+	apt-get install -y gcc-arm-linux-gnueabi g++-arm-linux-gnueabi
 	# ARMv7
-	apt-get install -y libc6-armel-cross libc6-dev-armel-cross binutils-arm-linux-gnueabi libncurses5-dev gcc-arm-linux-gnueabi g++-arm-linux-gnueabi
-  # ARMv8
-	apt-get install gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+	#apt-get install -y libc6-armel-cross libc6-dev-armel-cross binutils-arm-linux-gnueabi libncurses5-dev gcc-arm-linux-gnueabi g++-arm-linux-gnueabi
+
+deps_arm64:  ## Install dependencies to cross-compile to ARM
+	apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
 
 #
 # Go building, formatting, testing, and installing
@@ -139,7 +141,7 @@ bin/grw_linux_arm64.so:   ## Compile Shared Object for Linux / ARMv8
 
 
 .PHONY: build_so
-build_so: bin/grw_linux_amd64.so bin/grw_linux_armv7.so bin/grw_linux_armv8.so  ## Build Shared Objects (.so)
+build_so: bin/grw_linux_amd64.so bin/grw_linux_arm_v7.so bin/grw_linux_arm64.so  ## Build Shared Objects (.so)
 
 #
 # Android

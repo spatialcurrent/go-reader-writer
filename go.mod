@@ -18,6 +18,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
+	golang.org/x/mobile v0.0.0-20190719004257-d2bd2a29d028
 	golang.org/x/tools v0.0.0-20201125231158-b5590deeca9b
 	honnef.co/go/js/util v0.0.0-20150216223935-96b8dd9d1621 // indirect
 	honnef.co/go/js/xhr v0.0.0-20150307031022-00e3346113ae

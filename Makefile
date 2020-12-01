@@ -74,6 +74,9 @@ bin/goimports:
 bin/gox:
 	go build -o bin/gox github.com/mitchellh/gox
 
+bin/gomobile:
+	go build -o bin/gomobile golang.org/x/mobile/cmd/gomobile
+
 bin/ineffassign:
 	go build -o bin/ineffassign github.com/gordonklaus/ineffassign
 
@@ -125,14 +128,15 @@ bin/grw_linux_arm_v7.so:  ## Compile Shared Object for Linux / ARMv7
 	#GOOS=linux GOARCH=arm GOARM=7 CGO_ENABLED=1 CC=arm-linux-gnueabi-gcc go build -ldflags "-linkmode external -extldflags -static" -o bin/grw_linux_armv7.so -buildmode=c-shared -ldflags "$(LDFLAGS)" -gcflags="$(GCFLAGS)" github.com/spatialcurrent/go-reader-writer/plugins/grw
 	scripts/build-so linux arm 7
 
-bin/grw_linux_armv8.so:   ## Compile Shared Object for Linux / ARMv8
+bin/grw_linux_arm64.so:   ## Compile Shared Object for Linux / ARMv8
 	# LDFLAGS - https://golang.org/cmd/link/
 	# CGO Enabled  - https://github.com/golang/go/issues/24068
 	# GOARM/GOARCH Compatability Table - https://github.com/golang/go/wiki/GoArm
 	# ARM Cross Compiler Required - https://www.acmesystems.it/arm9_toolchain
 	# Dependencies - https://www.96boards.org/blog/cross-compile-files-x86-linux-to-96boards/
-	scripts/build-so linux arm
 	#GOOS=linux GOARCH=arm64 CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc go build -ldflags "-linkmode external -extldflags -static" -o bin/grw_linux_armv8.so -buildmode=c-shared -ldflags "$(LDFLAGS)" -gcflags="$(GCFLAGS)" github.com/spatialcurrent/go-reader-writer/plugins/grw
+	scripts/build-so linux arm64
+
 
 .PHONY: build_so
 build_so: bin/grw_linux_amd64.so bin/grw_linux_armv7.so bin/grw_linux_armv8.so  ## Build Shared Objects (.so)
@@ -141,8 +145,8 @@ build_so: bin/grw_linux_amd64.so bin/grw_linux_armv7.so bin/grw_linux_armv8.so  
 # Android
 #
 
-bin/grw.aar:  ## Build Android Archive Library
-	gomobile bind -target android -javapkg=com.spatialcurrent -o bin/grw.aar -gcflags="$(GCFLAGS)" github.com/spatialcurrent/go-reader-writer/pkg/grw
+bin/grw.aar: bin/gomobile  ## Build Android Archive Library
+	bin/gomobile bind -target android -javapkg=com.spatialcurrent -o bin/grw.aar -gcflags="$(GCFLAGS)" github.com/spatialcurrent/go-reader-writer/pkg/grw
 
 build_android: bin/grw.arr  ## Build artifacts for Android
 

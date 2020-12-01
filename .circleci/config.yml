@@ -11,6 +11,11 @@ executors:
     docker:
       - image: cimg/base:2020.07
 
+  # `android` uses the `cimg/base` docker image.
+  android:
+    docker:
+      - image: circleci/android:api-29-ndk
+
   # `macos` uses the macOS machine image.
   macos:
     macos:
@@ -76,6 +81,30 @@ jobs:
             - grw_windows_386.exe
             - grw_windows_amd64.exe
 
+  # `build_android` builds the GRW Android Archive (AAR)
+  build_android:
+    executor: android
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: false
+      - run:
+          name: Install go
+          command: |
+            curl -fsSL "https://golang.org/dl/go1.15.5.linux-amd64.tar.gz" | sudo tar --no-same-owner --strip-components=1 --gunzip -x -C /usr/local/go/
+            echo "export PATH=$PATH:/usr/local/go/bin" >> $BASH_ENV
+            chown -R $(whoami): /usr/local/go
+      - run: make tidy
+      - run: make build_android
+      - run: rm -f bin/gomobile
+      - store_artifacts:
+          path: bin
+          destination: /
+      - persist_to_workspace:
+          root: bin
+          paths:
+            - grw.aar
+
   # `examples` runs the GRW examples.
   examples:
     executor: base
@@ -118,6 +147,7 @@ workflows:
       - test_go
       - test_cli
       - build
+      - build_android
       - verify_linux:
           requires:
             - build

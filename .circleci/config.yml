@@ -62,11 +62,18 @@ jobs:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: false
+
+      # Update apt cache
       - run: sudo apt-get update
+
+      # Tidy dependencies
       - run: make tidy
+
+      # Build Executeables
       - run: make build_release
+
+      # Remove gox
       - run: rm -f bin/gox
-      - run: sudo make deps_arm
 
       # Build Linux / AMD64 Shared Library
       - run: make bin/grw_linux_amd64.so
@@ -119,7 +126,7 @@ jobs:
           command: |
             curl -fsSL "https://golang.org/dl/go1.15.5.linux-amd64.tar.gz" | sudo tar --no-same-owner --strip-components=1 --gunzip -x -C /usr/local/go/
             echo "export PATH=$PATH:/usr/local/go/bin" >> $BASH_ENV
-            chown -R $(whoami): /usr/local/go
+            sudo chown -R $(whoami): /usr/local/go
       - run: make tidy
       - run: make build_android
       - run: rm -f bin/gomobile
@@ -133,9 +140,10 @@ jobs:
 
   # `examples` runs the GRW examples.
   examples:
-    executor: base
+    executor: main
     steps:
       - run: sudo chown -R circleci /go/src
+      - run: sudo apt-get install -y python3
       - run: make run_example_c
       - run: make run_example_cpp
       - run: make run_example_python
@@ -181,5 +189,8 @@ workflows:
           requires:
             - build
       - verify_windows:
+          requires:
+            - build
+      - examples:
           requires:
             - build

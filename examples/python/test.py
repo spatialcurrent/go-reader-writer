@@ -41,11 +41,11 @@ input_uri = "https://raw.githubusercontent.com/spatialcurrent/go-reader-writer/m
 input_alg = "none"
 output_string_pointer = c_char_p()
 
-print "Algorithms: "+ algorithms()
+print("Algorithms:", algorithms())
 
-print "Schemes: "+ schemes()
+print("Schemes:", schemes())
 
-print input_uri
+print("URI:", input_uri)
 
 err = read_string(input_uri, input_alg, byref(output_string_pointer))
 if err != None:

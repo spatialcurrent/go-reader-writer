@@ -142,7 +142,6 @@ jobs:
   examples:
     executor: main
     steps:
-      - run: sudo chown -R circleci /go/src
       - run: make run_example_c
       - run: make run_example_cpp
       - run: make run_example_python

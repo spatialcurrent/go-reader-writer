@@ -142,6 +142,17 @@ jobs:
   examples:
     executor: main
     steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: false
+
+      # Update apt cache
+      - run: sudo apt-get update
+
+      # Tidy dependencies
+      - run: make tidy
+
+      # Run Examples
       - run: make run_example_c
       - run: make run_example_cpp
       - run: make run_example_python

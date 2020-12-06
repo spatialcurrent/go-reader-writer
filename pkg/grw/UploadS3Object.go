@@ -8,12 +8,12 @@
 package grw
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/pkg/errors"
 )
 
 // UploadS3Object uploads an object to S3.
@@ -35,7 +35,7 @@ func UploadS3Object(bucket string, key string, object io.Reader, s3_client *s3.S
 
 	_, err := uploader.Upload(uploadInput)
 	if err != nil {
-		return errors.Wrap(err, "error uploading data to AWS S3")
+		return fmt.Errorf("error uploading data to AWS S3: %w", err)
 	}
 
 	return nil

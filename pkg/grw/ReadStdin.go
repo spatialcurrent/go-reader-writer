@@ -8,9 +8,8 @@
 package grw
 
 import (
+	"fmt"
 	"os"
-
-	"github.com/pkg/errors"
 )
 
 // ReadStdin returns a ByteReadCloser for a file with a given compression.
@@ -25,7 +24,7 @@ func ReadStdin(alg string, dict []byte, bufferSize int) (*Reader, error) {
 
 	r, err := WrapReader(os.Stdin, alg, dict, bufferSize)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error wrapping reader for stdin")
+		return nil, fmt.Errorf("error wrapping reader for stdin: %w", err)
 	}
 	return &Reader{Reader: r}, nil
 }

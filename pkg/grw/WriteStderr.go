@@ -8,9 +8,8 @@
 package grw
 
 import (
+	"fmt"
 	"os"
-
-	"github.com/pkg/errors"
 )
 
 // WriteStderr returns a ByteWriteCloser for stderr with the given compression.
@@ -25,7 +24,7 @@ import (
 func WriteStderr(alg string, dict []byte) (*Writer, error) {
 	w, err := WrapWriter(os.Stderr, alg, dict)
 	if err != nil {
-		return nil, errors.Wrap(err, "error wrapping stderr")
+		return nil, fmt.Errorf("error wrapping stderr: %w", err)
 	}
 	return w, nil
 }

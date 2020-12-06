@@ -8,9 +8,10 @@
 package grw
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/io"
 )
@@ -38,7 +39,7 @@ func ReadS3Object(input *ReadS3ObjectInput) (*Reader, *Metadata, error) {
 		Key:    aws.String(input.Key),
 	})
 	if err != nil {
-		return &Reader{}, nil, errors.Wrap(err, "Error fetching data from S3")
+		return &Reader{}, nil, fmt.Errorf("error fetching data from S3: %w", err)
 	}
 
 	metadata := NewMetadataFromS3(result)
@@ -47,17 +48,17 @@ func ReadS3Object(input *ReadS3ObjectInput) (*Reader, *Metadata, error) {
 	case AlgorithmBzip2, AlgorithmGzip, AlgorithmSnappy, AlgorithmNone, "":
 		r, err := WrapReader(result.Body, input.Alg, input.Dict, input.BufferSize)
 		if err != nil {
-			return nil, metadata, errors.Wrapf(err, "error wrapping reader for object at uri s3://%s/%s", input.Bucket, input.Key)
+			return nil, metadata, fmt.Errorf("error wrapping reader for object at uri s3://%s/%s: %w", input.Bucket, input.Key, err)
 		}
 		return &Reader{Reader: r}, metadata, nil
 	case AlgorithmZip:
 		body, err := io.ReadAll(result.Body)
 		if err != nil {
-			return nil, metadata, errors.Wrapf(err, "error reading bytes from zip-compressed object at uri s3://%s/%s", input.Bucket, input.Key)
+			return nil, metadata, fmt.Errorf("error reading bytes from zip-compressed object at uri s3://%s/%s: %w", input.Bucket, input.Key, err)
 		}
 		brc, err := ReadZipBytes(body)
 		if err != nil {
-			return nil, metadata, errors.Wrapf(err, "error creating reader for zip bytes for object at uri s3://%s/%s", input.Bucket, input.Key)
+			return nil, metadata, fmt.Errorf("error creating reader for zip bytes for object at uri s3://%s/%s: %w", input.Bucket, input.Key, err)
 		}
 		return brc, metadata, nil
 	}

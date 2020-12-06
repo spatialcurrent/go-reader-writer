@@ -10,6 +10,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	stdos "os"
 	"os/signal"
@@ -22,7 +23,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	awssession "github.com/aws/aws-sdk-go/aws/session"
@@ -66,7 +66,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 
 			v, err := cli.InitViper(flag)
 			if err != nil {
-				return errors.Wrap(err, "error initializing viper")
+				return fmt.Errorf("error initializing viper: %w", err)
 			}
 
 			if v.GetBool(cli.FlagVersion) {
@@ -134,15 +134,15 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 
 			exists, fileInfo, err := os.Stat(inputUri)
 			if err != nil {
-				return errors.Wrapf(err, "error stating resource at uri %q", inputUri)
+				return fmt.Errorf("error stating resource at uri %q: %w", inputUri, err)
 			}
 
 			if !exists {
-				return errors.Errorf("resource at input uri %q does not exist", inputUri)
+				return fmt.Errorf("resource at input uri %q does not exist: %w", inputUri, err)
 			}
 
 			if !(fileInfo.IsRegular() || fileInfo.IsNamedPipe()) {
-				return errors.Errorf("resource at input uri %q is neither a regular file or named pipe", inputUri)
+				return fmt.Errorf("resource at input uri %q is neither a regular file or named pipe: %w", inputUri, err)
 			}
 
 			inputReader, _, err := grw.ReadFromResource(&grw.ReadFromResourceInput{
@@ -153,7 +153,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				S3Client:   s3Client,
 			})
 			if err != nil {
-				return errors.Wrapf(err, "error opening resource at uri %q", inputUri)
+				return fmt.Errorf("error opening resource at uri %q: %w", inputUri, err)
 			}
 
 			outputCompression := v.GetString(cli.FlagOutputCompression)
@@ -170,12 +170,12 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 			if outputUri == "stdout" || outputUri == "-" {
 				outputWriter, err = grw.WriteStdout(outputCompression, []byte(outputDictionary))
 				if err != nil {
-					return errors.Wrap(err, "error opening stdout")
+					return fmt.Errorf("error opening stdout: %w", err)
 				}
 			} else if strings.HasPrefix(outputUri, "s3://") {
 				outputWriter, outputBuffer, err = grw.WriteBytes(outputCompression, []byte(outputDictionary))
 				if err != nil {
-					return errors.Wrapf(err, "error opening bytes buffer for %q", outputUri)
+					return fmt.Errorf("error opening bytes buffer for %q: %w", outputUri, err)
 				}
 			} else {
 				uri := outputUri
@@ -187,7 +187,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 					if (!outputOverwrite) && (!outputAppend) {
 						exists, fileInfo, err := os.Stat(path)
 						if err != nil {
-							return errors.Wrapf(err, "error statting uri %q", uri)
+							return fmt.Errorf("error statting uri %q: %w", uri, err)
 						}
 						if exists && (!fileInfo.IsDevice()) && (!fileInfo.IsNamedPipe()) {
 							return fmt.Errorf("file already exists at uri %q and neither append or overwrite is set", uri)
@@ -196,12 +196,12 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 					if v.GetBool(cli.FlagOutputMkdirs) {
 						exists, _, err := os.Stat(filepath.Dir(path))
 						if err != nil {
-							return errors.Wrapf(err, "error statting uri %q", uri)
+							return fmt.Errorf("error statting uri %q: %w", uri, err)
 						}
 						if !exists {
 							err := os.MkdirAll(filepath.Dir(path), 0770)
 							if err != nil {
-								return errors.Wrapf(err, "error creating parent directories for uri %q", uri)
+								return fmt.Errorf("error creating parent directories for uri %q: %w", uri, err)
 							}
 						}
 					}
@@ -213,10 +213,10 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 						S3Client: s3Client,
 					})
 					if err != nil {
-						return errors.Wrapf(err, "error opening resource at uri %q", outputUri)
+						return fmt.Errorf("error opening resource at uri %q: %w", outputUri, err)
 					}
 				} else {
-					return errors.Errorf("unknown scheme for uri %q", outputUri)
+					return errors.New(fmt.Sprintf("unknown scheme for uri %q", outputUri))
 				}
 			}
 
@@ -260,13 +260,13 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 
 							err := outputWriter.Flush()
 							if err != nil {
-								fmt.Fprint(os.Stderr, errors.Wrapf(err, "error flushing resource at uri %q", strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, strconv.Itoa(files))).Error())
+								fmt.Fprint(os.Stderr, fmt.Errorf("error flushing resource at uri %q: %w", strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, strconv.Itoa(files)), err).Error())
 								break
 							}
 
 							err = outputWriter.Close()
 							if err != nil {
-								fmt.Fprint(os.Stderr, errors.Wrapf(err, "error closing resource at uri %q", strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, strconv.Itoa(files))).Error())
+								fmt.Fprint(os.Stderr, fmt.Errorf("error closing resource at uri %q: %w", strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, strconv.Itoa(files)), err).Error())
 								break
 							}
 
@@ -280,7 +280,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 								if (!outputOverwrite) && (!outputAppend) {
 									exists, fileInfo, err := os.Stat(path)
 									if err != nil {
-										fmt.Fprint(os.Stderr, errors.Wrapf(err, "error statting uri %q", uri).Error())
+										fmt.Fprint(os.Stderr, fmt.Errorf("error statting uri %q: %w", uri, err).Error())
 										break
 									}
 									if exists && (!fileInfo.IsDevice()) && (!fileInfo.IsNamedPipe()) {
@@ -291,13 +291,13 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 								if v.GetBool(cli.FlagOutputMkdirs) {
 									exists, _, err := os.Stat(filepath.Dir(path))
 									if err != nil {
-										fmt.Fprint(os.Stderr, errors.Wrapf(err, "error statting uri %q", uri).Error())
+										fmt.Fprint(os.Stderr, fmt.Errorf("error statting uri %q: %w", uri, err).Error())
 										break
 									}
 									if !exists {
 										err := os.MkdirAll(filepath.Dir(path), 0770)
 										if err != nil {
-											fmt.Fprint(os.Stderr, errors.Wrapf(err, "error creating parent directories for uri %q", uri).Error())
+											fmt.Fprint(os.Stderr, fmt.Errorf("error creating parent directories for uri %q: %w", uri, err).Error())
 											break
 										}
 									}
@@ -310,7 +310,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 									S3Client: s3Client,
 								})
 								if err != nil {
-									fmt.Fprint(os.Stderr, errors.Wrapf(err, "error opening resource at uri %q", outputUri).Error())
+									fmt.Fprint(os.Stderr, fmt.Errorf("error opening resource at uri %q: %w", outputUri, err).Error())
 									break
 								}
 								outputWriter = ow
@@ -336,7 +336,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 									break
 								}
 							}
-							fmt.Fprint(os.Stderr, errors.Wrapf(err, "error writing to resource at uri %q", outputUri).Error())
+							fmt.Fprint(os.Stderr, fmt.Errorf("error writing to resource at uri %q: %w", outputUri, err).Error())
 							break
 						}
 
@@ -345,7 +345,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 					}
 
 					if err := scanner.Err(); err != nil {
-						fmt.Fprint(os.Stderr, errors.Wrapf(err, "error reading from resource at uri %q", inputUri).Error())
+						fmt.Fprint(os.Stderr, fmt.Errorf("error reading from resource at uri %q: %w", inputUri, err).Error())
 					}
 
 					wg.Done()
@@ -364,7 +364,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 								// if the input is less than the size of the buffer,
 								// will then use n > 0, n < len(b), and return EOF
 							} else {
-								fmt.Fprintln(os.Stderr, errors.Wrapf(err, "error reading from resource at uri %q", inputUri).Error())
+								fmt.Fprintln(os.Stderr, fmt.Errorf("error reading from resource at uri %q: %w", inputUri, err).Error())
 								break
 							}
 						}
@@ -382,7 +382,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 										break
 									}
 								}
-								fmt.Fprintln(os.Stderr, errors.Wrapf(err, "error writing to resource at uri %q", outputUri).Error())
+								fmt.Fprintln(os.Stderr, fmt.Errorf("error writing to resource at uri %q: %w", outputUri, err).Error())
 							}
 						}
 
@@ -408,11 +408,11 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				_, outputPath := splitter.SplitUri(outputUri)
 				i := strings.Index(outputPath, "/")
 				if i == -1 {
-					return errors.Wrap(err, "path missing bucket")
+					return fmt.Errorf("path missing bucket: %w", err)
 				}
 				err := grw.UploadS3Object(outputPath[0:i], outputPath[i+1:], outputBuffer, s3Client)
 				if err != nil {
-					return errors.Wrapf(err, "error uploading to AWS S3 at uri %q", outputUri)
+					return fmt.Errorf("error uploading to AWS S3 at uri %q: %w", outputUri, err)
 				}
 			}
 

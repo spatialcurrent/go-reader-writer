@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/jlaffaye/ftp"
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/io"
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
@@ -44,35 +43,35 @@ func ReadFTPFile(uri string, alg string, dict []byte, bufferSize int) (*Reader, 
 
 	conn, err := ftp.Dial(fmt.Sprintf("%s:%s", host, port), ftp.DialWithTimeout(5*time.Second))
 	if err != nil {
-		return nil, errors.Wrapf(err, "error opening file from uri %q", uri)
+		return nil, fmt.Errorf("error opening file from uri %q: %w", uri, err)
 	}
 
 	if len(userinfo) > 0 {
 		user, password, err := splitter.SplitUserInfo(userinfo)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error parsing userinfo %q", userinfo)
+			return nil, fmt.Errorf("error parsing userinfo %q: %w", userinfo, err)
 		}
 		if len(user) > 0 {
 			err = conn.Login(user, password)
 			if err != nil {
-				return nil, errors.Wrapf(err, "error logging in with user %q", user)
+				return nil, fmt.Errorf("error logging in with user %q: %w", user, err)
 			}
 		}
 	}
 
 	resp, err := conn.Retr(p)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error reading file from uri %q", uri)
+		return nil, fmt.Errorf("error reading file from uri %q: %w", uri, err)
 	}
 
 	if alg == AlgorithmZip {
 		body, err := io.ReadAll(resp)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error reading bytes from zip-compressed http fileat uri %q", uri)
+			return nil, fmt.Errorf("error reading bytes from zip-compressed http fileat uri %q: %w", uri, err)
 		}
 		brc, err := ReadZipBytes(body)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error creating reader for zip bytes at uri %q", uri)
+			return nil, fmt.Errorf("error creating reader for zip bytes at uri %q: %w", uri, err)
 		}
 		return brc, nil
 	}
@@ -81,7 +80,7 @@ func ReadFTPFile(uri string, alg string, dict []byte, bufferSize int) (*Reader, 
 	case AlgorithmBzip2, AlgorithmGzip, AlgorithmSnappy, AlgorithmNone, "":
 		r, err := WrapReader(resp, alg, dict, bufferSize)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error wrapping reader for ftp file at uri %q", uri)
+			return nil, fmt.Errorf("error wrapping reader for ftp file at uri %q: %w", uri, err)
 		}
 		return &Reader{Reader: r}, nil
 	}

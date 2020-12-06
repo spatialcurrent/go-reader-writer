@@ -8,7 +8,7 @@
 package grw
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 	"github.com/spatialcurrent/go-reader-writer/pkg/compress/flate"
@@ -37,13 +37,13 @@ func WrapWriter(w io.Writer, alg string, dict []byte) (*Writer, error) {
 		if len(dict) > 0 {
 			fw, err := flate.NewWriterDict(w, flate.DefaultCompression, dict)
 			if err != nil {
-				return nil, errors.Wrapf(err, "error wrapping writer using compression %q with dictionary %q", alg, string(dict))
+				return nil, fmt.Errorf("error wrapping writer using compression %q with dictionary %q: %w", alg, string(dict), err)
 			}
 			return NewWriter(bufio.NewWriter(fw)), nil
 		}
 		fw, err := flate.NewWriter(w, flate.DefaultCompression)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error wrapping writer using compression %q", alg)
+			return nil, fmt.Errorf("error wrapping writer using compression %q: %w", alg, err)
 		}
 		return NewWriter(bufio.NewWriter(fw)), nil
 	case AlgorithmGzip:
@@ -56,7 +56,7 @@ func WrapWriter(w io.Writer, alg string, dict []byte) (*Writer, error) {
 		if len(dict) > 0 {
 			zw, err := zlib.NewWriterDict(w, dict)
 			if err != nil {
-				return nil, errors.Wrapf(err, "error wrapping writer using compression %q with dictionary %q", alg, string(dict))
+				return nil, fmt.Errorf("error wrapping writer using compression %q with dictionary %q: %w", alg, string(dict), err)
 			}
 			return NewWriter(bufio.NewWriter(zw)), nil
 		}

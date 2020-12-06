@@ -8,11 +8,11 @@
 package grw
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/mitchellh/go-homedir"
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/os"
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
@@ -33,7 +33,7 @@ func WriteToResource(input *WriteToResourceInput) (*Writer, error) {
 	if outputDevice := os.OpenDevice(input.Uri); outputDevice != nil {
 		w, err := WrapWriter(outputDevice, input.Alg, input.Dict)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error wrapping device %q", input.Uri)
+			return nil, fmt.Errorf("error wrapping device %q: %w", input.Uri, err)
 		}
 		return w, nil
 	}
@@ -44,7 +44,7 @@ func WriteToResource(input *WriteToResourceInput) (*Writer, error) {
 
 		pathExpanded, err := homedir.Expand(path)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error expanding resource file path %q", path)
+			return nil, fmt.Errorf("error expanding resource file path %q: %w", path, err)
 		}
 
 		flag := 0
@@ -57,7 +57,7 @@ func WriteToResource(input *WriteToResourceInput) (*Writer, error) {
 		if input.Parents {
 			err = os.MkdirAll(filepath.Dir(pathExpanded), 0770)
 			if err != nil {
-				return nil, errors.Wrap(err, "error creating parent directories")
+				return nil, fmt.Errorf("error creating parent directories: %w", err)
 			}
 		}
 

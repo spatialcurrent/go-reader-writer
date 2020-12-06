@@ -8,11 +8,10 @@
 package snappy
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/golang/snappy"
-
-	"github.com/pkg/errors"
 )
 
 type Writer struct {
@@ -28,20 +27,20 @@ type flusher interface {
 func (w *Writer) Close() error {
 	err := w.Writer.Close()
 	if err != nil {
-		return errors.Wrap(err, "error closing snappy writer")
+		return fmt.Errorf("error closing snappy writer: %w", err)
 	}
 	// When the snappy writer is closed is flushes one last time.
 	// Therefore, we need to flush the underlying writer one last time before we close it.
 	if f, ok := w.underlying.(flusher); ok {
 		err = f.Flush()
 		if err != nil {
-			return errors.Wrap(err, "error flushing underlying writer")
+			return fmt.Errorf("error flushing underlying writer: %w", err)
 		}
 	}
 	if c, ok := w.underlying.(io.Closer); ok {
 		err = c.Close()
 		if err != nil {
-			return errors.Wrap(err, "error closing underlying writer")
+			return fmt.Errorf("error closing underlying writer: %w", err)
 		}
 	}
 	return nil
@@ -51,12 +50,12 @@ func (w *Writer) Close() error {
 func (w *Writer) Flush() error {
 	err := w.Writer.Flush()
 	if err != nil {
-		return errors.Wrap(err, "error flushing snappy writer")
+		return fmt.Errorf("error flushing snappy writer: %w", err)
 	}
 	if f, ok := w.underlying.(flusher); ok {
 		err = f.Flush()
 		if err != nil {
-			return errors.Wrap(err, "error flushing underlying writer")
+			return fmt.Errorf("error flushing underlying writer: %w", err)
 		}
 	}
 	return nil

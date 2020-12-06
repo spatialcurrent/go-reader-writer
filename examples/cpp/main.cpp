@@ -41,7 +41,7 @@ char* write_string(std::string input_uri, std::string input_alg, std::string inp
   char *input_string_c = new char[input_string.length() + 1];
   std::strcpy(input_string_c, input_string.c_str());
 
-  char *err = WriteString(input_uri_c, input_alg_c, 1, input_string_c);
+  char *err = WriteString(input_uri_c, input_alg_c, 1, input_string_c, 0);
 
   free(input_uri_c);
   free(input_alg_c);

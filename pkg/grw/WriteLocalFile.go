@@ -8,9 +8,8 @@
 package grw
 
 import (
+	"fmt"
 	"os"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 )
@@ -20,7 +19,7 @@ func WriteLocalFile(path string, flag int) (*Writer, error) {
 
 	f, err := os.OpenFile(path, flag, 0600)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error opening file for writing at path %q", path)
+		return nil, fmt.Errorf("error opening file for writing at path %q: %w", path, err)
 	}
 
 	return NewWriter(bufio.NewWriter(f)), nil

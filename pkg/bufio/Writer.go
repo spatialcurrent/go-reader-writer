@@ -9,9 +9,8 @@ package bufio
 
 import (
 	"bufio"
+	"fmt"
 	"io"
-
-	"github.com/pkg/errors"
 )
 
 type Writer struct {
@@ -27,12 +26,12 @@ type flusher interface {
 func (b *Writer) Flush() error {
 	err := b.Writer.Flush()
 	if err != nil {
-		return errors.Wrap(err, "error flushing bufio.Writer")
+		return fmt.Errorf("error flushing bufio.Writer: %w", err)
 	}
 	if f, ok := b.underlying.(flusher); ok {
 		err = f.Flush()
 		if err != nil {
-			return errors.Wrap(err, "error flushing underlying writer")
+			return fmt.Errorf("error flushing underlying writer: %w", err)
 		}
 	}
 	return nil
@@ -43,7 +42,7 @@ func (b *Writer) Close() error {
 	if c, ok := b.underlying.(io.Closer); ok {
 		err := c.Close()
 		if err != nil {
-			return errors.Wrap(err, "error closing underlying writer")
+			return fmt.Errorf("error closing underlying writer: %w", err)
 		}
 	}
 	return nil

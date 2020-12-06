@@ -9,9 +9,8 @@
 package os
 
 import (
+	"errors"
 	"os"
-
-	"github.com/pkg/errors"
 )
 
 const (

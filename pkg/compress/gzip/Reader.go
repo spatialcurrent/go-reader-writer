@@ -8,11 +8,9 @@
 package gzip
 
 import (
-	"io"
-
 	"compress/gzip"
-
-	"github.com/pkg/errors"
+	"fmt"
+	"io"
 )
 
 type Reader struct {
@@ -26,12 +24,12 @@ type Reader struct {
 func (r *Reader) Close() error {
 	err := r.Reader.Close()
 	if err != nil {
-		return errors.Wrap(err, "error closing gzip.Reader")
+		return fmt.Errorf("error closing gzip.Reader: %w", err)
 	}
 	if c, ok := r.underlying.(io.Closer); ok {
 		err = c.Close()
 		if err != nil {
-			return errors.Wrap(err, "error closing underlying reader")
+			return fmt.Errorf("error closing underlying reader: %w", err)
 		}
 	}
 	return nil

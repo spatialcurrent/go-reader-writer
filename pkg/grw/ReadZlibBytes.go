@@ -8,7 +8,7 @@
 package grw
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 	"github.com/spatialcurrent/go-reader-writer/pkg/compress/zlib"
@@ -22,7 +22,7 @@ import (
 func ReadZlibBytes(b []byte, dict []byte) (*Reader, error) {
 	zr, err := zlib.ReadBytes(b, dict)
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating zlib reader for memory block.")
+		return nil, fmt.Errorf("error creating zlib reader for memory block: %w", err)
 	}
 	return &Reader{Reader: bufio.NewReader(zr)}, nil
 }

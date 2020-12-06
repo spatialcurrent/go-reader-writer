@@ -9,10 +9,11 @@ package grw
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
@@ -39,7 +40,7 @@ func WriteAllAndClose(input *WriteAllAndCloseInput) error {
 		}
 		err := UploadS3Object(path[0:i], path[i+1:], bytes.NewBuffer(input.Bytes), input.S3Client)
 		if err != nil {
-			return errors.Wrap(err, "error uploading new version of catalog to S3")
+			return fmt.Errorf("error uploading new version of catalog to S3: %w", err)
 		}
 		return nil
 	case "file", "":
@@ -52,19 +53,19 @@ func WriteAllAndClose(input *WriteAllAndCloseInput) error {
 			S3Client: input.S3Client,
 		})
 		if err != nil {
-			return errors.Wrapf(err, "error opening resource at uri %q", input.Uri)
+			return fmt.Errorf("error opening resource at uri %q: %w", input.Uri, err)
 		}
 		_, err = w.Write(input.Bytes)
 		if err != nil {
-			return errors.Wrapf(err, "error writing to resource at uri %q", input.Uri)
+			return fmt.Errorf("error writing to resource at uri %q: %w", input.Uri, err)
 		}
 		err = w.Flush()
 		if err != nil {
-			return errors.Wrapf(err, "error flushing to resource at uri %q", input.Uri)
+			return fmt.Errorf("error flushing to resource at uri %q: %w", input.Uri, err)
 		}
 		err = w.Close()
 		if err != nil {
-			return errors.Wrapf(err, "error closing resource at uri %q", input.Uri)
+			return fmt.Errorf("error closing resource at uri %q: %w", input.Uri, err)
 		}
 	}
 	return nil

@@ -10,9 +10,9 @@
 package grw
 
 import (
+	"errors"
+	"fmt"
 	"strings"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
@@ -52,7 +52,7 @@ func (b *Builder) Open() (*Reader, *Metadata, error) {
 			BufferSize: b.bufferSize,
 		})
 		if err != nil {
-			return nil, nil, errors.Wrapf(err, "error opening file at path %q", path)
+			return nil, nil, fmt.Errorf("error opening file at path %q: %w", path, err)
 		}
 		return r, nil, nil
 	}

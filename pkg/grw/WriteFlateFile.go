@@ -8,20 +8,19 @@
 package grw
 
 import (
+	"fmt"
 	"os"
-
-	"github.com/pkg/errors"
 )
 
 // WriteFlateFile returns a ByteWriteCloser for writing to a local file
 func WriteFlateFile(path string, dict []byte, flag int) (*Writer, error) {
 	f, err := os.OpenFile(path, flag, 0600)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error opening file at path %q for writing", path)
+		return nil, fmt.Errorf("error opening file at path %q for writing: %w", path, err)
 	}
 	w, err := WrapWriter(f, AlgorithmFlate, dict)
 	if err != nil {
-		return nil, errors.Wrap(err, "error wrapping writer")
+		return nil, fmt.Errorf("error wrapping writer: %w", err)
 	}
 	return w, nil
 }

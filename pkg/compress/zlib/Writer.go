@@ -10,9 +10,8 @@ package zlib
 
 import (
 	"compress/zlib"
+	"fmt"
 	"io"
-
-	"github.com/pkg/errors"
 )
 
 const (
@@ -36,20 +35,20 @@ type flusher interface {
 func (w *Writer) Close() error {
 	err := w.Writer.Close()
 	if err != nil {
-		return errors.Wrap(err, "error closing zlib writer")
+		return fmt.Errorf("error closing zlib writer: %w", err)
 	}
 	// When the zlib writer is closed is flushes one last time.
 	// Therefore, we need to flush the underlying writer one last time before we close it.
 	if f, ok := w.underlying.(flusher); ok {
 		err = f.Flush()
 		if err != nil {
-			return errors.Wrap(err, "error flushing underlying writer")
+			return fmt.Errorf("error flushing underlying writer: %w", err)
 		}
 	}
 	if c, ok := w.underlying.(io.Closer); ok {
 		err = c.Close()
 		if err != nil {
-			return errors.Wrap(err, "error closing underlying writer")
+			return fmt.Errorf("error closing underlying writer: %w", err)
 		}
 	}
 	return nil
@@ -59,12 +58,12 @@ func (w *Writer) Close() error {
 func (w *Writer) Flush() error {
 	err := w.Writer.Flush()
 	if err != nil {
-		return errors.Wrap(err, "error flushing zlib writer")
+		return fmt.Errorf("error flushing zlib writer: %w", err)
 	}
 	if f, ok := w.underlying.(flusher); ok {
 		err = f.Flush()
 		if err != nil {
-			return errors.Wrap(err, "error flushing underlying writer")
+			return fmt.Errorf("error flushing underlying writer: %w", err)
 		}
 	}
 	return nil

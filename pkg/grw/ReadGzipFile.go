@@ -8,7 +8,7 @@
 package grw
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 	"github.com/spatialcurrent/go-reader-writer/pkg/compress/gzip"
@@ -24,12 +24,12 @@ func ReadGzipFile(path string, bufferSize int) (*Reader, error) {
 
 	f, err := os.OpenFile(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error opening gzip file at path %q for reading", path)
+		return nil, fmt.Errorf("error opening gzip file at path %q for reading: %w", path, err)
 	}
 
 	gr, err := gzip.NewReader(bufio.NewReaderSize(f, bufferSize))
 	if err != nil {
-		return nil, errors.Wrapf(err, "error creating gzip reader for file at path %q", path)
+		return nil, fmt.Errorf("error creating gzip reader for file at path %q: %w", path, err)
 	}
 
 	return &Reader{Reader: bufio.NewReader(gr)}, nil

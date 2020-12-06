@@ -8,7 +8,7 @@
 package grw
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 	"github.com/spatialcurrent/go-reader-writer/pkg/compress/bzip2"
@@ -24,7 +24,7 @@ func ReadBzip2File(path string, bufferSize int) (*Reader, error) {
 
 	f, err := os.OpenFile(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error opening bzip2 file")
+		return nil, fmt.Errorf("error opening bzip2 file: %w", err)
 	}
 
 	return &Reader{Reader: bufio.NewReader(bzip2.NewReader(bufio.NewReaderSize(f, bufferSize)))}, nil

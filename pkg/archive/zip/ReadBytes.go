@@ -10,9 +10,9 @@ package zip
 import (
 	"archive/zip"
 	"bytes"
+	"errors"
+	"fmt"
 	"io"
-
-	"github.com/pkg/errors"
 )
 
 // ReadBytes returns a reader for reading zip-compressed bytes from an input slice.
@@ -24,7 +24,7 @@ func ReadBytes(b []byte) (io.ReadCloser, error) {
 
 	zr, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating reader for zip bytes")
+		return nil, fmt.Errorf("error creating reader for zip bytes: %w", err)
 	}
 
 	if len(zr.File) != 1 {
@@ -33,7 +33,7 @@ func ReadBytes(b []byte) (io.ReadCloser, error) {
 
 	zfr, err := zr.File[0].Open()
 	if err != nil {
-		return nil, errors.Wrap(err, "error opening internal file for zip")
+		return nil, fmt.Errorf("error opening internal file for zip: %w", err)
 	}
 
 	return zfr, nil

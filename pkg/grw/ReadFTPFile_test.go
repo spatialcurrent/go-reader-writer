@@ -8,11 +8,11 @@
 package grw
 
 import (
+	"errors"
 	"net/textproto"
 	"os"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -22,8 +22,8 @@ func TestReadFromFTPFile530(t *testing.T) {
 		brc, err := ReadFTPFile("ftp://ftp.fbo.gov/FBOFeed20011227", AlgorithmNone, NoDict, 4096)
 		require.Nil(t, brc)
 		require.NotNil(t, err)
-		require.IsType(t, &textproto.Error{}, errors.Cause(err))
-		assert.Equal(t, 530, errors.Cause(err).(*textproto.Error).Code)
+		require.IsType(t, &textproto.Error{}, errors.Unwrap(err))
+		assert.Equal(t, 530, errors.Unwrap(err).(*textproto.Error).Code)
 	}
 }
 

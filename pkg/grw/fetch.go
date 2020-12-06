@@ -5,21 +5,18 @@
 //
 // =================================================================
 
-// +build !js
-
 package grw
 
 import (
+	"fmt"
 	"io"
 	"net/http"
-
-	"github.com/pkg/errors"
 )
 
 func fetch(url string) (io.ReadCloser, *Metadata, error) {
 	resp, err := http.Get(url) // #nosec
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "error opening file from url %q", url)
+		return nil, nil, fmt.Errorf("error opening file from url %q: %w", url, err)
 	}
 	return resp.Body, NewMetadataFromHeader(resp.Header), nil
 }

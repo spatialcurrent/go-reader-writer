@@ -8,8 +8,9 @@
 package grw
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/pkg/errors"
 )
 
 type ReadAllAndCloseInput struct {
@@ -29,11 +30,11 @@ func ReadAllAndClose(input *ReadAllAndCloseInput) ([]byte, error) {
 		S3Client:   input.S3Client,
 	})
 	if err != nil {
-		return make([]byte, 0), errors.Wrapf(err, "error opening resource at uri %q", input.Uri)
+		return make([]byte, 0), fmt.Errorf("error opening resource at uri %q: %w", input.Uri, err)
 	}
 	b, err := r.ReadAllAndClose()
 	if err != nil {
-		return make([]byte, 0), errors.Wrapf(err, "error reading from resource at uri %q", input.Uri)
+		return make([]byte, 0), fmt.Errorf("error reading from resource at uri %q: %w", input.Uri, err)
 	}
 	return b, nil
 }

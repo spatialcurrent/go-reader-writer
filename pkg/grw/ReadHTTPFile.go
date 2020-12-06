@@ -8,9 +8,8 @@
 package grw
 
 import (
+	"fmt"
 	"io/ioutil"
-
-	"github.com/pkg/errors"
 )
 
 // ReadHTTPFile returns a ByteReadCloser for an object for a web address
@@ -25,12 +24,12 @@ func ReadHTTPFile(uri string, alg string, dict []byte, bufferSize int) (*Reader,
 
 	respBody, metadata, err := fetch(uri)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "error opening file from uri %q", uri)
+		return nil, nil, fmt.Errorf("error opening file from uri %q: %w", uri, err)
 	}
 
 	/*data, err := ioutil.ReadAll(respBody)
 	if err != nil {
-		return nil, metadata, errors.Wrapf(err, "error reading bytes from zip-compressed http file at uri %q", uri)
+		return nil, metadata, fmt.Errorf("error reading bytes from zip-compressed http file at uri %q: %w", uri, err)
 	}
 	respBody = &Reader{Reader: bytes.NewReader(data), Closer: nil}
 
@@ -39,11 +38,11 @@ func ReadHTTPFile(uri string, alg string, dict []byte, bufferSize int) (*Reader,
 	if alg == AlgorithmZip {
 		body, err := ioutil.ReadAll(respBody)
 		if err != nil {
-			return nil, metadata, errors.Wrapf(err, "error reading bytes from zip-compressed http file at uri %q", uri)
+			return nil, metadata, fmt.Errorf("error reading bytes from zip-compressed http file at uri %q: %w", uri, err)
 		}
 		brc, err := ReadZipBytes(body)
 		if err != nil {
-			return nil, metadata, errors.Wrapf(err, "error creating reader for zip bytes at uri %q", uri)
+			return nil, metadata, fmt.Errorf("error creating reader for zip bytes at uri %q: %w", uri, err)
 		}
 		return brc, metadata, nil
 	}
@@ -52,7 +51,7 @@ func ReadHTTPFile(uri string, alg string, dict []byte, bufferSize int) (*Reader,
 	case AlgorithmBzip2, AlgorithmGzip, AlgorithmSnappy, AlgorithmNone, "":
 		r, err := WrapReader(respBody, alg, dict, bufferSize)
 		if err != nil {
-			return nil, metadata, errors.Wrapf(err, "error wrapping reader for file at uri %q", uri)
+			return nil, metadata, fmt.Errorf("error wrapping reader for file at uri %q: %w", uri, err)
 		}
 		return &Reader{Reader: r}, metadata, nil
 	}

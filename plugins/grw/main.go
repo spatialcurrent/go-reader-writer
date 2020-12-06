@@ -17,8 +17,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	"github.com/spatialcurrent/go-reader-writer/pkg/grw"
 	//"unsafe"
 )
@@ -58,12 +56,12 @@ func ReadString(uri *C.char, alg *C.char, str **C.char) *C.char {
 		Alg: C.GoString(alg),
 	})
 	if err != nil {
-		return C.CString(errors.Wrapf(err, "error opening resource at uri %q", C.GoString(uri)).Error())
+		return C.CString(fmt.Errorf("error opening resource at uri %q: %w", C.GoString(uri), err).Error())
 	}
 
 	b, err := r.ReadAllAndClose()
 	if err != nil {
-		return C.CString(errors.Wrapf(err, "error reading resource at uri %q", C.GoString(uri)).Error())
+		return C.CString(fmt.Errorf("error reading resource at uri %q: %w", C.GoString(uri), err).Error())
 	}
 
 	*str = C.CString(string(b))
@@ -72,30 +70,34 @@ func ReadString(uri *C.char, alg *C.char, str **C.char) *C.char {
 }
 
 //export WriteString
-func WriteString(uri *C.char, alg *C.char, appendFlag C.int, contents *C.char) *C.char {
+func WriteString(uri *C.char, alg *C.char, appendFlag C.int, contents *C.char, close C.int) *C.char {
+
+	u := C.GoString(uri)
 
 	w, err := grw.WriteToResource(&grw.WriteToResourceInput{
-		Uri:    C.GoString(uri),
+		Uri:    u,
 		Alg:    C.GoString(alg),
 		Append: appendFlag > 0,
 	})
 	if err != nil {
-		return C.CString(errors.Wrap(err, "error opening resource from uri "+C.GoString(uri)).Error())
+		return C.CString(fmt.Errorf("error opening resource from uri %q: %w", u, err).Error())
 	}
 
 	_, err = w.WriteString(C.GoString(contents))
 	if err != nil {
-		return C.CString(errors.Wrap(err, "error writing").Error())
+		return C.CString(fmt.Errorf("error writing: %w", err).Error())
 	}
 
 	err = w.Flush()
 	if err != nil {
-		return C.CString(errors.Wrap(err, "error flushing").Error())
+		return C.CString(fmt.Errorf("error flushing: %w", err).Error())
 	}
 
-	err = w.Close()
-	if err != nil {
-		return C.CString(errors.Wrap(err, "error closing").Error())
+	if close > 0 {
+		err = w.Close()
+		if err != nil {
+			return C.CString(fmt.Errorf("error closing: %w", err).Error())
+		}
 	}
 
 	return nil
@@ -108,12 +110,12 @@ func ReadBytes(uri *C.char, alg *C.char, bytes *unsafe.Pointer, length *C.int) *
 
 	r, _, err := grw.ReadFromResource(C.GoString(uri), C.GoString(alg), 4096, nil)
 	if err != nil {
-		return C.CString(errors.Wrap(err, "error opening resource from uri "+C.GoString(uri)).Error())
+		return C.CString(fmt.Errorf("error opening resource from uri %q: %w", C.GoString(uri), err).Error())
 	}
 
 	b, err := r.ReadAll()
 	if err != nil {
-		return C.CString(errors.Wrap(err, "error reading from resource").Error())
+		return C.CString(fmt.Errorf("error reading from resource: %w", err).Error())
 	}
 
 	*bytes = unsafe.Pointer(&b[0])
@@ -130,12 +132,12 @@ func WriteBytes(uri *C.char, alg *C.char, appendFlag C.int, bytes unsafe.Pointer
 
 	w, err := grw.WriteToResource(C.GoString(uri), C.GoString(alg), appendFlag > 0, nil)
 	if err != nil {
-		return C.CString(errors.Wrap(err, "error opening resource from uri "+C.GoString(uri)).Error())
+		return C.CString(fmt.Errorf("error opening resource from uri %q: %w", C.GoString(uri), err).Error())
 	}
 
 	_, err = w.Write(C.GoBytes(bytes, length))
 	if err != nil {
-		return C.CString(errors.Wrap(err, "error writing to resource").Error())
+		return C.CString(fmt.Errorf("error writing to resource: %w", err).Error())
 	}
 
 	return nil

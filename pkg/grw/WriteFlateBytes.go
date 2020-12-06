@@ -9,8 +9,7 @@ package grw
 
 import (
 	"bytes"
-
-	"github.com/pkg/errors"
+	"fmt"
 )
 
 // WriteFlateBytes returns a reader for reading the bytes from an input slice, and an error if any.
@@ -18,7 +17,7 @@ func WriteFlateBytes(dict []byte) (*Writer, *bytes.Buffer, error) {
 	buf := new(bytes.Buffer)
 	w, err := WrapWriter(buf, AlgorithmFlate, dict)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "error wrapping writer")
+		return nil, nil, fmt.Errorf("error wrapping writer: %w", err)
 	}
 	return w, buf, nil
 }

@@ -8,10 +8,10 @@
 package snappy
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/golang/snappy"
-	"github.com/pkg/errors"
 )
 
 type Reader struct {
@@ -24,7 +24,7 @@ func (r *Reader) Close() error {
 	if c, ok := r.underlying.(io.Closer); ok {
 		err := c.Close()
 		if err != nil {
-			return errors.Wrap(err, "error closing underlying reader")
+			return fmt.Errorf("error closing underlying reader: %w", err)
 		}
 	}
 	return nil

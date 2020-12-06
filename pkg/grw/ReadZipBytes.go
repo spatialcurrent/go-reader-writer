@@ -9,8 +9,7 @@ package grw
 
 import (
 	"bufio"
-
-	"github.com/pkg/errors"
+	"fmt"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/archive/zip"
 )
@@ -23,7 +22,7 @@ func ReadZipBytes(b []byte) (*Reader, error) {
 
 	zfr, err := zip.ReadBytes(b)
 	if err != nil {
-		return nil, errors.Wrap(err, "error reading zip bytes")
+		return nil, fmt.Errorf("error reading zip bytes: %w", err)
 	}
 
 	return &Reader{Reader: bufio.NewReader(zfr)}, nil

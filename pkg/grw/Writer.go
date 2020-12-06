@@ -8,9 +8,8 @@
 package grw
 
 import (
+	"fmt"
 	"sync"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/io"
 )
@@ -118,7 +117,7 @@ func (w *Writer) Flush() error {
 	if f, ok := w.Writer.(io.Flusher); ok {
 		err := f.Flush()
 		if err != nil {
-			return errors.Wrapf(err, "error flushing underlying writer")
+			return fmt.Errorf("error flushing underlying writer: %w", err)
 		}
 	}
 	return nil
@@ -135,7 +134,7 @@ func (w *Writer) FlushSafe() error {
 		err := f.Flush()
 		if err != nil {
 			w.Unlock()
-			return errors.Wrapf(err, "error flushing underlying writer")
+			return fmt.Errorf("error flushing underlying writer: %w", err)
 		}
 		w.Unlock()
 	}
@@ -148,7 +147,7 @@ func (w *Writer) Close() error {
 	if c, ok := w.Writer.(io.Closer); ok {
 		err := c.Close()
 		if err != nil {
-			return errors.Wrapf(err, "error closing underlying writer")
+			return fmt.Errorf("error closing underlying writer: %w", err)
 		}
 	}
 	return nil

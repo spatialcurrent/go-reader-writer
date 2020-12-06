@@ -11,7 +11,6 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/io"
 	"github.com/spatialcurrent/go-reader-writer/pkg/os"
@@ -43,7 +42,7 @@ func WriteBuffers(input *WriteBuffersInput) error {
 			if (!input.Overwrite) && (!input.Append) {
 				exists, _, err := os.Stat(path)
 				if err != nil {
-					return errors.Wrapf(err, "error statting uri %q", uri)
+					return fmt.Errorf("error statting uri %q: %w", uri, err)
 				}
 				if exists {
 					return fmt.Errorf("file already exists at uri %q and neither append or overwrite is set", uri)
@@ -60,22 +59,22 @@ func WriteBuffers(input *WriteBuffersInput) error {
 			S3Client: input.S3Client,
 		})
 		if err != nil {
-			return errors.Wrapf(err, "error opening output file for path %q", uri)
+			return fmt.Errorf("error opening output file for path %q: %w", uri, err)
 		}
 
 		_, err = io.Copy(writer, buffer)
 		if err != nil {
-			return errors.Wrapf(err, "error writing to output file for uri %q", uri)
+			return fmt.Errorf("error writing to output file for uri %q: %w", uri, err)
 		}
 
 		err = writer.Flush()
 		if err != nil {
-			return errors.Wrapf(err, "error flushing to output file for uri %q", uri)
+			return fmt.Errorf("error flushing to output file for uri %q: %w", uri, err)
 		}
 
 		err = writer.Close()
 		if err != nil {
-			return errors.Wrapf(err, "error closing output file for uri %q", uri)
+			return fmt.Errorf("error closing output file for uri %q: %w", uri, err)
 		}
 	}
 

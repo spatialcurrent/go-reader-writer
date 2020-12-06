@@ -8,7 +8,7 @@
 package grw
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 	"github.com/spatialcurrent/go-reader-writer/pkg/compress/snappy"
@@ -23,7 +23,7 @@ func ReadSnappyFile(path string, bufferSize int) (*Reader, error) {
 
 	f, err := os.OpenFile(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error opening snappy file")
+		return nil, fmt.Errorf("error opening snappy file: %w", err)
 	}
 
 	return &Reader{Reader: bufio.NewReader(snappy.NewReader(bufio.NewReaderSize(f, bufferSize)))}, nil

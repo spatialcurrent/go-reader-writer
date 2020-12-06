@@ -8,7 +8,7 @@
 package grw
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 	"github.com/spatialcurrent/go-reader-writer/pkg/compress/gzip"
@@ -22,7 +22,7 @@ import (
 func ReadGzipBytes(b []byte) (*Reader, error) {
 	gr, err := gzip.ReadBytes(b, true)
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating gzip reader for memory block.")
+		return nil, fmt.Errorf("error creating gzip reader for memory block: %w", err)
 	}
 	return &Reader{Reader: bufio.NewReader(gr)}, nil
 }

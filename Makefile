@@ -168,7 +168,7 @@ run_example_c: bin/grw.so bin/grw_example_c  ## Run C example
 run_example_cpp: bin/grw.so bin/grw_example_cpp  ## Run C++ example
 	cd bin && LD_LIBRARY_PATH=. ./grw_example_cpp
 
-run_example_python: bin/grw.so  ## Run Python example
+run_example_python3: bin/grw.so  ## Run Python example
 	LD_LIBRARY_PATH=bin python3 examples/python/test.py
 
 ## Clean

@@ -8,11 +8,11 @@
 package os
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
 	homedir "github.com/mitchellh/go-homedir"
-	"github.com/pkg/errors"
 )
 
 // MkdirAll creates a directory named path, along with any necessary parents, and returns nil, or else returns an error.
@@ -31,17 +31,17 @@ func MkdirAll(p string, flag os.FileMode) error {
 
 	pathExpanded, err := homedir.Expand(p)
 	if err != nil {
-		return errors.Wrapf(err, "error expanding file path %q", p)
+		return fmt.Errorf("error expanding file path %q: %w", p, err)
 	}
 
 	pathAbsolute, err := filepath.Abs(pathExpanded)
 	if err != nil {
-		return errors.Wrapf(err, "error resolving file path %q", pathAbsolute)
+		return fmt.Errorf("error resolving file path %q: %w", pathAbsolute, err)
 	}
 
 	err = os.MkdirAll(pathAbsolute, flag)
 	if err != nil {
-		return errors.Wrapf(err, "error creating parent directories for %q", p)
+		return fmt.Errorf("error creating parent directories for %q: %w", p, err)
 	}
 
 	return nil

@@ -155,7 +155,7 @@ jobs:
       # Run Examples
       - run: make run_example_c
       - run: make run_example_cpp
-      - run: make run_example_python
+      - run: make run_example_python3
 
   # `verify_linux` verifys the linux build
   verify_linux:

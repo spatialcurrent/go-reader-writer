@@ -8,7 +8,7 @@
 package grw
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 	"github.com/spatialcurrent/go-reader-writer/pkg/compress/flate"
@@ -24,7 +24,7 @@ func ReadFlateFile(path string, dict []byte, bufferSize int) (*Reader, error) {
 
 	f, err := os.OpenFile(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error opening flate file at path %q for reading", path)
+		return nil, fmt.Errorf("error opening flate file at path %q for reading: %w", path, err)
 	}
 
 	if len(dict) > 0 {

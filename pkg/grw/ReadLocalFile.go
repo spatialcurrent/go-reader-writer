@@ -8,7 +8,7 @@
 package grw
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 	"github.com/spatialcurrent/go-reader-writer/pkg/os"
@@ -19,7 +19,7 @@ func ReadLocalFile(path string, bufferSize int) (*Reader, error) {
 
 	f, err := os.OpenFile(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error opening regular file")
+		return nil, fmt.Errorf("error opening regular file: %w", err)
 	}
 
 	return &Reader{Reader: bufio.NewReaderSize(f, bufferSize)}, nil

@@ -8,9 +8,9 @@
 package os
 
 import (
+	"errors"
+	"fmt"
 	"os"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
@@ -58,5 +58,5 @@ func Stat(uri string) (bool, Info, error) {
 		return true, &FileInfo{FileInfo: info}, err
 	}
 
-	return false, nil, errors.Errorf("could not stat path %q: unsupported scheme %q", path, scheme)
+	return false, nil, errors.New(fmt.Sprintf("could not stat path %q: unsupported scheme %q", path, scheme))
 }

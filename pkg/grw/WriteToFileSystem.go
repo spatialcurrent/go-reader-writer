@@ -8,9 +8,8 @@
 package grw
 
 import (
+	"fmt"
 	"path/filepath"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/os"
 )
@@ -35,7 +34,7 @@ func WriteToFileSystem(input *WriteToFileSystemInput) (*Writer, error) {
 	if input.Parents {
 		err := os.MkdirAll(filepath.Dir(input.Path), 0770)
 		if err != nil {
-			return nil, errors.Wrap(err, "error creating parent directories")
+			return nil, fmt.Errorf("error creating parent directories: %w", err)
 		}
 	}
 

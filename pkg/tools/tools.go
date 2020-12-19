@@ -18,6 +18,7 @@ import (
 	_ "github.com/gordonklaus/ineffassign"
 	_ "github.com/kisielk/errcheck"
 	_ "github.com/mitchellh/gox"
+	_ "golang.org/x/mobile/cmd/gobind"
 	_ "golang.org/x/mobile/cmd/gomobile"
 	_ "golang.org/x/tools/cmd/goimports"
 	_ "golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow"

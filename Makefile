@@ -70,14 +70,17 @@ install:  ## Install grw CLI on current platform
 bin/errcheck:
 	go build -o bin/errcheck github.com/kisielk/errcheck
 
+bin/gobind:
+	go build -o bin/gobind golang.org/x/mobile/cmd/gobind
+
 bin/goimports:
 	go build -o bin/goimports golang.org/x/tools/cmd/goimports
 
-bin/gox:
-	go build -o bin/gox github.com/mitchellh/gox
-
 bin/gomobile:
 	go build -o bin/gomobile golang.org/x/mobile/cmd/gomobile
+
+bin/gox:
+	go build -o bin/gox github.com/mitchellh/gox
 
 bin/ineffassign:
 	go build -o bin/ineffassign github.com/gordonklaus/ineffassign
@@ -147,10 +150,11 @@ build_so: bin/grw_linux_amd64.so bin/grw_linux_arm_v7.so bin/grw_linux_arm64.so 
 # Android
 #
 
-bin/grw.aar: bin/gomobile  ## Build Android Archive Library
+bin/grw.aar: bin/gobind bin/gomobile   ## Build Android Archive Library
+	bin/gomobile init
 	bin/gomobile bind -target android -javapkg=com.spatialcurrent -o bin/grw.aar -gcflags="$(GCFLAGS)" github.com/spatialcurrent/go-reader-writer/pkg/grw
 
-build_android: bin/grw.arr  ## Build artifacts for Android
+build_android: bin/grw.aar  ## Build artifacts for Android
 
 #
 # Examples

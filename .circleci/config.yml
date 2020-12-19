@@ -124,12 +124,13 @@ jobs:
       - run:
           name: Install go
           command: |
-            curl -fsSL "https://golang.org/dl/go1.15.5.linux-amd64.tar.gz" | sudo tar --no-same-owner --strip-components=1 --gunzip -x -C /usr/local/go/
+            curl -fsSL "https://golang.org/dl/go1.15.6.linux-amd64.tar.gz" | sudo tar --gunzip -x -C /usr/local
             echo "export PATH=$PATH:/usr/local/go/bin" >> $BASH_ENV
-            sudo chown -R $(whoami): /usr/local/go
+            echo "export PATH=$PATH:/home/circleci/project/bin" >> $BASH_ENV
+            echo "export GOBIN=/home/circleci/project/bin" >> $BASH_ENV
       - run: make tidy
       - run: make build_android
-      - run: rm -f bin/gomobile
+      - run: rm -f bin/gobind bin/gomobile
       - store_artifacts:
           path: bin
           destination: /

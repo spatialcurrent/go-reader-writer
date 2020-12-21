@@ -54,17 +54,11 @@ package grw
 
 import (
 	"errors"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/alg"
 )
 
 const (
-	AlgorithmBzip2  = "bzip2"  // bzip2
-	AlgorithmFlate  = "flate"  // flate aka DEFLATE
-	AlgorithmGzip   = "gzip"   // gzip
-	AlgorithmNone   = "none"   // no compressions
-	AlgorithmSnappy = "snappy" // snappy
-	AlgorithmZip    = "zip"    // zip archive
-	AlgorithmZlib   = "zlib"   // zlib
-
 	SchemeFile  = "file"
 	SchemeFtp   = "ftp"
 	SchemeHTTP  = "http"
@@ -74,13 +68,13 @@ const (
 
 var (
 	Algorithms = []string{
-		AlgorithmBzip2,
-		AlgorithmFlate,
-		AlgorithmGzip,
-		AlgorithmNone,
-		AlgorithmSnappy,
-		AlgorithmZip,
-		AlgorithmZlib,
+		alg.AlgorithmBzip2,
+		alg.AlgorithmFlate,
+		alg.AlgorithmGzip,
+		alg.AlgorithmNone,
+		alg.AlgorithmSnappy,
+		alg.AlgorithmZip,
+		alg.AlgorithmZlib,
 	}
 )
 

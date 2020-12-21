@@ -13,24 +13,27 @@ import (
 	"io"
 )
 
+// A reader that propagates the close method.
 type Reader struct {
 	*bufio.Reader
-	underlying io.Reader
+	underlying io.Closer
 }
 
-// Close, calls the Close method of the underlying reader, if it implements io.Closer.
-func (r *Reader) Close() error {
-	if c, ok := r.underlying.(io.Closer); ok {
-		err := c.Close()
-		if err != nil {
-			return fmt.Errorf("error closing underlying reader: %w", err)
-		}
+func (b *Reader) Reset(r io.ReadCloser) {
+	b.Reader.Reset(r)
+	b.underlying = r
+}
+
+func (b *Reader) Close() error {
+	err := b.underlying.Close()
+	if err != nil {
+		return fmt.Errorf("error closing underlying reader: %w", err)
 	}
 	return nil
 }
 
-// NewReader returns a new Reader whose buffer has the default size.
-func NewReader(r io.Reader) *Reader {
+// NewReader returns a new NewReader whose buffer has the default size.
+func NewReader(r io.ReadCloser) *Reader {
 	return &Reader{
 		Reader:     bufio.NewReader(r),
 		underlying: r,
@@ -38,7 +41,7 @@ func NewReader(r io.Reader) *Reader {
 }
 
 // NewReaderSize returns a new Reader whose buffer has at least the specified size. If the argument io.Reader is already a Reader with large enough size, it returns the underlying Reader.
-func NewReaderSize(r io.Reader, size int) *Reader {
+func NewReaderSize(r io.ReadCloser, size int) *Reader {
 	return &Reader{
 		Reader:     bufio.NewReaderSize(r, size),
 		underlying: r,

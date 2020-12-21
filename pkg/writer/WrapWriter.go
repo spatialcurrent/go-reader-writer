@@ -10,6 +10,7 @@ package grw
 import (
 	"fmt"
 
+	pkgalg "github.com/spatialcurrent/go-reader-writer/pkg/alg"
 	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 	"github.com/spatialcurrent/go-reader-writer/pkg/compress/flate"
 	"github.com/spatialcurrent/go-reader-writer/pkg/compress/gzip"
@@ -31,9 +32,9 @@ import (
 //
 func WrapWriter(w io.Writer, alg string, dict []byte) (*Writer, error) {
 	switch alg {
-	case AlgorithmBzip2:
+	case pkgalg.AlgorithmBzip2:
 		return nil, &ErrWriterNotImplemented{Algorithm: alg}
-	case AlgorithmFlate:
+	case pkgalg.AlgorithmFlate:
 		if len(dict) > 0 {
 			fw, err := flate.NewWriterDict(w, flate.DefaultCompression, dict)
 			if err != nil {
@@ -46,13 +47,13 @@ func WrapWriter(w io.Writer, alg string, dict []byte) (*Writer, error) {
 			return nil, fmt.Errorf("error wrapping writer using compression %q: %w", alg, err)
 		}
 		return NewWriter(bufio.NewWriter(fw)), nil
-	case AlgorithmGzip:
+	case pkgalg.AlgorithmGzip:
 		return NewWriter(bufio.NewWriter(gzip.NewWriter(w))), nil
-	case AlgorithmSnappy:
+	case pkgalg.AlgorithmSnappy:
 		return NewWriter(bufio.NewWriter(snappy.NewBufferedWriter(w))), nil
-	case AlgorithmZip:
+	case pkgalg.AlgorithmZip:
 		return nil, &ErrWriterNotImplemented{Algorithm: alg}
-	case AlgorithmZlib:
+	case pkgalg.AlgorithmZlib:
 		if len(dict) > 0 {
 			zw, err := zlib.NewWriterDict(w, dict)
 			if err != nil {
@@ -61,7 +62,7 @@ func WrapWriter(w io.Writer, alg string, dict []byte) (*Writer, error) {
 			return NewWriter(bufio.NewWriter(zw)), nil
 		}
 		return NewWriter(bufio.NewWriter(zlib.NewWriter(w))), nil
-	case AlgorithmNone, "":
+	case pkgalg.AlgorithmNone, "":
 		return NewWriter(bufio.NewWriter(w)), nil
 	}
 	return nil, &ErrUnknownAlgorithm{Algorithm: alg}

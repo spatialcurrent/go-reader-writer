@@ -5,14 +5,16 @@
 //
 // =================================================================
 
-package grw
+package alg
 
 import (
-	"bufio"
-	"bytes"
+	"fmt"
 )
 
-// ReadMemoryBytes returns a reader for reading the bytes from an input array, and an error if any.
-func ReadMemoryBytes(b []byte) *Reader {
-	return &Reader{Reader: bufio.NewReader(bytes.NewReader(b))}
+type ErrUnknownAlgorithm struct {
+	Algorithm string
+}
+
+func (e *ErrUnknownAlgorithm) Error() string {
+	return fmt.Sprintf("algorithm %q is not known", e.Algorithm)
 }

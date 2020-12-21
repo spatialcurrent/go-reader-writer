@@ -19,6 +19,10 @@ import (
 	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 )
 
+var (
+	BytesHelloWorld = []byte("hello world")
+)
+
 func TestFlate(t *testing.T) {
 	f := func() bool {
 
@@ -67,7 +71,7 @@ func TestFlate(t *testing.T) {
 		}
 
 		// wrap with bufio reader to test propagation.
-		r := NewReader(bufio.NewReader(buf))
+		r := NewReader(bufio.NewReader(ioutil.NopCloser(buf)))
 
 		out, err := ioutil.ReadAll(r)
 		if !assert.NoError(t, err) {

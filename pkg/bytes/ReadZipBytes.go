@@ -5,11 +5,11 @@
 //
 // =================================================================
 
-package grw
+package bytes
 
 import (
-	"bufio"
 	"fmt"
+	"io"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/archive/zip"
 )
@@ -18,12 +18,10 @@ import (
 //
 //  - https://godoc.org/github.com/golang/snappy
 //
-func ReadZipBytes(b []byte) (*Reader, error) {
-
-	zfr, err := zip.ReadBytes(b)
+func ReadZipBytes(b []byte) (io.ReadCloser, error) {
+	r, err := zip.ReadBytes(b)
 	if err != nil {
 		return nil, fmt.Errorf("error reading zip bytes: %w", err)
 	}
-
-	return &Reader{Reader: bufio.NewReader(zfr)}, nil
+	return r, err
 }

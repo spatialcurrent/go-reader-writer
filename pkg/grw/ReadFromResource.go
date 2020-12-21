@@ -19,7 +19,12 @@ type ReadFromResourceInput struct {
 	S3Client   *s3.S3 // AWS S3 Client
 }
 
-func ReadFromResource(input *ReadFromResourceInput) (*Reader, *Metadata, error) {
+type ReadFromResourceOutput struct {
+	Reader   *Reader
+	Metadata *Metadata
+}
+
+func ReadFromResource(input *ReadFromResourceInput) (*ReadFromResourceOutput, error) {
 	b := NewBuilder().Uri(input.Uri)
 	if len(input.Alg) > 0 {
 		b = b.Algorithm(input.Alg)

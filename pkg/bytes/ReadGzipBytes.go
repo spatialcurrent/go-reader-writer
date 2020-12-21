@@ -5,12 +5,11 @@
 //
 // =================================================================
 
-package grw
+package bytes
 
 import (
 	"fmt"
 
-	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 	"github.com/spatialcurrent/go-reader-writer/pkg/compress/gzip"
 )
 
@@ -19,10 +18,10 @@ import (
 //
 //  - https://golang.org/pkg/compress/gzip/
 //
-func ReadGzipBytes(b []byte) (*Reader, error) {
-	gr, err := gzip.ReadBytes(b, true)
+func ReadGzipBytes(b []byte, multistream bool) (gzip.ReadResetCloser, error) {
+	gr, err := gzip.ReadBytes(b, multistream)
 	if err != nil {
 		return nil, fmt.Errorf("error creating gzip reader for memory block: %w", err)
 	}
-	return &Reader{Reader: bufio.NewReader(gr)}, nil
+	return gr, nil
 }

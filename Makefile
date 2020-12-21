@@ -152,7 +152,7 @@ build_so: bin/grw_linux_amd64.so bin/grw_linux_arm_v7.so bin/grw_linux_arm64.so 
 
 bin/grw.aar: bin/gobind bin/gomobile   ## Build Android Archive Library
 	bin/gomobile init
-	bin/gomobile bind -target android -javapkg=com.spatialcurrent -o bin/grw.aar -gcflags="$(GCFLAGS)" github.com/spatialcurrent/go-reader-writer/pkg/grw
+	bin/gomobile bind -target android -javapkg=com.spatialcurrent -o bin/grw.aar -gcflags="$(GCFLAGS)" github.com/spatialcurrent/go-reader-writer/pkg/android
 
 build_android: bin/grw.aar  ## Build artifacts for Android
 

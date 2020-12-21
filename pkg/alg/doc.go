@@ -5,16 +5,5 @@
 //
 // =================================================================
 
-package grw
-
-import (
-	"fmt"
-)
-
-type ErrUnknownAlgorithm struct {
-	Algorithm string
-}
-
-func (e *ErrUnknownAlgorithm) Error() string {
-	return fmt.Sprintf("algorithm %q is not known", e.Algorithm)
-}
+// Package alg includes the algorithms supported in this project
+package alg

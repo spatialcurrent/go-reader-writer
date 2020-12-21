@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -17,6 +17,10 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
+)
+
+var (
+	BytesHelloWorld = []byte("hello world")
 )
 
 func TestGzip(t *testing.T) {
@@ -64,7 +68,7 @@ func TestGzip(t *testing.T) {
 		}
 
 		// wrap with bufio reader to test propagation.
-		r, err := NewReader(bufio.NewReader(buf))
+		r, err := NewReader(bufio.NewReader(ioutil.NopCloser(buf)))
 		if !assert.NoError(t, err) {
 			return false
 		}

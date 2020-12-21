@@ -22,7 +22,7 @@ func TestReader(t *testing.T) {
 		in := make([]byte, 10)
 		_, err := rand.Read(in)
 		assert.NoError(t, err)
-		out, err := ioutil.ReadAll(NewReader(NewReader(bytes.NewReader(in))))
+		out, err := ioutil.ReadAll(NewReader(NewReader(ioutil.NopCloser(bytes.NewReader(in)))))
 		assert.NoError(t, err)
 		return bytes.Equal(in, out)
 	}

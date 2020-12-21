@@ -197,7 +197,7 @@ func (c *Cache) ReadRange(start int, end int) ([]byte, error) {
 					break
 				} else {
 					return make([]byte, 0), fmt.Errorf("error reading %d bytes for range %d-%d starting at cursor %d.  Current Content: %x: %w",
-						fmt.Sprint(c.Cursor+end-len(*c.Content)+1),
+						c.Cursor+end-len(*c.Content)+1,
 						start,
 						end,
 						c.Cursor,
@@ -211,7 +211,7 @@ func (c *Cache) ReadRange(start int, end int) ([]byte, error) {
 	if (c.Cursor + end + 1) > len(*c.Content) {
 		return make([]byte, 0), errors.New(fmt.Sprintf(
 			"Content is only %d bytes.  %x.  End is %d",
-			fmt.Sprint(len(*c.Content)),
+			len(*c.Content),
 			fmt.Sprint(c.Content),
 			fmt.Sprint(c.Cursor+end+1)))
 	}

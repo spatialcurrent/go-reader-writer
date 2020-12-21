@@ -5,11 +5,9 @@
 //
 // =================================================================
 
-package grw
+package bytes
 
 import (
-	"bufio"
-
 	"github.com/spatialcurrent/go-reader-writer/pkg/compress/flate"
 )
 
@@ -18,6 +16,6 @@ import (
 //
 //  - https://golang.org/pkg/compress/flate/
 //
-func ReadFlateBytes(b []byte, dict []byte) *Reader {
-	return &Reader{Reader: bufio.NewReader(flate.ReadBytes(b, dict))}
+func ReadFlateBytes(b []byte, dict []byte) flate.ReadResetCloser {
+	return flate.ReadBytes(b, dict)
 }

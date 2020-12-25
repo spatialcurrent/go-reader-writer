@@ -8,7 +8,7 @@
 package grw
 
 import (
-	"io"
+	"github.com/spatialcurrent/go-reader-writer/pkg/io"
 )
 
 // Reader is a struct for normalizing reading of bytes from files with arbitrary compression and for closing underlying resources.

@@ -13,14 +13,6 @@ import (
 	"io"
 )
 
-const (
-	NoCompression      = flate.NoCompression
-	BestSpeed          = flate.BestSpeed
-	BestCompression    = flate.BestCompression
-	DefaultCompression = flate.DefaultCompression
-	HuffmanOnly        = flate.HuffmanOnly
-)
-
 type Writer struct {
 	*flate.Writer
 	underlying io.Writer
@@ -76,6 +68,14 @@ func (w *Writer) Flush() error {
 	return nil
 }
 
+func NewWriter(w io.Writer) (*Writer, error) {
+	fw, err := flate.NewWriter(w, DefaultCompression)
+	if err != nil {
+		return nil, err
+	}
+	return &Writer{Writer: fw, underlying: w}, nil
+}
+
 // NewWriter returns a new Writer compressing data at the given level.
 // Following zlib, levels range from 1 (BestSpeed) to 9 (BestCompression);
 // higher levels typically run slower but compress more. Level 0
@@ -88,7 +88,7 @@ func (w *Writer) Flush() error {
 //
 // If level is in the range [-2, 9] then the error returned will be nil.
 // Otherwise the error returned will be non-nil.
-func NewWriter(w io.Writer, level int) (*Writer, error) {
+func NewWriterLevel(w io.Writer, level int) (*Writer, error) {
 	fw, err := flate.NewWriter(w, level)
 	if err != nil {
 		return nil, err

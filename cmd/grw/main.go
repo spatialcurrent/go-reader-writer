@@ -10,6 +10,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	stdos "os"
@@ -32,6 +33,7 @@ import (
 	"github.com/spatialcurrent/go-reader-writer/pkg/cli"
 	"github.com/spatialcurrent/go-reader-writer/pkg/grw"
 	"github.com/spatialcurrent/go-reader-writer/pkg/io"
+	"github.com/spatialcurrent/go-reader-writer/pkg/nop"
 	"github.com/spatialcurrent/go-reader-writer/pkg/os"
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
@@ -96,6 +98,15 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 
 			verbose := v.GetBool(cli.FlagVerbose)
 
+			outputBufferSize := v.GetInt(cli.FlagOutputBufferSize)
+			if outputBufferSize < 0 {
+				if outputUri == "-" {
+					outputBufferSize = 0
+				} else {
+					outputBufferSize = 4096
+				}
+			}
+
 			var session *awssession.Session
 			var s3Client *s3.S3
 
@@ -145,8 +156,8 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				return fmt.Errorf("resource at input uri %q is neither a regular file or named pipe: %w", inputUri, err)
 			}
 
-			inputReader, _, err := grw.ReadFromResource(&grw.ReadFromResourceInput{
-				Uri:        inputUri,
+			readFromResourceOutput, err := grw.ReadFromResource(&grw.ReadFromResourceInput{
+				URI:        inputUri,
 				Alg:        inputCompression,
 				Dict:       []byte(inputDictionary),
 				BufferSize: v.GetInt(cli.FlagInputBufferSize),
@@ -155,25 +166,26 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 			if err != nil {
 				return fmt.Errorf("error opening resource at uri %q: %w", inputUri, err)
 			}
+			inputReader := readFromResourceOutput.Reader
 
 			outputCompression := v.GetString(cli.FlagOutputCompression)
 			outputDictionary := v.GetString(cli.FlagOutputDictionary)
 			outputOverwrite := v.GetBool(cli.FlagOutputOverwrite)
 			outputAppend := v.GetBool(cli.FlagOutputAppend)
-			outputBufferSize := v.GetInt(cli.FlagOutputBufferSize)
 
 			splitLines := v.GetInt(cli.FlagSplitLines)
 
-			var outputWriter io.ByteWriteCloser
+			var outputWriter io.WriteCloser
 			var outputBuffer io.Buffer
 
 			if outputUri == "stdout" || outputUri == "-" {
-				outputWriter, err = grw.WriteStdout(outputCompression, []byte(outputDictionary))
+				outputWriter, err = grw.WrapWriter(os.Stdout, outputCompression, []byte(outputDictionary), 0)
 				if err != nil {
 					return fmt.Errorf("error opening stdout: %w", err)
 				}
 			} else if strings.HasPrefix(outputUri, "s3://") {
-				outputWriter, outputBuffer, err = grw.WriteBytes(outputCompression, []byte(outputDictionary))
+				outputBuffer = new(bytes.Buffer)
+				outputWriter, err = grw.WrapWriter(nop.NewWriteCloser(outputBuffer), outputCompression, []byte(outputDictionary), 0)
 				if err != nil {
 					return fmt.Errorf("error opening bytes buffer for %q: %w", outputUri, err)
 				}
@@ -205,16 +217,18 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 							}
 						}
 					}
-					outputWriter, err = grw.WriteToResource(&grw.WriteToResourceInput{
-						Uri:      uri,
-						Alg:      outputCompression,
-						Dict:     []byte(outputDictionary),
-						Append:   outputAppend,
-						S3Client: s3Client,
+					writeToResourceOutput, err := grw.WriteToResource(&grw.WriteToResourceInput{
+						URI:        uri,
+						Alg:        outputCompression,
+						BufferSize: outputBufferSize,
+						Dict:       []byte(outputDictionary),
+						Append:     outputAppend,
+						S3Client:   s3Client,
 					})
 					if err != nil {
 						return fmt.Errorf("error opening resource at uri %q: %w", outputUri, err)
 					}
+					outputWriter = writeToResourceOutput.Writer
 				} else {
 					return errors.New(fmt.Sprintf("unknown scheme for uri %q", outputUri))
 				}
@@ -258,10 +272,12 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 
 						if lines == splitLines {
 
-							err := outputWriter.Flush()
-							if err != nil {
-								fmt.Fprint(os.Stderr, fmt.Errorf("error flushing resource at uri %q: %w", strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, strconv.Itoa(files)), err).Error())
-								break
+							if outputFlusher, ok := outputWriter.(interface{ Flush() error }); ok {
+								err := outputFlusher.Flush()
+								if err != nil {
+									fmt.Fprint(os.Stderr, fmt.Errorf("error flushing resource at uri %q: %w", strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, strconv.Itoa(files)), err).Error())
+									break
+								}
 							}
 
 							err = outputWriter.Close()
@@ -302,18 +318,19 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 										}
 									}
 								}
-								ow, err := grw.WriteToResource(&grw.WriteToResourceInput{
-									Uri:      uri,
-									Alg:      outputCompression,
-									Dict:     []byte(outputDictionary),
-									Append:   outputAppend,
-									S3Client: s3Client,
+								writeToResourceOutput, err := grw.WriteToResource(&grw.WriteToResourceInput{
+									URI:        uri,
+									Alg:        outputCompression,
+									BufferSize: outputBufferSize,
+									Dict:       []byte(outputDictionary),
+									Append:     outputAppend,
+									S3Client:   s3Client,
 								})
 								if err != nil {
 									fmt.Fprint(os.Stderr, fmt.Errorf("error opening resource at uri %q: %w", outputUri, err).Error())
 									break
 								}
-								outputWriter = ow
+								outputWriter = writeToResourceOutput.Writer
 							} else {
 								fmt.Fprintf(os.Stderr, "unknown scheme for uri %q", outputUri)
 								break
@@ -328,7 +345,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 							break
 						}
 
-						_, err = outputWriter.WriteLine(line)
+						_, err = io.WriteLine(outputWriter, line)
 						if err != nil {
 							if perr, ok := err.(*stdos.PathError); ok {
 								if perr.Err == syscall.EPIPE {

@@ -50,8 +50,8 @@ func WriteBuffers(input *WriteBuffersInput) error {
 			}
 		}
 
-		writer, err := WriteToResource(&WriteToResourceInput{
-			Uri:      uri,
+		writeToResourceOutput, err := WriteToResource(&WriteToResourceInput{
+			URI:      uri,
 			Alg:      input.Algorithm,
 			Dict:     input.Dictionary,
 			Append:   input.Append,
@@ -61,15 +61,18 @@ func WriteBuffers(input *WriteBuffersInput) error {
 		if err != nil {
 			return fmt.Errorf("error opening output file for path %q: %w", uri, err)
 		}
+		writer := writeToResourceOutput.Writer
 
 		_, err = io.Copy(writer, buffer)
 		if err != nil {
 			return fmt.Errorf("error writing to output file for uri %q: %w", uri, err)
 		}
 
-		err = writer.Flush()
-		if err != nil {
-			return fmt.Errorf("error flushing to output file for uri %q: %w", uri, err)
+		if flusher, ok := writer.(interface{ Flush() error }); ok {
+			err = flusher.Flush()
+			if err != nil {
+				return fmt.Errorf("error flushing to output file for uri %q: %w", uri, err)
+			}
 		}
 
 		err = writer.Close()

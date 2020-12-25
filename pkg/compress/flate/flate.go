@@ -9,7 +9,16 @@
 package flate
 
 import (
+	"compress/flate"
 	"io"
+)
+
+const (
+	NoCompression      = flate.NoCompression
+	BestSpeed          = flate.BestSpeed
+	BestCompression    = flate.BestCompression
+	DefaultCompression = flate.DefaultCompression
+	HuffmanOnly        = flate.HuffmanOnly
 )
 
 // Resetter resets a ReadCloser returned by NewReader or NewReaderDict

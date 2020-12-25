@@ -5,16 +5,13 @@
 //
 // =================================================================
 
-package grw
+package io
 
 import (
-	"bytes"
-
-	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
+	"io"
 )
 
-// WriteSnappyBytes returns a writer and buffer for writing uncompressed bytes.
-func WriteMemoryBytes() (*Writer, *bytes.Buffer) {
-	buf := new(bytes.Buffer)
-	return NewWriter(bufio.NewWriter(buf)), buf
+// ReadCloser is a copy of the standard library io.ReadCloser interface.
+type ReadCloser interface {
+	io.ReadCloser
 }

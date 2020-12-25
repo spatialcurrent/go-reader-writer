@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"io/ioutil"
+	"os"
 	"testing"
 	"testing/quick"
 
@@ -23,7 +24,7 @@ var (
 	BytesHelloWorld = []byte("hello world")
 )
 
-func TestGzip(t *testing.T) {
+func TestGzipMemory(t *testing.T) {
 	f := func() bool {
 
 		//
@@ -69,6 +70,79 @@ func TestGzip(t *testing.T) {
 
 		// wrap with bufio reader to test propagation.
 		r, err := NewReader(bufio.NewReader(ioutil.NopCloser(buf)))
+		if !assert.NoError(t, err) {
+			return false
+		}
+
+		out, err := ioutil.ReadAll(r)
+		if !assert.NoError(t, err) {
+			return false
+		}
+
+		if !assert.Equal(t, in, out) {
+			return false
+		}
+
+		return true
+	}
+	assert.NoError(t, quick.Check(f, nil))
+}
+
+func TestGzipFile(t *testing.T) {
+	f := func() bool {
+
+		//
+		// Create random input
+		//
+
+		in := make([]byte, 8192)
+		_, err := rand.Read(in)
+		if !assert.NoError(t, err) {
+			return false
+		}
+
+		//
+		// Create File
+		//
+
+		_ = os.MkdirAll("temp", 0775)
+
+		f, err := ioutil.TempFile("temp", "*.gz")
+		_ = f.Close()
+		assert.NoError(t, err)
+
+		defer os.Remove(f.Name())
+
+		//
+		// Create Writer
+		//
+
+		// wrap with bufio writer to test propagation.
+		w, err := WriteFile(f.Name(), 4096)
+		if !assert.NoError(t, err) {
+			return false
+		}
+
+		// Write data to buffer
+		_, err = w.Write(in)
+		if !assert.NoError(t, err) {
+			return false
+		}
+
+		// Flush all writers
+		err = w.Flush()
+		if !assert.NoError(t, err) {
+			return false
+		}
+
+		// Close all writers (save gzip trailer)
+		err = w.Close()
+		if !assert.NoError(t, err) {
+			return false
+		}
+
+		// wrap with bufio reader to test propagation.
+		r, err := ReadFile(f.Name(), 4096)
 		if !assert.NoError(t, err) {
 			return false
 		}

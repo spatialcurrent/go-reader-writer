@@ -9,7 +9,6 @@ package grw
 
 import (
 	"fmt"
-	"io"
 
 	pkgalg "github.com/spatialcurrent/go-reader-writer/pkg/alg"
 	"github.com/spatialcurrent/go-reader-writer/pkg/archive/zip"
@@ -19,6 +18,7 @@ import (
 	"github.com/spatialcurrent/go-reader-writer/pkg/compress/gzip"
 	"github.com/spatialcurrent/go-reader-writer/pkg/compress/snappy"
 	"github.com/spatialcurrent/go-reader-writer/pkg/compress/zlib"
+	"github.com/spatialcurrent/go-reader-writer/pkg/io"
 )
 
 func WrapReader(r io.ReadCloser, alg string, dict []byte, bufferSize int) (io.ReadCloser, error) {
@@ -70,5 +70,5 @@ func WrapReader(r io.ReadCloser, alg string, dict []byte, bufferSize int) (io.Re
 		return bufio.NewReaderSize(r, bufferSize), nil
 	}
 
-	return nil, fmt.Errorf("unsupported compression algorithm %q", alg)
+	return nil, &pkgalg.ErrUnknownAlgorithm{Algorithm: alg}
 }

@@ -10,6 +10,7 @@ package grw
 import (
 	"errors"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spatialcurrent/go-reader-writer/pkg/ftp"
@@ -34,7 +35,7 @@ type ReadFromResourceInput struct {
 }
 
 type ReadFromResourceOutput struct {
-	Reader   *Reader
+	Reader   io.ReadCloser
 	Metadata *Metadata
 }
 
@@ -86,7 +87,7 @@ func ReadFromResource(input *ReadFromResourceInput) (*ReadFromResourceOutput, er
 		if err != nil {
 			return nil, fmt.Errorf("error wrapping reader for file at uri %q: %w", input.URI, err)
 		}
-		return &ReadFromResourceOutput{Reader: wr, Metadata: nil}
+		return &ReadFromResourceOutput{Reader: wr, Metadata: nil}, nil
 	case schemes.SchemeFTP, schemes.SchemeSFTP, schemes.SchemeHTTP, schemes.SchemeHTTPS:
 		r, err := fetchRemoteFile(input.URI, input.Key)
 		if err != nil {
@@ -96,8 +97,8 @@ func ReadFromResource(input *ReadFromResourceInput) (*ReadFromResourceOutput, er
 		if err != nil {
 			return nil, fmt.Errorf("error wrapping reader for file at uri %q: %w", input.URI, err)
 		}
-		return &ReadFromResourceOutput{Reader: wr, Metadata: nil}
-	case schemes.S3:
+		return &ReadFromResourceOutput{Reader: wr, Metadata: nil}, nil
+	case schemes.SchemeS3:
 		i := strings.Index(path, "/")
 		if i == -1 {
 			return nil, errors.New("path missing bucket")
@@ -109,11 +110,11 @@ func ReadFromResource(input *ReadFromResourceInput) (*ReadFromResourceOutput, er
 		if err != nil {
 			return nil, fmt.Errorf("error fetching file on AWS S3 at uri %q: %w", input.URI, err)
 		}
-		wr, err := reader.WrapReader(r.Body, input.Alg, input.Dict, input.BufferSize)
+		wr, err := WrapReader(r.Body, input.Alg, input.Dict, input.BufferSize)
 		if err != nil {
 			return nil, fmt.Errorf("error wrapping reader for file at uri %q: %w", input.URI, err)
 		}
-		return &ReadFromResourceOutput{Reader: wr, Metadata: NewMetadataFromS3(r)}
+		return &ReadFromResourceOutput{Reader: wr, Metadata: NewMetadataFromS3(r)}, nil
 	}
 
 	return nil, &schemes.ErrUnknownScheme{Scheme: scheme}

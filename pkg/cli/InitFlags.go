@@ -27,7 +27,7 @@ func InitFlags(flag *pflag.FlagSet) {
 
 	flag.StringP(FlagOutputCompression, "", "", "the output compression")
 	flag.String(FlagOutputDictionary, "", "the output dictionary")
-	flag.IntP(FlagOutputBufferSize, "b", DefaultBufferSize, "the output writer buffer size")
+	flag.IntP(FlagOutputBufferSize, "b", -1, "The output writer buffer size. The default for stdout is 0.  The default for files is 4096.")
 
 	flag.BoolP(FlagOutputMkdirs, "m", false, "make directories if missing for output file")
 	flag.BoolP(FlagOutputAppend, "a", false, "append to output files")

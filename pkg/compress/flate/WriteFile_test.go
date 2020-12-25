@@ -5,27 +5,33 @@
 //
 // =================================================================
 
-package zlib
+package flate
 
 import (
 	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestReadFile(t *testing.T) {
-	r, err := ReadFile("../../../testdata/doc.txt.z", nil, 4096)
+func TestWriteFile(t *testing.T) {
+	_ = os.MkdirAll("temp", 0775)
+	f, err := ioutil.TempFile("temp", "*.gz")
 	assert.NoError(t, err)
-	assert.NotNil(t, r)
+	defer os.Remove(f.Name())
 
-	got, err := ioutil.ReadAll(r)
+	w, err := WriteFile(f.Name(), 4096)
 	assert.NoError(t, err)
-	assert.Equal(t, BytesHelloWorld, got)
+	assert.NotNil(t, w)
 
-	err = r.Close()
+	n, err := w.Write(BytesHelloWorld)
+	assert.Equal(t, n, len(BytesHelloWorld))
 	assert.NoError(t, err)
 
-	err = r.Close()
-	assert.Error(t, err)
+	err = w.Flush()
+	assert.NoError(t, err)
+
+	err = w.Close()
+	assert.NoError(t, err)
 }

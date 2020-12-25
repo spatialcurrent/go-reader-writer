@@ -40,7 +40,7 @@ func (w *Writer) Close() error {
 	if c, ok := w.underlying.(io.Closer); ok {
 		err = c.Close()
 		if err != nil {
-			return fmt.Errorf("error closing underlying writer: %w", err)
+			return fmt.Errorf("error flushing underlying writer: %w", err)
 		}
 	}
 	return nil
@@ -74,6 +74,6 @@ func (w *Writer) Reset(writer io.Writer) {
 // The Writer returned buffers writes. Users must call Close to guarantee all
 // data has been forwarded to the underlying io.Writer. They may also call
 // Flush zero or more times before calling Close.
-func NewBufferedWriter(w io.Writer) *Writer {
+func NewBufferedWriter(w io.WriteCloser) *Writer {
 	return &Writer{Writer: snappy.NewBufferedWriter(w), underlying: w}
 }

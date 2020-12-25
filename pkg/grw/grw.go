@@ -58,14 +58,6 @@ import (
 	"github.com/spatialcurrent/go-reader-writer/pkg/alg"
 )
 
-const (
-	SchemeFile  = "file"
-	SchemeFtp   = "ftp"
-	SchemeHTTP  = "http"
-	SchemeHTTPS = "https"
-	SchemeS3    = "s3"
-)
-
 var (
 	Algorithms = []string{
 		alg.AlgorithmBzip2,
@@ -75,16 +67,6 @@ var (
 		alg.AlgorithmSnappy,
 		alg.AlgorithmZip,
 		alg.AlgorithmZlib,
-	}
-)
-
-var (
-	Schemes = []string{
-		SchemeFile,
-		SchemeFtp,
-		SchemeHTTP,
-		SchemeHTTPS,
-		SchemeS3,
 	}
 )
 

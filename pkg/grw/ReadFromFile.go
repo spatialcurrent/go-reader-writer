@@ -7,6 +7,8 @@
 
 package grw
 
+/*
+
 import (
 	"fmt"
 	"os"
@@ -41,3 +43,5 @@ func ReadFromFile(input *ReadFromFileInput) (*Reader, error) {
 	}
 	return nil, &ErrUnknownAlgorithm{Algorithm: input.Alg}
 }
+
+*/

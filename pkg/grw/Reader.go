@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -8,13 +8,13 @@
 package grw
 
 import (
-	"github.com/spatialcurrent/go-reader-writer/pkg/io"
+	"io"
 )
 
 // Reader is a struct for normalizing reading of bytes from files with arbitrary compression and for closing underlying resources.
 // Reader implements the ByteReader interface by wrapping around a subordinate ByteReader.
 type Reader struct {
-	Reader io.Reader // the instance of ByteReader used for reading bytes
+	Reader io.ReadCloser // the instance of ByteReader used for reading bytes
 }
 
 // Read reads a maximum len(p) bytes from the reader and returns an error, if any.
@@ -85,7 +85,7 @@ func (r *Reader) ReadAll() ([]byte, error) {
 }
 
 func (r *Reader) Close() error {
-	return io.Close(r.Reader)
+	return r.Reader.Close()
 }
 
 // ReadAllAndClose reads all the bytes from the underlying reader and attempts to close the reader, even if there was an error reading.

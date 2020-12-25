@@ -5,19 +5,23 @@
 //
 // =================================================================
 
-package grw
+package ftp
 
 import (
 	"fmt"
+	"github.com/jlaffaye/ftp"
+	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
+	"strconv"
 	"strings"
 	"time"
-
-	"github.com/jlaffaye/ftp"
-
-	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 
-// ReadFTPFile returns a Reader for an object for given ftp, ftps, or sftp address, and buffer size.
+const (
+	DefaultPort    = 21
+	DefaultTimeout = 5 * time.Second
+)
+
+// Fetch returns a Reader for an object for given FTP address.
 // ReadFTPFile returns the Reader and error, if any.
 //
 // ReadFTPFile returns an error if the address cannot be dialed,
@@ -25,7 +29,7 @@ import (
 // the user and password are invalid, or
 // the file cannot be retrieved.
 //
-func ReadFTPFile(uri string, alg string, dict []byte, bufferSize int) (*Reader, error) {
+func Fetch(uri string) (*Reader, error) {
 
 	_, fullpath := splitter.SplitUri(uri)
 
@@ -34,10 +38,10 @@ func ReadFTPFile(uri string, alg string, dict []byte, bufferSize int) (*Reader, 
 
 	userinfo, host, port := splitter.SplitAuthority(authority)
 	if len(port) == 0 {
-		port = "21"
+		port = strconv.Itoa(DefaultPort)
 	}
 
-	conn, err := ftp.Dial(fmt.Sprintf("%s:%s", host, port), ftp.DialWithTimeout(5*time.Second))
+	conn, err := ftp.Dial(fmt.Sprintf("%s:%s", host, port), ftp.DialWithTimeout(DefaultTimeout))
 	if err != nil {
 		return nil, fmt.Errorf("error opening file from uri %q: %w", uri, err)
 	}
@@ -45,7 +49,7 @@ func ReadFTPFile(uri string, alg string, dict []byte, bufferSize int) (*Reader, 
 	if len(userinfo) > 0 {
 		user, password, err := splitter.SplitUserInfo(userinfo)
 		if err != nil {
-			return nil, fmt.Errorf("error parsing userinfo %q: %w", userinfo, err)
+			return nil, fmt.Errorf("error parsing user info %q: %w", userinfo, err)
 		}
 		if len(user) > 0 {
 			err = conn.Login(user, password)
@@ -60,6 +64,10 @@ func ReadFTPFile(uri string, alg string, dict []byte, bufferSize int) (*Reader, 
 		return nil, fmt.Errorf("error reading file from uri %q: %w", uri, err)
 	}
 
-	return resp, nil
+	if resp == nil {
+		return nil, fmt.Errorf("error reading file from uri %q: response is empty", uri)
+	}
+
+	return NewReader(resp, conn), nil
 
 }

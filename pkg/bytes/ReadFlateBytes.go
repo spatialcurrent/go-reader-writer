@@ -14,7 +14,7 @@ import (
 // FlateBytes returns a reader for reading flate bytes from an input array.
 // Wraps the "compress/flate" package.
 //
-//  - https://golang.org/pkg/compress/flate/
+//  - https://pkg.go.dev/pkg/compress/flate/
 //
 func ReadFlateBytes(b []byte, dict []byte) flate.ReadResetCloser {
 	return flate.ReadBytes(b, dict)

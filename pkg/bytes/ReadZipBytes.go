@@ -16,7 +16,7 @@ import (
 
 // ReadZipBytes returns a reader for reading from zip-compressed bytes.
 //
-//  - https://godoc.org/github.com/golang/snappy
+//  - https://pkg.go.dev/github.com/golang/snappy
 //
 func ReadZipBytes(b []byte) (io.ReadCloser, error) {
 	r, err := zip.ReadBytes(b)

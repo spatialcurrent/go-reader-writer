@@ -5,16 +5,5 @@
 //
 // =================================================================
 
-package grw
-
-import (
-	"fmt"
-)
-
-type ErrUnknownScheme struct {
-	Scheme string
-}
-
-func (e *ErrUnknownScheme) Error() string {
-	return fmt.Sprintf("scheme %q is not known", e.Scheme)
-}
+// Package schemes includes the schemes supported in this project
+package schemes

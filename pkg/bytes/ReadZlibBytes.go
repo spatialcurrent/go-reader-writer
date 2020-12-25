@@ -16,7 +16,7 @@ import (
 // ReadZlibBytes returns a reader for reading zlib bytes from an input slice.
 // Wraps the "compress/zlib" package.
 //
-//  - https://golang.org/pkg/compress/zlib/
+//  - https://pkg.go.dev/pkg/compress/zlib/
 //
 func ReadZlibBytes(b []byte, dict []byte) (zlib.ReadResetCloser, error) {
 	zr, err := zlib.ReadBytes(b, dict)

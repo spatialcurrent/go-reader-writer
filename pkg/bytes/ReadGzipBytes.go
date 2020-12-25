@@ -16,7 +16,7 @@ import (
 // GzipBytes returns a reader for reading gzip bytes from an input array.
 // Wraps the "compress/gzip" package.
 //
-//  - https://golang.org/pkg/compress/gzip/
+//  - https://pkg.go.dev/pkg/compress/gzip/
 //
 func ReadGzipBytes(b []byte, multistream bool) (gzip.ReadResetCloser, error) {
 	gr, err := gzip.ReadBytes(b, multistream)

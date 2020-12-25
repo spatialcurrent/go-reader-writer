@@ -5,10 +5,11 @@
 //
 // =================================================================
 
-package grw
+package ftp
 
 import (
 	"errors"
+	"io/ioutil"
 	"net/textproto"
 	"os"
 	"testing"
@@ -17,23 +18,26 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestReadFromFTPFile530(t *testing.T) {
+func TestFetch530(t *testing.T) {
 	if os.Getenv("TEST_ACC_FTP") == "1" {
-		brc, err := ReadFTPFile("ftp://ftp.fbo.gov/FBOFeed20011227", AlgorithmNone, NoDict, 4096)
-		require.Nil(t, brc)
+		r, err := Fetch("ftp://ftp2.census.gov/robots.txt")
+		require.Nil(t, r)
 		require.NotNil(t, err)
 		require.IsType(t, &textproto.Error{}, errors.Unwrap(err))
 		assert.Equal(t, 530, errors.Unwrap(err).(*textproto.Error).Code)
 	}
 }
 
-func TestReadFromFTPFileAnonymous(t *testing.T) {
+func TestFetchAnonymous(t *testing.T) {
 	if os.Getenv("TEST_ACC_FTP") == "1" {
-		brc, err := ReadFTPFile("ftp://anonymous@ftp.fbo.gov/FBOFeed20011227", AlgorithmNone, NoDict, 4096)
+		r, err := Fetch("ftp://anonymous@ftp2.census.gov/robots.txt")
 		require.NoError(t, err)
-		require.NotNil(t, brc)
-		got, err := brc.ReadAllAndClose()
+		require.NotNil(t, r)
+		got, err := ioutil.ReadAll(r)
 		assert.NoError(t, err)
 		assert.NotNil(t, got)
+		assert.Len(t, got, 478)
+		err = r.Close()
+		assert.NoError(t, err)
 	}
 }

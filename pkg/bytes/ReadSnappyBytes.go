@@ -13,7 +13,7 @@ import (
 
 // ReadSnappyBytes returns a reader for an input of snappy-compressed bytes, and an error if any.
 //
-//  - https://pkg.go.dev//github.com/golang/snappy
+//  - https://pkg.go.dev/github.com/golang/snappy
 //
 func ReadSnappyBytes(b []byte) snappy.ReadResetter {
 	return snappy.ReadBytes(b)

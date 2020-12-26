@@ -73,7 +73,7 @@ func ReadFromResource(input *ReadFromResourceInput) (*ReadFromResourceOutput, er
 	scheme, path := splitter.SplitUri(input.URI)
 
 	switch scheme {
-	case schemes.SchemeFile:
+	case schemes.SchemeFile, "":
 		pathExpanded, err := homedir.Expand(path)
 		if err != nil {
 			return nil, fmt.Errorf("error expanding file path %q: %w", path, err)

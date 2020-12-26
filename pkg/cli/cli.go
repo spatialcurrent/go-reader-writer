@@ -23,6 +23,7 @@ const (
 	FlagOutputMkdirs       = "output-mkdirs"
 	FlagOutputOverwrite    = "output-overwrite"
 	FlagOutputDictionary   = "output-dictionary"
+	FlagOutputPrivateKey   = "output-private-key"
 	FlagSplitLines         = "split-lines"
 	FlagVersion            = "version"
 	FlagVerbose            = "verbose"

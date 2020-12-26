@@ -79,5 +79,6 @@ var (
 )
 
 var (
-	NoDict = []byte{} // no dictionary
+	NoDict   = []byte{} // no dictionary
+	NoBuffer = 0
 )

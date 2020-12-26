@@ -11,21 +11,11 @@ import (
 	"fmt"
 	"github.com/pkg/sftp"
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
+	"os"
 	"strings"
 )
 
-// Fetch returns a Reader for a file at a given SFTP address.
-// ReadFTPFile returns the Reader and error, if any.
-//
-// ReadFTPFile returns an error if the address cannot be dialed,
-// the userinfo cannot be parsed,
-// the user and password are invalid, or
-// the file cannot be retrieved.
-//
-// If a private key is provided, the function authenticates with the server
-// and encrypts the connection using the key.
-//
-func Fetch(uri string, options ...ClientOption) (*Reader, error) {
+func WriteFile(uri string, options ...ClientOption) (*Writer, error) {
 
 	sshClient, err := Dial(uri, options...)
 	if err != nil {
@@ -40,11 +30,11 @@ func Fetch(uri string, options ...ClientOption) (*Reader, error) {
 	_, fullpath := splitter.SplitUri(uri)
 	parts := strings.SplitN(fullpath, "/", 2)
 
-	file, err := sftpClient.Open(parts[1])
+	file, err := sftpClient.OpenFile(parts[1], os.O_WRONLY|os.O_CREATE|os.O_TRUNC)
 	if err != nil {
 		return nil, fmt.Errorf("error opening file: %w", err)
 	}
 
-	return NewReader(file, sftpClient, sshClient), nil
+	return NewWriter(file, sftpClient, sshClient), nil
 
 }

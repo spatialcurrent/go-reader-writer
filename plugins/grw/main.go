@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/grw"
+	"github.com/spatialcurrent/go-reader-writer/pkg/schemes"
 	//"unsafe"
 )
 
@@ -45,14 +46,14 @@ func Algorithms() *C.char {
 
 //export Schemes
 func Schemes() *C.char {
-	return C.CString(strings.Join(grw.Schemes, ","))
+	return C.CString(strings.Join(schemes.Schemes, ","))
 }
 
 //export ReadString
 func ReadString(uri *C.char, alg *C.char, str **C.char) *C.char {
 
 	r, _, err := grw.ReadFromResource(&grw.ReadFromResourceInput{
-		Uri: C.GoString(uri),
+		URI: C.GoString(uri),
 		Alg: C.GoString(alg),
 	})
 	if err != nil {
@@ -75,7 +76,7 @@ func WriteString(uri *C.char, alg *C.char, appendFlag C.int, contents *C.char, c
 	u := C.GoString(uri)
 
 	w, err := grw.WriteToResource(&grw.WriteToResourceInput{
-		Uri:    u,
+		URI:    u,
 		Alg:    C.GoString(alg),
 		Append: appendFlag > 0,
 	})

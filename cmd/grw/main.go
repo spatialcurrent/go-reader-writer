@@ -13,6 +13,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	stdos "os"
 	"os/signal"
 	"path/filepath"
@@ -45,8 +46,8 @@ const (
 func main() {
 
 	rootCommand := cobra.Command{
-		Use: `grw [flags] [-|stdin|INPUT_URI] [-|stdout|OUTPUT_URI]
-  grw [flags] [-|stdin|INPUT_URI]
+		Use: `grw [flags] [-|INPUT_URI] [-|OUTPUT_URI]
+  grw [flags] [-|INPUT_URI]
   grw [flags]`,
 		DisableFlagsInUseLine: true,
 		Short:                 "grw is a simple tool for reading and writing compressed resources by uri.",
@@ -81,18 +82,12 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				return err
 			}
 
-			inputUri := "stdin"
-			outputUri := "stdout"
+			inputUri := "-"
+			outputUri := "-"
 			if len(args) > 0 {
 				inputUri = args[0]
-				if inputUri == "-" {
-					inputUri = "stdin"
-				}
 				if len(args) > 1 {
 					outputUri = args[1]
-					if outputUri == "-" {
-						outputUri = "stdout"
-					}
 				}
 			}
 
@@ -101,10 +96,20 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 			outputBufferSize := v.GetInt(cli.FlagOutputBufferSize)
 			if outputBufferSize < 0 {
 				if outputUri == "-" {
-					outputBufferSize = 0
+					outputBufferSize = 4096 // the buffer size is used when reading from stdin and not for the writer.
 				} else {
 					outputBufferSize = 4096
 				}
+			}
+
+			outputPrivateKey := []byte{}
+			outputPrivateKeyPath := v.GetString(cli.FlagOutputPrivateKey)
+			if len(outputPrivateKeyPath) > 0 {
+				b, err := ioutil.ReadFile(outputPrivateKeyPath)
+				if err != nil {
+					return fmt.Errorf("error reading output private key from %q: %w", outputPrivateKeyPath, err)
+				}
+				outputPrivateKey = b
 			}
 
 			var session *awssession.Session
@@ -143,17 +148,19 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 			inputCompression := v.GetString(cli.FlagInputCompression)
 			inputDictionary := v.GetString(cli.FlagInputDictionary)
 
-			exists, fileInfo, err := os.Stat(inputUri)
-			if err != nil {
-				return fmt.Errorf("error stating resource at uri %q: %w", inputUri, err)
-			}
+			if inputUri != "-" {
+				exists, fileInfo, err := os.Stat(inputUri)
+				if err != nil {
+					return fmt.Errorf("error stating resource at uri %q: %w", inputUri, err)
+				}
 
-			if !exists {
-				return fmt.Errorf("resource at input uri %q does not exist: %w", inputUri, err)
-			}
+				if !exists {
+					return fmt.Errorf("resource at input uri %q does not exist", inputUri)
+				}
 
-			if !(fileInfo.IsRegular() || fileInfo.IsNamedPipe()) {
-				return fmt.Errorf("resource at input uri %q is neither a regular file or named pipe: %w", inputUri, err)
+				if !(fileInfo.IsRegular() || fileInfo.IsNamedPipe()) {
+					return fmt.Errorf("resource at input uri %q is neither a regular file or named pipe: %w", inputUri, err)
+				}
 			}
 
 			readFromResourceOutput, err := grw.ReadFromResource(&grw.ReadFromResourceInput{
@@ -178,14 +185,14 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 			var outputWriter io.WriteCloser
 			var outputBuffer io.Buffer
 
-			if outputUri == "stdout" || outputUri == "-" {
-				outputWriter, err = grw.WrapWriter(os.Stdout, outputCompression, []byte(outputDictionary), 0)
+			if outputUri == "-" {
+				outputWriter, err = grw.WrapWriter(nop.NewWriteCloser(os.Stdout), outputCompression, []byte(outputDictionary), grw.NoBuffer)
 				if err != nil {
 					return fmt.Errorf("error opening stdout: %w", err)
 				}
 			} else if strings.HasPrefix(outputUri, "s3://") {
 				outputBuffer = new(bytes.Buffer)
-				outputWriter, err = grw.WrapWriter(nop.NewWriteCloser(outputBuffer), outputCompression, []byte(outputDictionary), 0)
+				outputWriter, err = grw.WrapWriter(nop.NewWriteCloser(outputBuffer), outputCompression, []byte(outputDictionary), grw.NoBuffer)
 				if err != nil {
 					return fmt.Errorf("error opening bytes buffer for %q: %w", outputUri, err)
 				}
@@ -195,7 +202,21 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 					uri = strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, "1")
 				}
 				scheme, path := splitter.SplitUri(uri)
-				if scheme == "file" || scheme == "" {
+				if scheme == "sftp" {
+					writeToResourceOutput, err := grw.WriteToResource(&grw.WriteToResourceInput{
+						URI:        uri,
+						Alg:        outputCompression,
+						BufferSize: outputBufferSize,
+						Dict:       []byte(outputDictionary),
+						Append:     outputAppend,
+						S3Client:   s3Client,
+						PrivateKey: outputPrivateKey,
+					})
+					if err != nil {
+						return fmt.Errorf("error writing to resource at uri %q: %w", outputUri, err)
+					}
+					outputWriter = writeToResourceOutput.Writer
+				} else if scheme == "file" || scheme == "" {
 					if (!outputOverwrite) && (!outputAppend) {
 						exists, fileInfo, err := os.Stat(path)
 						if err != nil {
@@ -224,9 +245,10 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 						Dict:       []byte(outputDictionary),
 						Append:     outputAppend,
 						S3Client:   s3Client,
+						PrivateKey: outputPrivateKey,
 					})
 					if err != nil {
-						return fmt.Errorf("error opening resource at uri %q: %w", outputUri, err)
+						return fmt.Errorf("error writing to resource at uri %q: %w", outputUri, err)
 					}
 					outputWriter = writeToResourceOutput.Writer
 				} else {
@@ -325,6 +347,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 									Dict:       []byte(outputDictionary),
 									Append:     outputAppend,
 									S3Client:   s3Client,
+									PrivateKey: outputPrivateKey,
 								})
 								if err != nil {
 									fmt.Fprint(os.Stderr, fmt.Errorf("error opening resource at uri %q: %w", outputUri, err).Error())

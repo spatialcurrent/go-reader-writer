@@ -2,7 +2,7 @@
 
 # =================================================================
 #
-# Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
+# Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
 # Released as open source under the MIT License.  See LICENSE file.
 #
 # =================================================================
@@ -11,7 +11,8 @@ set -euo pipefail
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-export testdata_local=$(realpath "${DIR}/../testdata")
+#export testdata_local=$(realpath "${DIR}/../testdata")
+export testdata_local="${DIR}/../testdata"
 
 export "testdata_s3"="${GRW_TESTDATA_S3:-}"
 
@@ -45,14 +46,14 @@ testHelp() {
 
 testDevicePath() {
   local expected='hello world'
-  local output=$(echo 'hello world' | "${DIR}/../bin/grw" /dev/stdin /dev/stdout)
+  local output=$(echo 'hello world' | "${DIR}/../bin/grw" file:///dev/stdin file:///dev/stdout)
   assertEquals "unexpected output" "${expected}" "${output}"
 }
 
 testDeviceName() {
   local expected='hello world'
-  local output=$(echo 'hello world' | "${DIR}/../bin/grw" stdin stdout)
-  assertEquals "unexpected output" "${expected}" "${output}"
+  #local output=$(echo 'hello world' | "${DIR}/../bin/grw" stdin stdout)
+  #assertEquals "unexpected output" "${expected}" "${output}"
 }
 
 testDeviceNone() {
@@ -83,7 +84,7 @@ testDeviceDashes() {
 
 testDeviceAbsolutePath() {
   local expected='hello world'
-  local output=$(echo 'hello world' | "${DIR}/../bin/grw" '/dev/stdin' '/dev/stdout')
+  local output=$(echo 'hello world' | "${DIR}/../bin/grw" 'file:///dev/stdin' 'file:///dev/stdout')
   assertEquals "unexpected output" "${expected}" "${output}"
 }
 

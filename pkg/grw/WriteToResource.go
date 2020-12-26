@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -9,15 +9,16 @@ package grw
 
 import (
 	"fmt"
-	"io"
-	"path/filepath"
-
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/mitchellh/go-homedir"
-
 	pkgalg "github.com/spatialcurrent/go-reader-writer/pkg/alg"
 	"github.com/spatialcurrent/go-reader-writer/pkg/os"
+	"github.com/spatialcurrent/go-reader-writer/pkg/schemes"
+	"github.com/spatialcurrent/go-reader-writer/pkg/sftp"
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
+	"golang.org/x/crypto/ssh"
+	"io"
+	"path/filepath"
 )
 
 type WriteToResourceInput struct {
@@ -28,6 +29,7 @@ type WriteToResourceInput struct {
 	Parents    bool   // automatically create parent directories as necessary
 	S3Client   *s3.S3 // AWS S3 Client
 	URI        string // uri to write to
+	PrivateKey []byte // private key
 }
 
 type WriteToResourceOutput struct {
@@ -47,7 +49,30 @@ func WriteToResource(input *WriteToResourceInput) (*WriteToResourceOutput, error
 
 	scheme, path := splitter.SplitUri(input.URI)
 	switch scheme {
-	case "none", "":
+	case schemes.SchemeSFTP:
+		options := []sftp.ClientOption{}
+		if input.PrivateKey != nil && len(input.PrivateKey) > 0 {
+			privateKey, err := ssh.ParsePrivateKey(input.PrivateKey)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing private key from path %q: %w", path, err)
+			}
+			options = append(options, func(config *sftp.ClientConfig) error {
+				config.Auth = []ssh.AuthMethod{
+					ssh.PublicKeys(privateKey),
+				}
+				return nil
+			})
+		}
+		w, err := sftp.WriteFile(input.URI, options...)
+		if err != nil {
+			return nil, fmt.Errorf("error creating writer for resource at %q: %w", input.URI, err)
+		}
+		ww, err := WrapWriter(w, input.Alg, input.Dict, 0)
+		if err != nil {
+			return nil, fmt.Errorf("error wrapping writer for resource at %q: %w", input.URI, err)
+		}
+		return &WriteToResourceOutput{Writer: ww}, nil
+	case schemes.SchemeFile, "":
 
 		pathExpanded, err := homedir.Expand(path)
 		if err != nil {
@@ -76,6 +101,9 @@ func WriteToResource(input *WriteToResourceInput) (*WriteToResourceOutput, error
 			Parents:    false,
 			Path:       pathExpanded,
 		})
+		if err != nil {
+			return nil, fmt.Errorf("error creating writer for resource at %q: %w", input.URI, err)
+		}
 		return &WriteToResourceOutput{Writer: w}, nil
 	}
 

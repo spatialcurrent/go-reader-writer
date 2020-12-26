@@ -45,6 +45,17 @@ func WriteToFileSystem(input *WriteToFileSystemInput) (io.WriteCloser, error) {
 		}
 	}
 
+	/*
+		fileInfo, err := os.Stat(input.Path)
+		if err != nil {
+			return nil, fmt.Errorf("error stating file at path %q: %w", input.Path, err)
+		}
+
+		if fileInfo.Mode()&os.ModeDevice != 0 {
+			close = false
+		}
+	*/
+
 	switch input.Alg {
 	case pkgalg.AlgorithmBzip2:
 		return nil, &ErrWriterNotImplemented{Algorithm: input.Alg}

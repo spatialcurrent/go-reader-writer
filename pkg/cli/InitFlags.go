@@ -21,17 +21,18 @@ func InitFlags(flag *pflag.FlagSet) {
 	flag.StringP(FlagAWSSecretAccessKey, "", "", "AWS Secret Access Key")
 	flag.StringP(FlagAWSSessionToken, "", "", "AWS Session Token")
 
-	flag.StringP(FlagInputCompression, "", "", "the input compression")
+	flag.String(FlagInputCompression, "none", "the input compression")
 	flag.String(FlagInputDictionary, "", "the input dictionary")
 	flag.Int(FlagInputBufferSize, DefaultBufferSize, "the input reader buffer size")
 
-	flag.StringP(FlagOutputCompression, "", "", "the output compression")
+	flag.String(FlagOutputCompression, "none", "the output compression")
 	flag.String(FlagOutputDictionary, "", "the output dictionary")
 	flag.IntP(FlagOutputBufferSize, "b", -1, "The output writer buffer size. The default for stdout is 0.  The default for files is 4096.")
 
 	flag.BoolP(FlagOutputMkdirs, "m", false, "make directories if missing for output file")
 	flag.BoolP(FlagOutputAppend, "a", false, "append to output files")
 	flag.BoolP(FlagOutputOverwrite, "o", false, "overwrite output if it already exists")
+	flag.String(FlagOutputPrivateKey, "", "Use the provided private key to connect to the output destination.")
 
 	flag.IntP(
 		FlagSplitLines,

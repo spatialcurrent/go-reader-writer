@@ -17,6 +17,7 @@ const (
 	FlagInputCompression   = "input-compression"
 	FlagInputDictionary    = "input-dictionary"
 	FlagInputBufferSize    = "input-buffer-size"
+	FlagInputPrivateKey    = "input-private-key"
 	FlagOutputCompression  = "output-compression"
 	FlagOutputBufferSize   = "output-buffer-size"
 	FlagOutputAppend       = "output-append"

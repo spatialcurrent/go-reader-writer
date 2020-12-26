@@ -5,7 +5,7 @@
 //
 // =================================================================
 
-package sftp
+package ssh2
 
 import (
 	"os"
@@ -18,8 +18,8 @@ import (
 )
 
 func TestDialPassword(t *testing.T) {
-	if os.Getenv("TEST_ACC_SFTP") == "1" {
-		r, err := Dial(os.Getenv("TEST_ACC_SFTP_URI"))
+	if os.Getenv("TEST_ACC_SSH") == "1" {
+		r, err := Dial(os.Getenv("TEST_ACC_SSH_URI"))
 		require.NoError(t, err)
 		require.NotNil(t, r)
 		err = r.Close()
@@ -30,12 +30,12 @@ func TestDialPassword(t *testing.T) {
 }
 
 func TestDialKey(t *testing.T) {
-	if os.Getenv("TEST_ACC_SFTP") == "1" {
-		key, err := LoadPrivateKey(os.Getenv("TEST_ACC_SFTP_KEY"))
+	if os.Getenv("TEST_ACC_SSH") == "1" {
+		key, err := LoadPrivateKey(os.Getenv("TEST_ACC_SSH_KEY"))
 		if err != nil {
 			t.Fatal(err)
 		}
-		r, err := Dial(os.Getenv("TEST_ACC_SFTP_URI"), func(config *ClientConfig) error {
+		r, err := Dial(os.Getenv("TEST_ACC_SSH_URI"), func(config *ClientConfig) error {
 			config.Auth = []ssh.AuthMethod{
 				ssh.PublicKeys(key),
 			}

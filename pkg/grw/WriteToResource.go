@@ -17,9 +17,10 @@ import (
 	"golang.org/x/crypto/ssh"
 
 	pkgalg "github.com/spatialcurrent/go-reader-writer/pkg/alg"
+	"github.com/spatialcurrent/go-reader-writer/pkg/net/sftp"
+	"github.com/spatialcurrent/go-reader-writer/pkg/net/ssh2"
 	"github.com/spatialcurrent/go-reader-writer/pkg/os"
 	"github.com/spatialcurrent/go-reader-writer/pkg/schemes"
-	"github.com/spatialcurrent/go-reader-writer/pkg/sftp"
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 
@@ -52,13 +53,13 @@ func WriteToResource(input *WriteToResourceInput) (*WriteToResourceOutput, error
 	scheme, path := splitter.SplitUri(input.URI)
 	switch scheme {
 	case schemes.SchemeSFTP:
-		options := []sftp.ClientOption{}
+		options := []ssh2.ClientOption{}
 		if input.PrivateKey != nil && len(input.PrivateKey) > 0 {
 			privateKey, err := ssh.ParsePrivateKey(input.PrivateKey)
 			if err != nil {
 				return nil, fmt.Errorf("error parsing private key from path %q: %w", path, err)
 			}
-			options = append(options, func(config *sftp.ClientConfig) error {
+			options = append(options, func(config *ssh2.ClientConfig) error {
 				config.Auth = []ssh.AuthMethod{
 					ssh.PublicKeys(privateKey),
 				}

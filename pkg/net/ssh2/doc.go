@@ -5,14 +5,5 @@
 //
 // =================================================================
 
-package sftp
-
-import (
-	"golang.org/x/crypto/ssh"
-)
-
-type ClientConfig struct {
-	ssh.ClientConfig
-}
-
-type ClientOption func(config *ClientConfig) error
+// Package ssh provides functions for interacting with a SSH server.
+package ssh2

@@ -5,7 +5,7 @@
 //
 // =================================================================
 
-package sftp
+package ssh2
 
 import (
 	"fmt"
@@ -28,9 +28,13 @@ import (
 // If a private key is provided, the function authenticates with the server
 // and encrypts the connection using the key.
 //
-func Dial(uri string, options ...ClientOption) (*ssh.Client, error) {
+func Dial(uri string, options ...ClientOption) (*Client, error) {
 
-	_, fullpath := splitter.SplitUri(uri)
+	scheme, fullpath := splitter.SplitUri(uri)
+
+	if scheme != SchemeSSH && scheme != SchemeSFTP {
+		return nil, fmt.Errorf("error dialing %q: unknown scheme %q", uri, scheme)
+	}
 
 	parts := strings.SplitN(fullpath, "/", 2)
 
@@ -73,6 +77,6 @@ func Dial(uri string, options ...ClientOption) (*ssh.Client, error) {
 		return nil, fmt.Errorf("error creating SSH client: %w", err)
 	}
 
-	return sshClient, nil
+	return &Client{sshClient}, nil
 
 }

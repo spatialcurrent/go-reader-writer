@@ -14,17 +14,18 @@ import (
 
 	"github.com/pkg/sftp"
 
+	"github.com/spatialcurrent/go-reader-writer/pkg/net/ssh2"
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 
-func WriteFile(uri string, options ...ClientOption) (*Writer, error) {
+func WriteFile(uri string, options ...ssh2.ClientOption) (*Writer, error) {
 
-	sshClient, err := Dial(uri, options...)
+	sshClient, err := ssh2.Dial(uri, options...)
 	if err != nil {
 		return nil, fmt.Errorf("error creating SSH client: %w", err)
 	}
 
-	sftpClient, err := sftp.NewClient(sshClient)
+	sftpClient, err := sftp.NewClient(sshClient.Client)
 	if err != nil {
 		return nil, fmt.Errorf("error creating SFTP client: %w", err)
 	}
@@ -37,6 +38,6 @@ func WriteFile(uri string, options ...ClientOption) (*Writer, error) {
 		return nil, fmt.Errorf("error opening file: %w", err)
 	}
 
-	return NewWriter(file, sftpClient, sshClient), nil
+	return NewWriter(file, sftpClient, sshClient.Client), nil
 
 }

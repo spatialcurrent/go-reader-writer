@@ -13,6 +13,7 @@ import (
 
 	"github.com/pkg/sftp"
 
+	"github.com/spatialcurrent/go-reader-writer/pkg/net/ssh2"
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 
@@ -27,14 +28,14 @@ import (
 // If a private key is provided, the function authenticates with the server
 // and encrypts the connection using the key.
 //
-func Fetch(uri string, options ...ClientOption) (*Reader, error) {
+func Fetch(uri string, options ...ssh2.ClientOption) (*Reader, error) {
 
-	sshClient, err := Dial(uri, options...)
+	sshClient, err := ssh2.Dial(uri, options...)
 	if err != nil {
 		return nil, fmt.Errorf("error creating SSH client: %w", err)
 	}
 
-	sftpClient, err := sftp.NewClient(sshClient)
+	sftpClient, err := sftp.NewClient(sshClient.Client)
 	if err != nil {
 		return nil, fmt.Errorf("error creating SFTP client: %w", err)
 	}
@@ -47,6 +48,6 @@ func Fetch(uri string, options ...ClientOption) (*Reader, error) {
 		return nil, fmt.Errorf("error opening file: %w", err)
 	}
 
-	return NewReader(file, sftpClient, sshClient), nil
+	return NewReader(file, sftpClient, sshClient.Client), nil
 
 }

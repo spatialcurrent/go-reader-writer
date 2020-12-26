@@ -132,6 +132,17 @@ testSplit() {
   assertEquals "unexpected output" "$(echo -e "${output}")" "${output}"
 }
 
+#
+# Test Reading SFTP Objects
+#
+
+testReadS3None() {
+  if [[ ! -z "${testdata_sftp}" ]]; then
+    _testRead 'none' "${testdata_sftp}/doc.txt"
+  else
+    echo "* skipping"
+  fi
+}
 
 #
 # Test Reading S3 Objects

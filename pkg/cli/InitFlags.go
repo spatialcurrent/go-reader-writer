@@ -24,6 +24,7 @@ func InitFlags(flag *pflag.FlagSet) {
 	flag.String(FlagInputCompression, "none", "the input compression")
 	flag.String(FlagInputDictionary, "", "the input dictionary")
 	flag.Int(FlagInputBufferSize, DefaultBufferSize, "the input reader buffer size")
+	flag.String(FlagInputPrivateKey, "", "Use the provided private key to connect to the input.")
 
 	flag.String(FlagOutputCompression, "none", "the output compression")
 	flag.String(FlagOutputDictionary, "", "the output dictionary")
@@ -32,7 +33,7 @@ func InitFlags(flag *pflag.FlagSet) {
 	flag.BoolP(FlagOutputMkdirs, "m", false, "make directories if missing for output file")
 	flag.BoolP(FlagOutputAppend, "a", false, "append to output files")
 	flag.BoolP(FlagOutputOverwrite, "o", false, "overwrite output if it already exists")
-	flag.String(FlagOutputPrivateKey, "", "Use the provided private key to connect to the output destination.")
+	flag.String(FlagOutputPrivateKey, "", "Use the provided private key to connect to the output.")
 
 	flag.IntP(
 		FlagSplitLines,

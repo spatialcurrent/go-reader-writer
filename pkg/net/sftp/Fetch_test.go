@@ -17,6 +17,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/net/ssh2"
 )
 
 func TestFetchPassword(t *testing.T) {
@@ -37,11 +39,11 @@ func TestFetchPassword(t *testing.T) {
 
 func TestFetchKey(t *testing.T) {
 	if os.Getenv("TEST_ACC_SFTP") == "1" {
-		key, err := LoadPrivateKey(os.Getenv("TEST_ACC_SFTP_KEY"))
+		key, err := ssh2.LoadPrivateKey(os.Getenv("TEST_ACC_SFTP_KEY"))
 		if err != nil {
 			t.Fatal(err)
 		}
-		r, err := Fetch(os.Getenv("TEST_ACC_SFTP_URI"), func(config *ClientConfig) error {
+		r, err := Fetch(os.Getenv("TEST_ACC_SFTP_URI"), func(config *ssh2.ClientConfig) error {
 			config.Auth = []ssh.AuthMethod{
 				ssh.PublicKeys(key),
 			}

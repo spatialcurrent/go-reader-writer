@@ -43,6 +43,17 @@ const (
 	GRWVersion = "v0.0.3"
 )
 
+func initPrivateKey(p string) ([]byte, error) {
+	if len(p) == 0 {
+		return []byte{}, nil
+	}
+	b, err := ioutil.ReadFile(p)
+	if err != nil {
+		return nil, fmt.Errorf("error reading private key from %q: %w", p, err)
+	}
+	return b, nil
+}
+
 func main() {
 
 	rootCommand := cobra.Command{
@@ -102,14 +113,14 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				}
 			}
 
-			outputPrivateKey := []byte{}
-			outputPrivateKeyPath := v.GetString(cli.FlagOutputPrivateKey)
-			if len(outputPrivateKeyPath) > 0 {
-				b, err := ioutil.ReadFile(outputPrivateKeyPath)
-				if err != nil {
-					return fmt.Errorf("error reading output private key from %q: %w", outputPrivateKeyPath, err)
-				}
-				outputPrivateKey = b
+			inputPrivateKey, err := initPrivateKey(v.GetString(cli.FlagInputPrivateKey))
+			if err != nil {
+				return fmt.Errorf("error initializing input private key: %w", err)
+			}
+
+			outputPrivateKey, err := initPrivateKey(v.GetString(cli.FlagOutputPrivateKey))
+			if err != nil {
+				return fmt.Errorf("error initializing output private key: %w", err)
 			}
 
 			var session *awssession.Session
@@ -145,6 +156,10 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				s3Client = s3.New(session)
 			}
 
+			if strings.HasPrefix(inputUri, "s3://") || strings.HasPrefix(outputUri, "s3://") {
+
+			}
+
 			inputCompression := v.GetString(cli.FlagInputCompression)
 			inputDictionary := v.GetString(cli.FlagInputDictionary)
 
@@ -169,6 +184,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				Dict:       []byte(inputDictionary),
 				BufferSize: v.GetInt(cli.FlagInputBufferSize),
 				S3Client:   s3Client,
+				PrivateKey: inputPrivateKey,
 			})
 			if err != nil {
 				return fmt.Errorf("error opening resource at uri %q: %w", inputUri, err)

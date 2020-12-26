@@ -18,22 +18,23 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 	"golang.org/x/crypto/ssh"
 
-	"github.com/spatialcurrent/go-reader-writer/pkg/ftp"
-	"github.com/spatialcurrent/go-reader-writer/pkg/http"
 	"github.com/spatialcurrent/go-reader-writer/pkg/io"
+	"github.com/spatialcurrent/go-reader-writer/pkg/net/ftp"
+	"github.com/spatialcurrent/go-reader-writer/pkg/net/http"
+	"github.com/spatialcurrent/go-reader-writer/pkg/net/sftp"
+	"github.com/spatialcurrent/go-reader-writer/pkg/net/ssh2"
 	"github.com/spatialcurrent/go-reader-writer/pkg/os"
 	"github.com/spatialcurrent/go-reader-writer/pkg/schemes"
-	"github.com/spatialcurrent/go-reader-writer/pkg/sftp"
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 
 type ReadFromResourceInput struct {
-	URI        string     // uri to read from
-	Alg        string     // compression algorithm
-	Dict       []byte     // compression dictionary
-	BufferSize int        // input reader buffer size
-	S3Client   *s3.S3     // AWS S3 Client
-	Key        ssh.Signer // Key used for SSH connections
+	URI        string // uri to read from
+	Alg        string // compression algorithm
+	Dict       []byte // compression dictionary
+	BufferSize int    // input reader buffer size
+	S3Client   *s3.S3 // AWS S3 Client
+	PrivateKey []byte // private key
 }
 
 type ReadFromResourceOutput struct {
@@ -41,16 +42,20 @@ type ReadFromResourceOutput struct {
 	Metadata *Metadata
 }
 
-func fetchRemoteFile(uri string, key ssh.Signer) (io.ReadCloser, error) {
+func fetchRemoteFile(uri string, privateKeyBytes []byte) (io.ReadCloser, error) {
 	switch scheme, _ := splitter.SplitUri(uri); scheme {
 	case schemes.SchemeFTP:
 		return ftp.Fetch(uri)
 	case schemes.SchemeSFTP:
-		options := []sftp.ClientOption{}
-		if key != nil {
-			options = append(options, func(config *sftp.ClientConfig) error {
+		options := []ssh2.ClientOption{}
+		if privateKeyBytes != nil && len(privateKeyBytes) > 0 {
+			privateKey, err := ssh.ParsePrivateKey(privateKeyBytes)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing private key: %w", err)
+			}
+			options = append(options, func(config *ssh2.ClientConfig) error {
 				config.Auth = []ssh.AuthMethod{
-					ssh.PublicKeys(key),
+					ssh.PublicKeys(privateKey),
 				}
 				return nil
 			})
@@ -91,7 +96,7 @@ func ReadFromResource(input *ReadFromResourceInput) (*ReadFromResourceOutput, er
 		}
 		return &ReadFromResourceOutput{Reader: wr, Metadata: nil}, nil
 	case schemes.SchemeFTP, schemes.SchemeSFTP, schemes.SchemeHTTP, schemes.SchemeHTTPS:
-		r, err := fetchRemoteFile(input.URI, input.Key)
+		r, err := fetchRemoteFile(input.URI, input.PrivateKey)
 		if err != nil {
 			return nil, fmt.Errorf("error fetching remote file at uri %q: %w", input.URI, err)
 		}

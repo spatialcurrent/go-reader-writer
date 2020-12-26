@@ -8,9 +8,10 @@
 package sftp
 
 import (
-	"golang.org/x/crypto/ssh"
 	"os"
 	"testing"
+
+	"golang.org/x/crypto/ssh"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

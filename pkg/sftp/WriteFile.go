@@ -9,10 +9,12 @@ package sftp
 
 import (
 	"fmt"
-	"github.com/pkg/sftp"
-	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 	"os"
 	"strings"
+
+	"github.com/pkg/sftp"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 
 func WriteFile(uri string, options ...ClientOption) (*Writer, error) {

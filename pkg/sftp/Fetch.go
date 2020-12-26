@@ -9,9 +9,11 @@ package sftp
 
 import (
 	"fmt"
-	"github.com/pkg/sftp"
-	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 	"strings"
+
+	"github.com/pkg/sftp"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 
 // Fetch returns a Reader for a file at a given SFTP address.

@@ -9,8 +9,9 @@ package ftp
 
 import (
 	"fmt"
-	"github.com/jlaffaye/ftp"
 	"time"
+
+	"github.com/jlaffaye/ftp"
 )
 
 // Reader implements the io.ReadCloser interface to enabling reading

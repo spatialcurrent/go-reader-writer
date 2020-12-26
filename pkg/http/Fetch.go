@@ -9,11 +9,12 @@ package http
 
 import (
 	"fmt"
-	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 
 const (

@@ -9,8 +9,9 @@ package flate
 
 import (
 	"fmt"
-	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 	"os"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 )
 
 // WriteFile returns a Writer for writing to a local file

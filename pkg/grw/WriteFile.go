@@ -9,9 +9,10 @@ package grw
 
 import (
 	"fmt"
-	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 	"io"
 	"os"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/bufio"
 )
 
 // WriteFile returns a Writer for writing to a local file

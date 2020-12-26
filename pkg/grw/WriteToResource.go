@@ -9,16 +9,18 @@ package grw
 
 import (
 	"fmt"
+	"io"
+	"path/filepath"
+
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/mitchellh/go-homedir"
+	"golang.org/x/crypto/ssh"
+
 	pkgalg "github.com/spatialcurrent/go-reader-writer/pkg/alg"
 	"github.com/spatialcurrent/go-reader-writer/pkg/os"
 	"github.com/spatialcurrent/go-reader-writer/pkg/schemes"
 	"github.com/spatialcurrent/go-reader-writer/pkg/sftp"
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
-	"golang.org/x/crypto/ssh"
-	"io"
-	"path/filepath"
 )
 
 type WriteToResourceInput struct {

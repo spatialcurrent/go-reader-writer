@@ -9,9 +9,10 @@ package sftp
 
 import (
 	"fmt"
-	"golang.org/x/crypto/ssh"
 	"strconv"
 	"strings"
+
+	"golang.org/x/crypto/ssh"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )

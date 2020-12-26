@@ -10,9 +10,14 @@ package grw
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	homedir "github.com/mitchellh/go-homedir"
+	"golang.org/x/crypto/ssh"
+
 	"github.com/spatialcurrent/go-reader-writer/pkg/ftp"
 	"github.com/spatialcurrent/go-reader-writer/pkg/http"
 	"github.com/spatialcurrent/go-reader-writer/pkg/io"
@@ -20,9 +25,6 @@ import (
 	"github.com/spatialcurrent/go-reader-writer/pkg/schemes"
 	"github.com/spatialcurrent/go-reader-writer/pkg/sftp"
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
-	"golang.org/x/crypto/ssh"
-	"path/filepath"
-	"strings"
 )
 
 type ReadFromResourceInput struct {

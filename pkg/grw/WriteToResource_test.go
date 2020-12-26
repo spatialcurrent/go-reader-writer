@@ -10,8 +10,9 @@ package grw
 import (
 	"testing"
 
-	pkgalg "github.com/spatialcurrent/go-reader-writer/pkg/alg"
 	"github.com/stretchr/testify/assert"
+
+	pkgalg "github.com/spatialcurrent/go-reader-writer/pkg/alg"
 )
 
 func TestWriteToStdout(t *testing.T) {

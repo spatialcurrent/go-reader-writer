@@ -9,8 +9,9 @@ package sftp
 
 import (
 	"fmt"
-	"golang.org/x/crypto/ssh"
 	"io/ioutil"
+
+	"golang.org/x/crypto/ssh"
 )
 
 type PrivateKey interface {

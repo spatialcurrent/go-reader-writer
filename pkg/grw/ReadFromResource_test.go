@@ -10,9 +10,10 @@ package grw
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	pkgalg "github.com/spatialcurrent/go-reader-writer/pkg/alg"
 	"github.com/spatialcurrent/go-reader-writer/pkg/io"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestReadFromResourceDocTxt(t *testing.T) {

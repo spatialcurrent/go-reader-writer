@@ -9,11 +9,13 @@ package ftp
 
 import (
 	"fmt"
-	"github.com/jlaffaye/ftp"
-	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/jlaffaye/ftp"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 
 const (

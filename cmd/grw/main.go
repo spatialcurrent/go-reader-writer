@@ -23,9 +23,13 @@ import (
 	"syscall"
 	"time"
 
+	"golang.org/x/crypto/ssh"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/pkg/sftp"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	awssession "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -34,6 +38,8 @@ import (
 	"github.com/spatialcurrent/go-reader-writer/pkg/cli"
 	"github.com/spatialcurrent/go-reader-writer/pkg/grw"
 	"github.com/spatialcurrent/go-reader-writer/pkg/io"
+	"github.com/spatialcurrent/go-reader-writer/pkg/net/sftp2"
+	"github.com/spatialcurrent/go-reader-writer/pkg/net/ssh2"
 	"github.com/spatialcurrent/go-reader-writer/pkg/nop"
 	"github.com/spatialcurrent/go-reader-writer/pkg/os"
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
@@ -53,6 +59,137 @@ func initPrivateKey(p string) ([]byte, error) {
 	}
 	return b, nil
 }
+
+func initPrivateKeys(inputPath string, outputPath string) ([]byte, []byte, error) {
+	inputPrivateKey, err := initPrivateKey(inputPath)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error initializing input private key: %w", err)
+	}
+
+	outputPrivateKey, err := initPrivateKey(outputPath)
+	if err != nil {
+		return inputPrivateKey, nil, fmt.Errorf("error initializing output private key: %w", err)
+	}
+
+	return inputPrivateKey, outputPrivateKey, nil
+}
+
+func initS3Client(v *viper.Viper, inputUri string, outputUri string) (*s3.S3, *awssession.Session, error) {
+	if (!strings.HasPrefix(inputUri, "s3://")) && (!strings.HasPrefix(outputUri, "s3://")) {
+		return nil, nil, nil
+	}
+
+	accessKeyID := v.GetString(cli.FlagAWSAccessKeyID)
+	secretAccessKey := v.GetString(cli.FlagAWSSecretAccessKey)
+	sessionToken := v.GetString(cli.FlagAWSSessionToken)
+
+	region := v.GetString(cli.FlagAWSRegion)
+	if len(region) == 0 {
+		if defaultRegion := v.GetString(cli.FlagAWSDefaultRegion); len(defaultRegion) > 0 {
+			region = defaultRegion
+		}
+	}
+
+	config := aws.Config{
+		MaxRetries: aws.Int(3),
+		Region:     aws.String(region),
+	}
+
+	if len(accessKeyID) > 0 && len(secretAccessKey) > 0 {
+		config.Credentials = credentials.NewStaticCredentials(
+			accessKeyID,
+			secretAccessKey,
+			sessionToken)
+	}
+
+	session, err := awssession.NewSessionWithOptions(awssession.Options{
+		Config: config,
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("error creating new AWS session: %w", err)
+	}
+	return s3.New(session), session, nil
+}
+
+func initSFTPClient(uri string, password string, privateKeyBytes []byte) (*sftp.Client, *ssh.Client, error) {
+	if !strings.HasPrefix(uri, "sftp://") {
+		return nil, nil, nil
+	}
+
+	options := []ssh2.ClientOption{}
+
+	if privateKeyBytes != nil && len(privateKeyBytes) > 0 {
+		privateKey, err := ssh.ParsePrivateKey(privateKeyBytes)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error parsing private key: %w", err)
+		}
+		options = append(options, func(config *ssh2.ClientConfig) error {
+			config.Auth = []ssh.AuthMethod{
+				ssh.PublicKeys(privateKey),
+			}
+			return nil
+		})
+	} else if len(password) > 0 {
+		options = append(options, func(config *ssh2.ClientConfig) error {
+			config.Auth = []ssh.AuthMethod{
+				ssh.Password(password),
+			}
+			return nil
+		})
+	}
+
+	sshClient, err := ssh2.Dial(uri, options...)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error creating SSH client: %w", err)
+	}
+
+	sftpClient, err := sftp.NewClient(sshClient.Client)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error creating SFTP client: %w", err)
+	}
+
+	return sftpClient, sshClient.Client, nil
+}
+
+func checkURIRead(uri string, sftpClient *sftp.Client) error {
+	if uri != "-" {
+		scheme, path := splitter.SplitUri(uri)
+		switch scheme {
+		case "sftp":
+			err := sftp2.CheckFileRead(sftpClient, strings.SplitN(path, "/", 2)[1])
+			if err != nil {
+				return fmt.Errorf("resource %q cannot be read: %w", uri, err)
+			}
+		case "file", "":
+			err := os.CheckURIRead(uri)
+			if err != nil {
+				return fmt.Errorf("resource %q cannot be read: %w", uri, err)
+			}
+		}
+	}
+	return nil
+}
+
+/*
+func checkURIWrite(uri string, sftpClient *sftp.Client) error {
+	if uri != "-" {
+		scheme, path := splitter.SplitUri(uri)
+		switch scheme {
+		case "sftp":
+			err := sftp2.CheckFileRead(sftpClient, strings.SplitN(path, "/", 2)[1])
+			if err != nil {
+				return fmt.Errorf("resource %q cannot be read: %w", uri, err)
+			}
+		case "file", "":
+			err := os.CheckURIRead(uri)
+			if err != nil {
+				return fmt.Errorf("resource %q cannot be read: %w", uri, err)
+			}
+		}
+	}
+	return nil
+}
+*/
 
 func main() {
 
@@ -102,6 +239,8 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				}
 			}
 
+			_, outputPath := splitter.SplitUri(outputUri)
+
 			verbose := v.GetBool(cli.FlagVerbose)
 
 			outputBufferSize := v.GetInt(cli.FlagOutputBufferSize)
@@ -113,69 +252,38 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				}
 			}
 
-			inputPrivateKey, err := initPrivateKey(v.GetString(cli.FlagInputPrivateKey))
+			inputPassword := v.GetString(cli.FlagInputPassword)
+
+			outputPassword := v.GetString(cli.FlagOutputPassword)
+
+			inputPrivateKey, outputPrivateKey, err := initPrivateKeys(v.GetString(cli.FlagInputPrivateKey), v.GetString(cli.FlagOutputPrivateKey))
 			if err != nil {
-				return fmt.Errorf("error initializing input private key: %w", err)
+				return fmt.Errorf("error initializing private keys: %w", err)
 			}
 
-			outputPrivateKey, err := initPrivateKey(v.GetString(cli.FlagOutputPrivateKey))
+			s3Client, _, err := initS3Client(v, inputUri, outputUri)
 			if err != nil {
-				return fmt.Errorf("error initializing output private key: %w", err)
+				return fmt.Errorf("error initializing AWS S3 client: %w", err)
 			}
 
-			var session *awssession.Session
-			var s3Client *s3.S3
-
-			if strings.HasPrefix(inputUri, "s3://") || strings.HasPrefix(outputUri, "s3://") {
-				accessKeyID := v.GetString(cli.FlagAWSAccessKeyID)
-				secretAccessKey := v.GetString(cli.FlagAWSSecretAccessKey)
-				sessionToken := v.GetString(cli.FlagAWSSessionToken)
-
-				region := v.GetString(cli.FlagAWSRegion)
-				if len(region) == 0 {
-					if defaultRegion := v.GetString(cli.FlagAWSDefaultRegion); len(defaultRegion) > 0 {
-						region = defaultRegion
-					}
-				}
-
-				config := aws.Config{
-					MaxRetries: aws.Int(3),
-					Region:     aws.String(region),
-				}
-
-				if len(accessKeyID) > 0 && len(secretAccessKey) > 0 {
-					config.Credentials = credentials.NewStaticCredentials(
-						accessKeyID,
-						secretAccessKey,
-						sessionToken)
-				}
-
-				session = awssession.Must(awssession.NewSessionWithOptions(awssession.Options{
-					Config: config,
-				}))
-				s3Client = s3.New(session)
+			inputSFTPClient, inputSSHClient, err := initSFTPClient(inputUri, inputPassword, inputPrivateKey)
+			if err != nil {
+				return fmt.Errorf("error initializing SFTP client for input at %q: %w", inputUri, err)
 			}
 
-			if strings.HasPrefix(inputUri, "s3://") || strings.HasPrefix(outputUri, "s3://") {
-
+			outputSFTPClient, outputSSHClient, err := initSFTPClient(outputUri, outputPassword, outputPrivateKey)
+			if err != nil {
+				return fmt.Errorf("error initializing SFTP client for output at %q: %w", outputUri, err)
 			}
 
 			inputCompression := v.GetString(cli.FlagInputCompression)
 			inputDictionary := v.GetString(cli.FlagInputDictionary)
 
-			if inputUri != "-" {
-				exists, fileInfo, err := os.Stat(inputUri)
-				if err != nil {
-					return fmt.Errorf("error stating resource at uri %q: %w", inputUri, err)
-				}
-
-				if !exists {
-					return fmt.Errorf("resource at input uri %q does not exist", inputUri)
-				}
-
-				if !(fileInfo.IsRegular() || fileInfo.IsNamedPipe()) {
-					return fmt.Errorf("resource at input uri %q is neither a regular file or named pipe: %w", inputUri, err)
-				}
+			err = checkURIRead(inputUri, inputSFTPClient)
+			if err != nil {
+				_ = inputSFTPClient.Close()
+				_ = inputSSHClient.Close()
+				return fmt.Errorf("input resource %q not valid: %w", inputUri, err)
 			}
 
 			readFromResourceOutput, err := grw.ReadFromResource(&grw.ReadFromResourceInput{
@@ -184,6 +292,9 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				Dict:       []byte(inputDictionary),
 				BufferSize: v.GetInt(cli.FlagInputBufferSize),
 				S3Client:   s3Client,
+				SSHClient:  inputSSHClient,
+				SFTPClient: inputSFTPClient,
+				Password:   inputPassword,
 				PrivateKey: inputPrivateKey,
 			})
 			if err != nil {
@@ -219,6 +330,10 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				}
 				scheme, path := splitter.SplitUri(uri)
 				if scheme == "sftp" {
+					err := sftp2.CheckFileWrite(outputSFTPClient, strings.SplitN(path, "/", 2)[1], outputAppend, outputOverwrite)
+					if err != nil {
+						return fmt.Errorf("cannot write to resource at uri %q: %w", outputUri, err)
+					}
 					writeToResourceOutput, err := grw.WriteToResource(&grw.WriteToResourceInput{
 						URI:        uri,
 						Alg:        outputCompression,
@@ -226,6 +341,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 						Dict:       []byte(outputDictionary),
 						Append:     outputAppend,
 						S3Client:   s3Client,
+						Password:   outputPassword,
 						PrivateKey: outputPrivateKey,
 					})
 					if err != nil {
@@ -233,14 +349,9 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 					}
 					outputWriter = writeToResourceOutput.Writer
 				} else if scheme == "file" || scheme == "" {
-					if (!outputOverwrite) && (!outputAppend) {
-						exists, fileInfo, err := os.Stat(path)
-						if err != nil {
-							return fmt.Errorf("error statting uri %q: %w", uri, err)
-						}
-						if exists && (!fileInfo.IsDevice()) && (!fileInfo.IsNamedPipe()) {
-							return fmt.Errorf("file already exists at uri %q and neither append or overwrite is set", uri)
-						}
+					err := os.CheckURIWrite(uri, outputAppend, outputOverwrite)
+					if err != nil {
+						return fmt.Errorf("cannot write to resource at uri %q: %w", outputUri, err)
 					}
 					if v.GetBool(cli.FlagOutputMkdirs) {
 						exists, _, err := os.Stat(filepath.Dir(path))
@@ -261,6 +372,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 						Dict:       []byte(outputDictionary),
 						Append:     outputAppend,
 						S3Client:   s3Client,
+						Password:   outputPassword,
 						PrivateKey: outputPrivateKey,
 					})
 					if err != nil {
@@ -330,17 +442,32 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 							uri := strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, strconv.Itoa(files))
 
 							scheme, path := splitter.SplitUri(uri)
-							if scheme == "file" || scheme == "" {
-								if (!outputOverwrite) && (!outputAppend) {
-									exists, fileInfo, err := os.Stat(path)
-									if err != nil {
-										fmt.Fprint(os.Stderr, fmt.Errorf("error statting uri %q: %w", uri, err).Error())
-										break
-									}
-									if exists && (!fileInfo.IsDevice()) && (!fileInfo.IsNamedPipe()) {
-										fmt.Fprintln(os.Stderr, fmt.Errorf("file already exists at uri %q and neither append or overwrite is set", uri).Error())
-										break
-									}
+							if scheme == "sftp" {
+								err := sftp2.CheckFileWrite(outputSFTPClient, strings.SplitN(path, "/", 2)[1], outputAppend, outputOverwrite)
+								if err != nil {
+									fmt.Fprint(os.Stderr, fmt.Errorf("cannot write to resource at uri %q: %w", uri, err).Error())
+									break
+								}
+								writeToResourceOutput, err := grw.WriteToResource(&grw.WriteToResourceInput{
+									URI:        uri,
+									Alg:        outputCompression,
+									BufferSize: outputBufferSize,
+									Dict:       []byte(outputDictionary),
+									Append:     outputAppend,
+									S3Client:   s3Client,
+									Password:   outputPassword,
+									PrivateKey: outputPrivateKey,
+								})
+								if err != nil {
+									fmt.Fprint(os.Stderr, fmt.Errorf("error opening resource at uri %q: %w", outputUri, err).Error())
+									break
+								}
+								outputWriter = writeToResourceOutput.Writer
+							} else if scheme == "file" || scheme == "" {
+								err := os.CheckURIWrite(uri, outputAppend, outputOverwrite)
+								if err != nil {
+									fmt.Fprint(os.Stderr, fmt.Errorf("cannot write to resource at uri %q: %w", uri, err).Error())
+									break
 								}
 								if v.GetBool(cli.FlagOutputMkdirs) {
 									exists, _, err := os.Stat(filepath.Dir(path))
@@ -363,6 +490,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 									Dict:       []byte(outputDictionary),
 									Append:     outputAppend,
 									S3Client:   s3Client,
+									Password:   outputPassword,
 									PrivateKey: outputPrivateKey,
 								})
 								if err != nil {
@@ -461,7 +589,6 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 			}
 
 			if strings.HasPrefix(outputUri, "s3://") {
-				_, outputPath := splitter.SplitUri(outputUri)
 				i := strings.Index(outputPath, "/")
 				if i == -1 {
 					return fmt.Errorf("path missing bucket: %w", err)
@@ -470,6 +597,15 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				if err != nil {
 					return fmt.Errorf("error uploading to AWS S3 at uri %q: %w", outputUri, err)
 				}
+			}
+
+			err = outputSFTPClient.Close()
+			if err != nil {
+				return fmt.Errorf("error closing SFTP client for output: %w", err)
+			}
+			err = outputSSHClient.Close()
+			if err != nil {
+				return fmt.Errorf("error closing SSH client for output: %w", err)
 			}
 
 			elapsed := time.Since(start)

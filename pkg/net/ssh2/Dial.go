@@ -74,7 +74,7 @@ func Dial(uri string, options ...ClientOption) (*Client, error) {
 
 	sshClient, err := ssh.Dial("tcp", fmt.Sprintf("%s:%s", host, port), &sshClientConfig.ClientConfig)
 	if err != nil {
-		return nil, fmt.Errorf("error creating SSH client: %w", err)
+		return nil, fmt.Errorf("error creating SSH client for %q: %w", fmt.Sprintf("%s:%s", host, port), err)
 	}
 
 	return &Client{sshClient}, nil

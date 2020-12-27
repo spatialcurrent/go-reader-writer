@@ -17,7 +17,7 @@ import (
 	"golang.org/x/crypto/ssh"
 
 	pkgalg "github.com/spatialcurrent/go-reader-writer/pkg/alg"
-	"github.com/spatialcurrent/go-reader-writer/pkg/net/sftp"
+	"github.com/spatialcurrent/go-reader-writer/pkg/net/sftp2"
 	"github.com/spatialcurrent/go-reader-writer/pkg/net/ssh2"
 	"github.com/spatialcurrent/go-reader-writer/pkg/os"
 	"github.com/spatialcurrent/go-reader-writer/pkg/schemes"
@@ -32,6 +32,7 @@ type WriteToResourceInput struct {
 	Parents    bool   // automatically create parent directories as necessary
 	S3Client   *s3.S3 // AWS S3 Client
 	URI        string // uri to write to
+	Password   string // password
 	PrivateKey []byte // private key
 }
 
@@ -65,8 +66,15 @@ func WriteToResource(input *WriteToResourceInput) (*WriteToResourceOutput, error
 				}
 				return nil
 			})
+		} else if len(input.Password) > 0 {
+			options = append(options, func(config *ssh2.ClientConfig) error {
+				config.Auth = []ssh.AuthMethod{
+					ssh.Password(input.Password),
+				}
+				return nil
+			})
 		}
-		w, err := sftp.WriteFile(input.URI, options...)
+		w, err := sftp2.WriteFile(input.URI, options...)
 		if err != nil {
 			return nil, fmt.Errorf("error creating writer for resource at %q: %w", input.URI, err)
 		}

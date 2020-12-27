@@ -5,16 +5,15 @@
 //
 // =================================================================
 
-package sftp
+package sftp2
 
 import (
+	"errors"
 	"fmt"
-	"strings"
 
-	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/net/ssh2"
-	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 
 // Fetch returns a Reader for a file at a given SFTP address.
@@ -28,26 +27,24 @@ import (
 // If a private key is provided, the function authenticates with the server
 // and encrypts the connection using the key.
 //
-func Fetch(uri string, options ...ssh2.ClientOption) (*Reader, error) {
+func FetchWithKey(uri string, key []byte, options ...ssh2.ClientOption) (*Reader, error) {
 
-	sshClient, err := ssh2.Dial(uri, options...)
-	if err != nil {
-		return nil, fmt.Errorf("error creating SSH client: %w", err)
+	if key == nil || len(key) == 0 {
+		return nil, errors.New("missing private SSH key")
 	}
 
-	sftpClient, err := sftp.NewClient(sshClient.Client)
+	privateKey, err := ssh.ParsePrivateKey(key)
 	if err != nil {
-		return nil, fmt.Errorf("error creating SFTP client: %w", err)
+		return nil, fmt.Errorf("error parsing private SSH key: %w", err)
 	}
 
-	_, fullpath := splitter.SplitUri(uri)
-	parts := strings.SplitN(fullpath, "/", 2)
+	options = append(options, func(config *ssh2.ClientConfig) error {
+		config.Auth = []ssh.AuthMethod{
+			ssh.PublicKeys(privateKey),
+		}
+		return nil
+	})
 
-	file, err := sftpClient.Open(parts[1])
-	if err != nil {
-		return nil, fmt.Errorf("error opening file: %w", err)
-	}
-
-	return NewReader(file, sftpClient, sshClient.Client), nil
+	return Fetch(uri, options...)
 
 }

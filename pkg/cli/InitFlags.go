@@ -25,6 +25,7 @@ func InitFlags(flag *pflag.FlagSet) {
 	flag.String(FlagInputDictionary, "", "the input dictionary")
 	flag.Int(FlagInputBufferSize, DefaultBufferSize, "the input reader buffer size")
 	flag.String(FlagInputPrivateKey, "", "Use the provided private key to connect to the input.")
+	flag.String(FlagInputPassword, "", "Use the provided password to connect to the input.")
 
 	flag.String(FlagOutputCompression, "none", "the output compression")
 	flag.String(FlagOutputDictionary, "", "the output dictionary")
@@ -34,6 +35,7 @@ func InitFlags(flag *pflag.FlagSet) {
 	flag.BoolP(FlagOutputAppend, "a", false, "append to output files")
 	flag.BoolP(FlagOutputOverwrite, "o", false, "overwrite output if it already exists")
 	flag.String(FlagOutputPrivateKey, "", "Use the provided private key to connect to the output.")
+	flag.String(FlagOutputPassword, "", "Use the provided password to connect to the output.")
 
 	flag.IntP(
 		FlagSplitLines,

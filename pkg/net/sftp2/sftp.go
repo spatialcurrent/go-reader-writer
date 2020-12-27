@@ -5,5 +5,13 @@
 //
 // =================================================================
 
-// Package sftp provides functions for interacting with a SFTP server.
-package sftp
+package sftp2
+
+import (
+	"time"
+)
+
+const (
+	DefaultPort    = 22
+	DefaultTimeout = 5 * time.Second
+)

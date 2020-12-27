@@ -31,18 +31,28 @@ func (r *Reader) Read(p []byte) (int, error) {
 func (r *Reader) Close() error {
 	err := r.sftpFile.Close()
 	if err != nil {
-		_ = r.sftpClient.Close() // attempt to close the underlying SFTP connection
-		_ = r.sshClient.Close()  // attempt to close the underlying SSH connection
+		if r.sftpClient != nil {
+			_ = r.sftpClient.Close() // attempt to close the underlying SFTP connection
+		}
+		if r.sshClient != nil {
+			_ = r.sshClient.Close() // attempt to close the underlying SSH connection
+		}
 		return fmt.Errorf("error closing SFTP file: %w", err)
 	}
-	err = r.sftpClient.Close()
-	if err != nil {
-		_ = r.sshClient.Close() // attempt to close the underlying SSH connection
-		return fmt.Errorf("error closing SFTP client connection: %w", err)
+	if r.sftpClient != nil {
+		err = r.sftpClient.Close()
+		if err != nil {
+			if r.sshClient != nil {
+				_ = r.sshClient.Close() // attempt to close the underlying SSH connection
+			}
+			return fmt.Errorf("error closing SFTP client connection: %w", err)
+		}
 	}
-	err = r.sshClient.Close()
-	if err != nil {
-		return fmt.Errorf("error closing SSH client connection: %w", err)
+	if r.sshClient != nil {
+		err = r.sshClient.Close()
+		if err != nil {
+			return fmt.Errorf("error closing SSH client connection: %w", err)
+		}
 	}
 	return nil
 }

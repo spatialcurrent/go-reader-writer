@@ -170,27 +170,6 @@ func checkURIRead(uri string, sftpClient *sftp.Client) error {
 	return nil
 }
 
-/*
-func checkURIWrite(uri string, sftpClient *sftp.Client) error {
-	if uri != "-" {
-		scheme, path := splitter.SplitUri(uri)
-		switch scheme {
-		case "sftp":
-			err := sftp2.CheckFileRead(sftpClient, strings.SplitN(path, "/", 2)[1])
-			if err != nil {
-				return fmt.Errorf("resource %q cannot be read: %w", uri, err)
-			}
-		case "file", "":
-			err := os.CheckURIRead(uri)
-			if err != nil {
-				return fmt.Errorf("resource %q cannot be read: %w", uri, err)
-			}
-		}
-	}
-	return nil
-}
-*/
-
 func main() {
 
 	rootCommand := cobra.Command{
@@ -341,6 +320,8 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 						Dict:       []byte(outputDictionary),
 						Append:     outputAppend,
 						S3Client:   s3Client,
+						SSHClient:  outputSSHClient,
+						SFTPClient: outputSFTPClient,
 						Password:   outputPassword,
 						PrivateKey: outputPrivateKey,
 					})
@@ -372,6 +353,8 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 						Dict:       []byte(outputDictionary),
 						Append:     outputAppend,
 						S3Client:   s3Client,
+						SSHClient:  outputSSHClient,
+						SFTPClient: outputSFTPClient,
 						Password:   outputPassword,
 						PrivateKey: outputPrivateKey,
 					})
@@ -455,6 +438,8 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 									Dict:       []byte(outputDictionary),
 									Append:     outputAppend,
 									S3Client:   s3Client,
+									SSHClient:  outputSSHClient,
+									SFTPClient: outputSFTPClient,
 									Password:   outputPassword,
 									PrivateKey: outputPrivateKey,
 								})
@@ -490,6 +475,8 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 									Dict:       []byte(outputDictionary),
 									Append:     outputAppend,
 									S3Client:   s3Client,
+									SSHClient:  outputSSHClient,
+									SFTPClient: outputSFTPClient,
 									Password:   outputPassword,
 									PrivateKey: outputPrivateKey,
 								})

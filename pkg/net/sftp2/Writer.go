@@ -31,18 +31,26 @@ func (w *Writer) Write(b []byte) (int, error) {
 func (w *Writer) Close() error {
 	err := w.sftpFile.Close()
 	if err != nil {
-		_ = w.sftpClient.Close() // attempt to close the underlying SFTP connection
-		_ = w.sshClient.Close()  // attempt to close the underlying SSH connection
+		if w.sftpClient != nil {
+			_ = w.sftpClient.Close() // attempt to close the underlying SFTP connection
+		}
+		if w.sshClient != nil {
+			_ = w.sshClient.Close() // attempt to close the underlying SSH connection
+		}
 		return fmt.Errorf("error closing SFTP file: %w", err)
 	}
-	err = w.sftpClient.Close()
-	if err != nil {
-		_ = w.sshClient.Close() // attempt to close the underlying SSH connection
-		return fmt.Errorf("error closing SFTP client connection: %w", err)
+	if w.sftpClient != nil {
+		err = w.sftpClient.Close()
+		if err != nil {
+			_ = w.sshClient.Close() // attempt to close the underlying SSH connection
+			return fmt.Errorf("error closing SFTP client connection: %w", err)
+		}
 	}
-	err = w.sshClient.Close()
-	if err != nil {
-		return fmt.Errorf("error closing SSH client connection: %w", err)
+	if w.sshClient != nil {
+		err = w.sshClient.Close()
+		if err != nil {
+			return fmt.Errorf("error closing SSH client connection: %w", err)
+		}
 	}
 	return nil
 }

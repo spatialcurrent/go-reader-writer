@@ -586,13 +586,17 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				}
 			}
 
-			err = outputSFTPClient.Close()
-			if err != nil {
-				return fmt.Errorf("error closing SFTP client for output: %w", err)
+			if outputSFTPClient != nil {
+				err = outputSFTPClient.Close()
+				if err != nil {
+					return fmt.Errorf("error closing SFTP client for output: %w", err)
+				}
 			}
-			err = outputSSHClient.Close()
-			if err != nil {
-				return fmt.Errorf("error closing SSH client for output: %w", err)
+			if outputSSHClient != nil {
+				err = outputSSHClient.Close()
+				if err != nil {
+					return fmt.Errorf("error closing SSH client for output: %w", err)
+				}
 			}
 
 			elapsed := time.Since(start)

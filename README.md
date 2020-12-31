@@ -104,8 +104,14 @@ The `make build_so` script is used to build Shared Objects (`*.so`), which can b
 
 To run CLI testes use `make test_cli`, which uses [shUnit2](https://github.com/kward/shunit2).  If you recive a `shunit2:FATAL Please declare TMPDIR with path on partition with exec permission.` error, you can modify the `TMPDIR` environment variable in line or with `export TMPDIR=<YOUR TEMP DIRECTORY HERE>`. For example:
 
-```
+```shell
 TMPDIR="/usr/local/tmp" make test_cli
+```
+
+To test SFTP support, set following environment variables as shown below.
+
+```shell
+GRW_TESTDATA_SFTP=sftp://ubuntu@A.B.C.D OUTPUT_PRIVATE_KEY=~/sftp-test-1.pem INPUT_PRIVATE_KEY=~/sftp-test-1.pem OUTPUT_OVERWRITE=1 make test_cli
 ```
 
 **Go**

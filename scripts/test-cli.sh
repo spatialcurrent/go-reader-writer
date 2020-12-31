@@ -16,6 +16,12 @@ export testdata_local="${DIR}/../testdata"
 
 export "testdata_s3"="${GRW_TESTDATA_S3:-}"
 
+export "testdata_sftp"="${GRW_TESTDATA_SFTP:-}"
+
+rand() {
+  head -c $((${1}/2)) < /dev/random | base64
+}
+
 _testDevice() {
   local algorithm=$1
   local expected='hello world'
@@ -31,12 +37,21 @@ _testRead() {
   assertEquals "unexpected output" "${expected}" "${output}"
 }
 
+_testWriteRead() {
+  local algorithm=$1
+  local filePath=$2
+  local expected=$(rand 4096)
+  echo "${expected}" | "${DIR}/../bin/grw" --output-compression "${algorithm}" - "${filePath}"
+  local output=$("${DIR}/../bin/grw" --input-compression "${algorithm}" "${filePath}" -)
+  assertEquals "unexpected output" "${expected}" "${output}"
+}
+
 #
 # Test Help
 #
 
 testHelp() {
-  "${DIR}/../bin/grw" --help
+  "${DIR}/../bin/grw" --help > /dev/null
 }
 
 #
@@ -136,9 +151,41 @@ testSplit() {
 # Test Reading SFTP Objects
 #
 
-testReadS3None() {
+testWriteReadSFTPNone() {
   if [[ ! -z "${testdata_sftp}" ]]; then
-    _testRead 'none' "${testdata_sftp}/doc.txt"
+    _testWriteRead 'none' "${testdata_sftp}/doc.txt"
+  else
+    echo "* skipping"
+  fi
+}
+
+testWriteReadSFTPGZIP() {
+  if [[ ! -z "${testdata_sftp}" ]]; then
+    _testWriteRead 'gzip' "${testdata_sftp}/doc.txt.gz"
+  else
+    echo "* skipping"
+  fi
+}
+
+testWriteReadSFTPFlate() {
+  if [[ ! -z "${testdata_sftp}" ]]; then
+    _testWriteRead 'flate' "${testdata_sftp}/doc.txt.f"
+  else
+    echo "* skipping"
+  fi
+}
+
+testWriteReadSFTPSnappy() {
+  if [[ ! -z "${testdata_sftp}" ]]; then
+    _testWriteRead 'snappy' "${testdata_sftp}/doc.txt.sz"
+  else
+    echo "* skipping"
+  fi
+}
+
+testWriteReadSFTPZlib() {
+  if [[ ! -z "${testdata_sftp}" ]]; then
+    _testWriteRead 'zlib' "${testdata_sftp}/doc.txt.z"
   else
     echo "* skipping"
   fi

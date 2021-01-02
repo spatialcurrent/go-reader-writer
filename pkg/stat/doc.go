@@ -5,5 +5,6 @@
 //
 // =================================================================
 
-// Package ssh2 provides functions for interacting with a SSH server.
-package ssh2
+// Package stat provides structs for describing file into that can be used
+// across file systems.
+package stat

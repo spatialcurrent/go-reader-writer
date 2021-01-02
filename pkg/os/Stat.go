@@ -24,13 +24,13 @@ func Stat(uri string) (bool, stat.Info, error) {
 
 	if uri == "stdin" {
 		info, err := os.Stdin.Stat()
-		return info.Mode()&os.ModeNamedPipe != 0, &stat.FileInfo{FileInfo: info}, err
+		return info.Mode()&os.ModeNamedPipe != 0, stat.NewFileInfo(info), err
 	} else if uri == "stdout" {
 		info, err := os.Stdout.Stat()
-		return true, &stat.FileInfo{FileInfo: info}, err
+		return true, stat.NewFileInfo(info), err
 	} else if uri == "stderr" {
 		info, err := os.Stderr.Stat()
-		return true, &stat.FileInfo{FileInfo: info}, err
+		return true, stat.NewFileInfo(info), err
 	}
 
 	scheme, path := splitter.SplitUri(uri)
@@ -44,7 +44,7 @@ func Stat(uri string) (bool, stat.Info, error) {
 			}
 			return false, nil, err
 		}
-		return true, &stat.FileInfo{FileInfo: info}, err
+		return true, stat.NewFileInfo(info), err
 	}
 
 	return false, nil, fmt.Errorf("could not stat path %q: unsupported scheme %q", path, scheme)

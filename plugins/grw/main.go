@@ -15,6 +15,7 @@ package main
 import (
 	"C"
 	"fmt"
+	"io/ioutil"
 	"strings"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/grw"
@@ -52,7 +53,7 @@ func Schemes() *C.char {
 //export ReadString
 func ReadString(uri *C.char, alg *C.char, str **C.char) *C.char {
 
-	r, _, err := grw.ReadFromResource(&grw.ReadFromResourceInput{
+	readFromResourceOutput, err := grw.ReadFromResource(&grw.ReadFromResourceInput{
 		URI: C.GoString(uri),
 		Alg: C.GoString(alg),
 	})
@@ -60,9 +61,14 @@ func ReadString(uri *C.char, alg *C.char, str **C.char) *C.char {
 		return C.CString(fmt.Errorf("error opening resource at uri %q: %w", C.GoString(uri), err).Error())
 	}
 
-	b, err := r.ReadAllAndClose()
+	b, err := ioutil.ReadAll(readFromResourceOutput.Reader)
 	if err != nil {
 		return C.CString(fmt.Errorf("error reading resource at uri %q: %w", C.GoString(uri), err).Error())
+	}
+
+	err = readFromResourceOutput.Reader.Close()
+	if err != nil {
+		return C.CString(fmt.Errorf("error closing resource at uri %q: %w", C.GoString(uri), err).Error())
 	}
 
 	*str = C.CString(string(b))
@@ -75,7 +81,7 @@ func WriteString(uri *C.char, alg *C.char, appendFlag C.int, contents *C.char, c
 
 	u := C.GoString(uri)
 
-	w, err := grw.WriteToResource(&grw.WriteToResourceInput{
+	writeToResourceOutput, err := grw.WriteToResource(&grw.WriteToResourceInput{
 		URI:    u,
 		Alg:    C.GoString(alg),
 		Append: appendFlag > 0,
@@ -83,15 +89,18 @@ func WriteString(uri *C.char, alg *C.char, appendFlag C.int, contents *C.char, c
 	if err != nil {
 		return C.CString(fmt.Errorf("error opening resource from uri %q: %w", u, err).Error())
 	}
+	w := writeToResourceOutput.Writer
 
-	_, err = w.WriteString(C.GoString(contents))
+	_, err = fmt.Fprint(w, C.GoString(contents))
 	if err != nil {
 		return C.CString(fmt.Errorf("error writing: %w", err).Error())
 	}
 
-	err = w.Flush()
-	if err != nil {
-		return C.CString(fmt.Errorf("error flushing: %w", err).Error())
+	if flusher, ok := w.(interface{ Flush() error }); ok {
+		err = flusher.Flush()
+		if err != nil {
+			return C.CString(fmt.Errorf("error flushing: %w", err).Error())
+		}
 	}
 
 	if close > 0 {

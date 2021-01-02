@@ -11,7 +11,6 @@ package main
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	stdos "os"
@@ -74,8 +73,8 @@ func initPrivateKeys(inputPath string, outputPath string) ([]byte, []byte, error
 	return inputPrivateKey, outputPrivateKey, nil
 }
 
-func initS3Client(v *viper.Viper, inputUri string, outputUri string) (*s3.S3, *awssession.Session, error) {
-	if (!strings.HasPrefix(inputUri, "s3://")) && (!strings.HasPrefix(outputUri, "s3://")) {
+func initS3Client(v *viper.Viper, inputURI string, outputURI string) (*s3.S3, *awssession.Session, error) {
+	if (!strings.HasPrefix(inputURI, "s3://")) && (!strings.HasPrefix(outputURI, "s3://")) {
 		return nil, nil, nil
 	}
 
@@ -118,7 +117,7 @@ func initSFTPClient(uri string, password string, privateKeyBytes []byte) (*sftp.
 
 	options := []ssh2.ClientOption{}
 
-	if privateKeyBytes != nil && len(privateKeyBytes) > 0 {
+	if len(privateKeyBytes) > 0 {
 		privateKey, err := ssh.ParsePrivateKey(privateKeyBytes)
 		if err != nil {
 			return nil, nil, fmt.Errorf("error parsing private key: %w", err)
@@ -209,22 +208,22 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				return err
 			}
 
-			inputUri := "-"
-			outputUri := "-"
+			inputURI := "-"
+			outputURI := "-"
 			if len(args) > 0 {
-				inputUri = args[0]
+				inputURI = args[0]
 				if len(args) > 1 {
-					outputUri = args[1]
+					outputURI = args[1]
 				}
 			}
 
-			_, outputPath := splitter.SplitUri(outputUri)
+			_, outputPath := splitter.SplitUri(outputURI)
 
 			verbose := v.GetBool(cli.FlagVerbose)
 
 			outputBufferSize := v.GetInt(cli.FlagOutputBufferSize)
 			if outputBufferSize < 0 {
-				if outputUri == "-" {
+				if outputURI == "-" {
 					outputBufferSize = 4096 // the buffer size is used when reading from stdin and not for the writer.
 				} else {
 					outputBufferSize = 4096
@@ -240,33 +239,33 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				return fmt.Errorf("error initializing private keys: %w", err)
 			}
 
-			s3Client, _, err := initS3Client(v, inputUri, outputUri)
+			s3Client, _, err := initS3Client(v, inputURI, outputURI)
 			if err != nil {
 				return fmt.Errorf("error initializing AWS S3 client: %w", err)
 			}
 
-			inputSFTPClient, inputSSHClient, err := initSFTPClient(inputUri, inputPassword, inputPrivateKey)
+			inputSFTPClient, inputSSHClient, err := initSFTPClient(inputURI, inputPassword, inputPrivateKey)
 			if err != nil {
-				return fmt.Errorf("error initializing SFTP client for input at %q: %w", inputUri, err)
+				return fmt.Errorf("error initializing SFTP client for input at %q: %w", inputURI, err)
 			}
 
-			outputSFTPClient, outputSSHClient, err := initSFTPClient(outputUri, outputPassword, outputPrivateKey)
+			outputSFTPClient, outputSSHClient, err := initSFTPClient(outputURI, outputPassword, outputPrivateKey)
 			if err != nil {
-				return fmt.Errorf("error initializing SFTP client for output at %q: %w", outputUri, err)
+				return fmt.Errorf("error initializing SFTP client for output at %q: %w", outputURI, err)
 			}
 
 			inputCompression := v.GetString(cli.FlagInputCompression)
 			inputDictionary := v.GetString(cli.FlagInputDictionary)
 
-			err = checkURIRead(inputUri, inputSFTPClient)
+			err = checkURIRead(inputURI, inputSFTPClient)
 			if err != nil {
 				_ = inputSFTPClient.Close()
 				_ = inputSSHClient.Close()
-				return fmt.Errorf("input resource %q not valid: %w", inputUri, err)
+				return fmt.Errorf("input resource %q not valid: %w", inputURI, err)
 			}
 
 			readFromResourceOutput, err := grw.ReadFromResource(&grw.ReadFromResourceInput{
-				URI:        inputUri,
+				URI:        inputURI,
 				Alg:        inputCompression,
 				Dict:       []byte(inputDictionary),
 				BufferSize: v.GetInt(cli.FlagInputBufferSize),
@@ -277,7 +276,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				PrivateKey: inputPrivateKey,
 			})
 			if err != nil {
-				return fmt.Errorf("error opening resource at uri %q: %w", inputUri, err)
+				return fmt.Errorf("error opening resource at uri %q: %w", inputURI, err)
 			}
 			inputReader := readFromResourceOutput.Reader
 
@@ -291,29 +290,29 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 			var outputWriter io.WriteCloser
 			var outputBuffer io.Buffer
 
-			if outputUri == "-" {
+			if outputURI == "-" {
 				outputWriter, err = grw.WrapWriter(nop.NewWriteCloser(os.Stdout), outputCompression, []byte(outputDictionary), grw.NoBuffer)
 				if err != nil {
 					return fmt.Errorf("error opening stdout: %w", err)
 				}
-			} else if strings.HasPrefix(outputUri, "s3://") {
+			} else if strings.HasPrefix(outputURI, "s3://") {
 				outputBuffer = new(bytes.Buffer)
 				outputWriter, err = grw.WrapWriter(nop.NewWriteCloser(outputBuffer), outputCompression, []byte(outputDictionary), grw.NoBuffer)
 				if err != nil {
-					return fmt.Errorf("error opening bytes buffer for %q: %w", outputUri, err)
+					return fmt.Errorf("error opening bytes buffer for %q: %w", outputURI, err)
 				}
 			} else {
-				uri := outputUri
+				uri := outputURI
 				if splitLines > 0 {
-					uri = strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, "1")
+					uri = strings.ReplaceAll(outputURI, cli.NumberReplacementCharacter, "1")
 				}
 				scheme, path := splitter.SplitUri(uri)
 				if scheme == "sftp" {
-					err := sftp2.CheckFileWrite(outputSFTPClient, strings.SplitN(path, "/", 2)[1], outputAppend, outputOverwrite)
+					err = sftp2.CheckFileWrite(outputSFTPClient, strings.SplitN(path, "/", 2)[1], outputAppend, outputOverwrite)
 					if err != nil {
-						return fmt.Errorf("cannot write to resource at uri %q: %w", outputUri, err)
+						return fmt.Errorf("cannot write to resource at uri %q: %w", outputURI, err)
 					}
-					writeToResourceOutput, err := grw.WriteToResource(&grw.WriteToResourceInput{
+					writeToResourceOutput, errWriteToResource := grw.WriteToResource(&grw.WriteToResourceInput{
 						URI:        uri,
 						Alg:        outputCompression,
 						BufferSize: outputBufferSize,
@@ -325,28 +324,28 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 						Password:   outputPassword,
 						PrivateKey: outputPrivateKey,
 					})
-					if err != nil {
-						return fmt.Errorf("error writing to resource at uri %q: %w", outputUri, err)
+					if errWriteToResource != nil {
+						return fmt.Errorf("error writing to resource at uri %q: %w", outputURI, errWriteToResource)
 					}
 					outputWriter = writeToResourceOutput.Writer
 				} else if scheme == "file" || scheme == "" {
-					err := os.CheckURIWrite(uri, outputAppend, outputOverwrite)
+					err = os.CheckURIWrite(uri, outputAppend, outputOverwrite)
 					if err != nil {
-						return fmt.Errorf("cannot write to resource at uri %q: %w", outputUri, err)
+						return fmt.Errorf("cannot write to resource at uri %q: %w", outputURI, err)
 					}
 					if v.GetBool(cli.FlagOutputMkdirs) {
-						exists, _, err := os.Stat(filepath.Dir(path))
+						exists, _, errStat := os.Stat(filepath.Dir(path))
 						if err != nil {
-							return fmt.Errorf("error statting uri %q: %w", uri, err)
+							return fmt.Errorf("error statting uri %q: %w", uri, errStat)
 						}
 						if !exists {
-							err := os.MkdirAll(filepath.Dir(path), 0770)
+							err = os.MkdirAll(filepath.Dir(path), 0770)
 							if err != nil {
 								return fmt.Errorf("error creating parent directories for uri %q: %w", uri, err)
 							}
 						}
 					}
-					writeToResourceOutput, err := grw.WriteToResource(&grw.WriteToResourceInput{
+					writeToResourceOutput, errWriteToResource := grw.WriteToResource(&grw.WriteToResourceInput{
 						URI:        uri,
 						Alg:        outputCompression,
 						BufferSize: outputBufferSize,
@@ -358,12 +357,12 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 						Password:   outputPassword,
 						PrivateKey: outputPrivateKey,
 					})
-					if err != nil {
-						return fmt.Errorf("error writing to resource at uri %q: %w", outputUri, err)
+					if errWriteToResource != nil {
+						return fmt.Errorf("error writing to resource at uri %q: %w", outputURI, errWriteToResource)
 					}
 					outputWriter = writeToResourceOutput.Writer
 				} else {
-					return errors.New(fmt.Sprintf("unknown scheme for uri %q", outputUri))
+					return fmt.Errorf("unknown scheme for uri %q", outputURI)
 				}
 			}
 
@@ -406,32 +405,32 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 						if lines == splitLines {
 
 							if outputFlusher, ok := outputWriter.(interface{ Flush() error }); ok {
-								err := outputFlusher.Flush()
-								if err != nil {
-									fmt.Fprint(os.Stderr, fmt.Errorf("error flushing resource at uri %q: %w", strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, strconv.Itoa(files)), err).Error())
+								errFlush := outputFlusher.Flush()
+								if errFlush != nil {
+									fmt.Fprint(os.Stderr, fmt.Errorf("error flushing resource at uri %q: %w", strings.ReplaceAll(outputURI, cli.NumberReplacementCharacter, strconv.Itoa(files)), errFlush).Error())
 									break
 								}
 							}
 
-							err = outputWriter.Close()
-							if err != nil {
-								fmt.Fprint(os.Stderr, fmt.Errorf("error closing resource at uri %q: %w", strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, strconv.Itoa(files)), err).Error())
+							errClose := outputWriter.Close()
+							if errClose != nil {
+								fmt.Fprint(os.Stderr, fmt.Errorf("error closing resource at uri %q: %w", strings.ReplaceAll(outputURI, cli.NumberReplacementCharacter, strconv.Itoa(files)), errClose).Error())
 								break
 							}
 
 							// increment files number
 							files++
 
-							uri := strings.ReplaceAll(outputUri, cli.NumberReplacementCharacter, strconv.Itoa(files))
+							uri := strings.ReplaceAll(outputURI, cli.NumberReplacementCharacter, strconv.Itoa(files))
 
 							scheme, path := splitter.SplitUri(uri)
 							if scheme == "sftp" {
-								err := sftp2.CheckFileWrite(outputSFTPClient, strings.SplitN(path, "/", 2)[1], outputAppend, outputOverwrite)
-								if err != nil {
-									fmt.Fprint(os.Stderr, fmt.Errorf("cannot write to resource at uri %q: %w", uri, err).Error())
+								errCheckFileWrite := sftp2.CheckFileWrite(outputSFTPClient, strings.SplitN(path, "/", 2)[1], outputAppend, outputOverwrite)
+								if errCheckFileWrite != nil {
+									fmt.Fprint(os.Stderr, fmt.Errorf("cannot write to resource at uri %q: %w", uri, errCheckFileWrite).Error())
 									break
 								}
-								writeToResourceOutput, err := grw.WriteToResource(&grw.WriteToResourceInput{
+								writeToResourceOutput, errWriteToResource := grw.WriteToResource(&grw.WriteToResourceInput{
 									URI:        uri,
 									Alg:        outputCompression,
 									BufferSize: outputBufferSize,
@@ -443,32 +442,32 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 									Password:   outputPassword,
 									PrivateKey: outputPrivateKey,
 								})
-								if err != nil {
-									fmt.Fprint(os.Stderr, fmt.Errorf("error opening resource at uri %q: %w", outputUri, err).Error())
+								if errWriteToResource != nil {
+									fmt.Fprint(os.Stderr, fmt.Errorf("error opening resource at uri %q: %w", outputURI, errWriteToResource).Error())
 									break
 								}
 								outputWriter = writeToResourceOutput.Writer
 							} else if scheme == "file" || scheme == "" {
-								err := os.CheckURIWrite(uri, outputAppend, outputOverwrite)
-								if err != nil {
-									fmt.Fprint(os.Stderr, fmt.Errorf("cannot write to resource at uri %q: %w", uri, err).Error())
+								errCheckURIWrite := os.CheckURIWrite(uri, outputAppend, outputOverwrite)
+								if errCheckURIWrite != nil {
+									fmt.Fprint(os.Stderr, fmt.Errorf("cannot write to resource at uri %q: %w", uri, errCheckURIWrite).Error())
 									break
 								}
 								if v.GetBool(cli.FlagOutputMkdirs) {
-									exists, _, err := os.Stat(filepath.Dir(path))
-									if err != nil {
-										fmt.Fprint(os.Stderr, fmt.Errorf("error statting uri %q: %w", uri, err).Error())
+									exists, _, errStat := os.Stat(filepath.Dir(path))
+									if errStat != nil {
+										fmt.Fprint(os.Stderr, fmt.Errorf("error statting uri %q: %w", uri, errStat).Error())
 										break
 									}
 									if !exists {
-										err := os.MkdirAll(filepath.Dir(path), 0770)
-										if err != nil {
-											fmt.Fprint(os.Stderr, fmt.Errorf("error creating parent directories for uri %q: %w", uri, err).Error())
+										errMkdirAll := os.MkdirAll(filepath.Dir(path), 0770)
+										if errMkdirAll != nil {
+											fmt.Fprint(os.Stderr, fmt.Errorf("error creating parent directories for uri %q: %w", uri, errMkdirAll).Error())
 											break
 										}
 									}
 								}
-								writeToResourceOutput, err := grw.WriteToResource(&grw.WriteToResourceInput{
+								writeToResourceOutput, errWriteToResource := grw.WriteToResource(&grw.WriteToResourceInput{
 									URI:        uri,
 									Alg:        outputCompression,
 									BufferSize: outputBufferSize,
@@ -480,13 +479,13 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 									Password:   outputPassword,
 									PrivateKey: outputPrivateKey,
 								})
-								if err != nil {
-									fmt.Fprint(os.Stderr, fmt.Errorf("error opening resource at uri %q: %w", outputUri, err).Error())
+								if errWriteToResource != nil {
+									fmt.Fprint(os.Stderr, fmt.Errorf("error opening resource at uri %q: %w", outputURI, errWriteToResource).Error())
 									break
 								}
 								outputWriter = writeToResourceOutput.Writer
 							} else {
-								fmt.Fprintf(os.Stderr, "unknown scheme for uri %q", outputUri)
+								fmt.Fprintf(os.Stderr, "unknown scheme for uri %q", outputURI)
 								break
 							}
 
@@ -507,7 +506,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 									break
 								}
 							}
-							fmt.Fprint(os.Stderr, fmt.Errorf("error writing to resource at uri %q: %w", outputUri, err).Error())
+							fmt.Fprint(os.Stderr, fmt.Errorf("error writing to resource at uri %q: %w", outputURI, err).Error())
 							break
 						}
 
@@ -515,8 +514,8 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 						lines++
 					}
 
-					if err := scanner.Err(); err != nil {
-						fmt.Fprint(os.Stderr, fmt.Errorf("error reading from resource at uri %q: %w", inputUri, err).Error())
+					if errScan := scanner.Err(); errScan != nil {
+						fmt.Fprint(os.Stderr, fmt.Errorf("error reading from resource at uri %q: %w", inputURI, errScan).Error())
 					}
 
 					wg.Done()
@@ -527,15 +526,15 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 					for (!updateGracefulShutdown(nil)) && (!eof) && (!brokenPipe) {
 
 						b := make([]byte, outputBufferSize)
-						n, err := inputReader.Read(b)
-						if err != nil {
-							if err == io.EOF {
+						n, errRead := inputReader.Read(b)
+						if errRead != nil {
+							if errRead == io.EOF {
 								eof = true
 								// do not break
 								// if the input is less than the size of the buffer,
 								// will then use n > 0, n < len(b), and return EOF
 							} else {
-								fmt.Fprintln(os.Stderr, fmt.Errorf("error reading from resource at uri %q: %w", inputUri, err).Error())
+								fmt.Fprintln(os.Stderr, fmt.Errorf("error reading from resource at uri %q: %w", inputURI, errRead).Error())
 								break
 							}
 						}
@@ -553,7 +552,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 										break
 									}
 								}
-								fmt.Fprintln(os.Stderr, fmt.Errorf("error writing to resource at uri %q: %w", outputUri, err).Error())
+								fmt.Fprintln(os.Stderr, fmt.Errorf("error writing to resource at uri %q: %w", outputURI, err).Error())
 							}
 						}
 
@@ -575,14 +574,14 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				os.Exit(1)
 			}
 
-			if strings.HasPrefix(outputUri, "s3://") {
+			if strings.HasPrefix(outputURI, "s3://") {
 				i := strings.Index(outputPath, "/")
 				if i == -1 {
 					return fmt.Errorf("path missing bucket: %w", err)
 				}
-				err := grw.UploadS3Object(outputPath[0:i], outputPath[i+1:], outputBuffer, s3Client)
-				if err != nil {
-					return fmt.Errorf("error uploading to AWS S3 at uri %q: %w", outputUri, err)
+				errUpload := grw.UploadS3Object(outputPath[0:i], outputPath[i+1:], outputBuffer, s3Client)
+				if errUpload != nil {
+					return fmt.Errorf("error uploading to AWS S3 at uri %q: %w", outputURI, errUpload)
 				}
 			}
 

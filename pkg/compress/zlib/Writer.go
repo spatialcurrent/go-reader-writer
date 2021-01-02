@@ -24,14 +24,14 @@ const (
 
 type Writer struct {
 	*zlib.Writer
-	underlying io.Writer
+	underlying io.WriteCloser
 }
 
 type flusher interface {
 	Flush() error
 }
 
-// Close, flushes and closes the zlib writer and calls the Close method of the underlying writer, if it implements io.Closer.
+// Close closes the zlib writer, and then flushes and closes the underlying writer.
 func (w *Writer) Close() error {
 	err := w.Writer.Close()
 	if err != nil {
@@ -45,11 +45,9 @@ func (w *Writer) Close() error {
 			return fmt.Errorf("error flushing underlying writer: %w", err)
 		}
 	}
-	if c, ok := w.underlying.(io.Closer); ok {
-		err = c.Close()
-		if err != nil {
-			return fmt.Errorf("error closing underlying writer: %w", err)
-		}
+	err = w.underlying.Close()
+	if err != nil {
+		return fmt.Errorf("error closing underlying writer: %w", err)
 	}
 	return nil
 }
@@ -74,7 +72,7 @@ func (w *Writer) Flush() error {
 //
 // It is the caller's responsibility to call Close on the Writer when done.
 // Writes may be buffered and not flushed until Close.
-func NewWriter(w io.Writer) *Writer {
+func NewWriter(w io.WriteCloser) *Writer {
 	return &Writer{Writer: zlib.NewWriter(w), underlying: w}
 }
 
@@ -84,7 +82,7 @@ func NewWriter(w io.Writer) *Writer {
 // The compression level can be DefaultCompression, NoCompression, HuffmanOnly
 // or any integer value between BestSpeed and BestCompression inclusive.
 // The error returned will be nil if the level is valid.
-func NewWriterLevel(w io.Writer, level int) (*Writer, error) {
+func NewWriterLevel(w io.WriteCloser, level int) (*Writer, error) {
 	zw, err := zlib.NewWriterLevel(w, level)
 	if err != nil {
 		return nil, err
@@ -97,7 +95,7 @@ func NewWriterLevel(w io.Writer, level int) (*Writer, error) {
 //
 // The dictionary may be nil. If not, its contents should not be modified until
 // the Writer is closed.
-func NewWriterDict(w io.Writer, dict []byte) (*Writer, error) {
+func NewWriterDict(w io.WriteCloser, dict []byte) (*Writer, error) {
 	zw, err := zlib.NewWriterLevelDict(w, zlib.DefaultCompression, dict)
 	if err != nil {
 		return nil, err
@@ -110,7 +108,7 @@ func NewWriterDict(w io.Writer, dict []byte) (*Writer, error) {
 //
 // The dictionary may be nil. If not, its contents should not be modified until
 // the Writer is closed.
-func NewWriterLevelDict(w io.Writer, level int, dict []byte) (*Writer, error) {
+func NewWriterLevelDict(w io.WriteCloser, level int, dict []byte) (*Writer, error) {
 	zw, err := zlib.NewWriterLevelDict(w, level, dict)
 	if err != nil {
 		return nil, err

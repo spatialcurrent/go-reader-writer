@@ -5,5 +5,5 @@
 //
 // =================================================================
 
-// Package ssh2 provides functions for interacting with a SSH server.
-package ssh2
+// Package cli includes functions for initializing the CLI.
+package cli

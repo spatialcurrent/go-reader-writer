@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -20,7 +20,7 @@ func ReadAllAndClose(r Reader) ([]byte, error) {
 
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
-		Close(r) // ignores error from close and returns error from ReadAll
+		_ = Close(r) // ignores error from close and returns error from ReadAll
 		return b, err
 	}
 	err = Close(r)

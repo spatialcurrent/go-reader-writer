@@ -17,22 +17,22 @@ import (
 // ReadFile returns a reader for reading bytes from a zlib-compressed file.
 func ReadFile(path string, dict []byte, bufferSize int) (*Reader, error) {
 
-	f, err := os.OpenFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("error opening zlib file at path %q for reading: %w", path, err)
+	f, errOpenFile := os.OpenFile(path)
+	if errOpenFile != nil {
+		return nil, fmt.Errorf("error opening zlib file at path %q for reading: %w", path, errOpenFile)
 	}
 
 	if len(dict) > 0 {
-		zr, err := NewReaderDict(bufio.NewReaderSize(f, bufferSize), dict)
-		if err != nil {
-			return nil, fmt.Errorf("error creating zlib reader for file at path %q: %w", path, err)
+		zr, errNewReader := NewReaderDict(bufio.NewReaderSize(f, bufferSize), dict)
+		if errNewReader != nil {
+			return nil, fmt.Errorf("error creating zlib reader for file at path %q: %w", path, errNewReader)
 		}
 		return zr, nil
 	}
 
-	zr, err := NewReader(bufio.NewReaderSize(f, bufferSize))
-	if err != nil {
-		return nil, fmt.Errorf("error creating zlib reader for file at path %q: %w", path, err)
+	zr, errNewReader := NewReader(bufio.NewReaderSize(f, bufferSize))
+	if errNewReader != nil {
+		return nil, fmt.Errorf("error creating zlib reader for file at path %q: %w", path, errNewReader)
 	}
 
 	return zr, nil

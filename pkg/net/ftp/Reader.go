@@ -50,7 +50,7 @@ func NewReader(response *ftp.Response, server *ftp.ServerConn) *Reader {
 	return &Reader{response: response, server: server}
 }
 
-// NewReader creates a new Reader for reading from a FTP server with a set deadline.
+// NewReaderWithDeadline creates a new Reader for reading from a FTP server with a set deadline.
 func NewReaderWithDeadline(response *ftp.Response, server *ftp.ServerConn, deadline time.Time) (*Reader, error) {
 	err := response.SetDeadline(deadline)
 	if err != nil {

@@ -13,7 +13,9 @@ import (
 	"io"
 )
 
-// A reader that propagates the close method.
+// Reader is a modified version of the Reader from the standard library
+// bufio package that wraps an io.ReadCloser and closes its underlying closer
+// when the Close method is called.
 type Reader struct {
 	*bufio.Reader
 	underlying io.Closer
@@ -25,6 +27,7 @@ func (b *Reader) Reset(r io.ReadCloser) {
 	b.underlying = r
 }
 
+// Close closes the underlying io.ReadCloser.
 func (b *Reader) Close() error {
 	if b.close {
 		err := b.underlying.Close()
@@ -53,7 +56,7 @@ func NewReaderSize(r io.ReadCloser, size int) *Reader {
 	}
 }
 
-// NewReaderSize returns a new Reader whose buffer has at least the specified size. If the argument io.Reader is already a Reader with large enough size, it returns the underlying Reader.
+// NewReaderSizeClose returns a new Reader whose buffer has at least the specified size. If the argument io.Reader is already a Reader with large enough size, it returns the underlying Reader.
 func NewReaderSizeClose(r io.ReadCloser, size int, close bool) *Reader {
 	return &Reader{
 		Reader:     bufio.NewReaderSize(r, size),

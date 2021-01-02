@@ -23,11 +23,12 @@ type Reader struct {
 	underlying io.ReadCloser
 }
 
+// Read implements the io.Reader inferface.
 func (r *Reader) Read(p []byte) (int, error) {
 	return r.reader.Read(p)
 }
 
-// Resetter resets a ReadCloser returned by NewReader or NewReaderDict
+// Reset resets a ReadCloser returned by NewReader or NewReaderDict
 // to switch to a new underlying Reader. This permits reusing a ReadCloser
 // instead of allocating a new one.
 func (z *Reader) Reset(reader ByteReadCloser, dict []byte) error {
@@ -48,6 +49,7 @@ func (z *Reader) Reset(reader ByteReadCloser, dict []byte) error {
 	return nil
 }
 
+// Close closes the Reader and the underlying io.ReadCloser.
 func (r *Reader) Close() error {
 	err := r.reader.Close()
 	if err != nil {

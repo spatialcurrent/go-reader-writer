@@ -22,7 +22,7 @@ type Writer struct {
 	sshClient  *ssh.Client
 }
 
-// Read implements the io.Writer interface.
+// Write implements the io.Writer interface.
 func (w *Writer) Write(b []byte) (int, error) {
 	return w.sftpFile.Write(b)
 }

@@ -19,7 +19,7 @@ func TestWriteFile(t *testing.T) {
 	_ = os.MkdirAll("temp", 0775)
 	f, err := ioutil.TempFile("temp", "*.z")
 	assert.NoError(t, err)
-	defer os.Remove(f.Name())
+	defer removeFile(t, f.Name())
 
 	w, err := WriteFile(f.Name(), nil, 4096)
 	assert.NoError(t, err)

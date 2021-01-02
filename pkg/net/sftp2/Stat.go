@@ -29,5 +29,5 @@ func Stat(client *sftp.Client, path string) (bool, stat.Info, error) {
 		}
 		return false, nil, err
 	}
-	return true, &stat.FileInfo{FileInfo: info}, err
+	return true, stat.NewFileInfo(info), err
 }

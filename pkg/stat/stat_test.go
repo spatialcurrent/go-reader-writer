@@ -5,5 +5,4 @@
 //
 // =================================================================
 
-// Package ssh2 provides functions for interacting with a SSH server.
-package ssh2
+package stat

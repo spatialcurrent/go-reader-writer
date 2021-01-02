@@ -13,7 +13,7 @@ import (
 	"github.com/spatialcurrent/go-reader-writer/pkg/compress/gzip"
 )
 
-// GzipBytes returns a reader for reading gzip bytes from an input array.
+// ReadGzipBytes returns a reader for reading gzip bytes from an input array.
 // Wraps the "compress/gzip" package.
 //
 //  - https://pkg.go.dev/pkg/compress/gzip/

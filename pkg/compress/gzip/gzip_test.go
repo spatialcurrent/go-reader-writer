@@ -10,6 +10,7 @@ package gzip
 import (
 	"bytes"
 	"crypto/rand"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -23,6 +24,13 @@ import (
 var (
 	BytesHelloWorld = []byte("hello world")
 )
+
+func removeFile(t *testing.T, path string) {
+	err := os.Remove(path)
+	if err != nil {
+		t.Error(fmt.Errorf("error removing file at path %q: %w", path, err).Error())
+	}
+}
 
 func TestGzipMemory(t *testing.T) {
 	f := func() bool {
@@ -111,7 +119,7 @@ func TestGzipFile(t *testing.T) {
 		_ = f.Close()
 		assert.NoError(t, err)
 
-		defer os.Remove(f.Name())
+		defer removeFile(t, f.Name())
 
 		//
 		// Create Writer

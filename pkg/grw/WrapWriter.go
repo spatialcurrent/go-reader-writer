@@ -38,7 +38,7 @@ func WrapWriter(w io.WriteCloser, alg string, dict []byte, bufferSize int) (io.W
 	case pkgalg.AlgorithmBzip2:
 		return nil, &ErrWriterNotImplemented{Algorithm: alg}
 	case pkgalg.AlgorithmFlate:
-		if dict != nil && len(dict) > 0 {
+		if len(dict) > 0 {
 			fw, err := flate.NewWriterDict(bufio.NewWriter(w), flate.DefaultCompression, dict)
 			if err != nil {
 				return nil, fmt.Errorf("error wrapping writer using compression %q with dictionary %q: %w", alg, string(dict), err)

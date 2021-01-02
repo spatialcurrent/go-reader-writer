@@ -19,15 +19,11 @@ import (
 )
 
 // Fetch returns a Reader for a file at a given SFTP address.
-// ReadFTPFile returns the Reader and error, if any.
 //
-// ReadFTPFile returns an error if the address cannot be dialed,
+// Fetch returns an error if the address cannot be dialed,
 // the userinfo cannot be parsed,
 // the user and password are invalid, or
 // the file cannot be retrieved.
-//
-// If a private key is provided, the function authenticates with the server
-// and encrypts the connection using the key.
 //
 func Fetch(uri string, options ...ssh2.ClientOption) (*Reader, error) {
 

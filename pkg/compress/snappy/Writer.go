@@ -16,14 +16,14 @@ import (
 
 type Writer struct {
 	*snappy.Writer
-	underlying io.Writer
+	underlying io.WriteCloser
 }
 
 type flusher interface {
 	Flush() error
 }
 
-// Close, flushes and closes the snppy.Writer and calls the "Close() error" method of the underlying writer, if it implements io.Closer.
+// Close closes the snppy.Writer, and then flushes and closes the underlying io.WriteCloser.
 func (w *Writer) Close() error {
 	err := w.Writer.Close()
 	if err != nil {
@@ -37,11 +37,9 @@ func (w *Writer) Close() error {
 			return fmt.Errorf("error flushing underlying writer: %w", err)
 		}
 	}
-	if c, ok := w.underlying.(io.Closer); ok {
-		err = c.Close()
-		if err != nil {
-			return fmt.Errorf("error flushing underlying writer: %w", err)
-		}
+	err = w.underlying.Close()
+	if err != nil {
+		return fmt.Errorf("error flushing underlying writer: %w", err)
 	}
 	return nil
 }
@@ -62,7 +60,7 @@ func (w *Writer) Flush() error {
 }
 
 // Reset discards the writer's state and switches the Snappy writer to write to w. This permits reusing a Writer rather than allocating a new one
-func (w *Writer) Reset(writer io.Writer) {
+func (w *Writer) Reset(writer io.WriteCloser) {
 	w.Writer.Reset(writer)
 	w.underlying = w
 }

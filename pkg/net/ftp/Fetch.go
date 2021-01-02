@@ -49,21 +49,21 @@ func Fetch(uri string) (*Reader, error) {
 	}
 
 	if len(userinfo) > 0 {
-		user, password, err := splitter.SplitUserInfo(userinfo)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing user info %q: %w", userinfo, err)
+		user, password, errSplitUserInfo := splitter.SplitUserInfo(userinfo)
+		if errSplitUserInfo != nil {
+			return nil, fmt.Errorf("error parsing user info %q: %w", userinfo, errSplitUserInfo)
 		}
 		if len(user) > 0 {
-			err = conn.Login(user, password)
-			if err != nil {
-				return nil, fmt.Errorf("error logging in with user %q: %w", user, err)
+			errLogin := conn.Login(user, password)
+			if errLogin != nil {
+				return nil, fmt.Errorf("error logging in with user %q: %w", user, errLogin)
 			}
 		}
 	}
 
-	resp, err := conn.Retr(p)
-	if err != nil {
-		return nil, fmt.Errorf("error reading file from uri %q: %w", uri, err)
+	resp, errRetr := conn.Retr(p)
+	if errRetr != nil {
+		return nil, fmt.Errorf("error reading file from uri %q: %w", uri, errRetr)
 	}
 
 	if resp == nil {

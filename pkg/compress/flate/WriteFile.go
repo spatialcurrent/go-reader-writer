@@ -24,15 +24,15 @@ func WriteFile(path string, bufferSize int) (*Writer, error) {
 		return nil, fmt.Errorf("error creating DEFALTE writer for file at path %q: invalid buffer size %d", path, bufferSize)
 	}
 	if bufferSize > 0 {
-		w, err := NewWriter(bufio.NewWriterSize(f, bufferSize))
+		w, errWriter := NewWriter(bufio.NewWriterSize(f, bufferSize))
 		if err != nil {
-			return nil, fmt.Errorf("error creating DEFLATE writer for file at path %q: %w", path, err)
+			return nil, fmt.Errorf("error creating DEFLATE writer for file at path %q: %w", path, errWriter)
 		}
 		return w, nil
 	}
-	w, err := NewWriter(f)
-	if err != nil {
-		return nil, fmt.Errorf("error creating DEFLATE writer for file at path %q: %w", path, err)
+	w, errWriter := NewWriter(f)
+	if errWriter != nil {
+		return nil, fmt.Errorf("error creating DEFLATE writer for file at path %q: %w", path, errWriter)
 	}
 	return w, nil
 }

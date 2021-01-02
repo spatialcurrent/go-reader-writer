@@ -18,7 +18,7 @@ import (
 func TestWriter(t *testing.T) {
 	buf := new(bytes.Buffer)
 	w := NewWriter(NewWriter(buf))
-	fmt.Fprint(w, "hello world")
+	_, _ = fmt.Fprint(w, "hello world")
 	assert.Equal(t, "", buf.String())
 	err := w.Flush()
 	assert.NoError(t, err)
@@ -28,7 +28,7 @@ func TestWriter(t *testing.T) {
 func TestWriterOpen(t *testing.T) {
 	buf := new(bytes.Buffer)
 	w := NewWriter(NewWriterClose(buf, false))
-	fmt.Fprint(w, "hello world")
+	_, _ = fmt.Fprint(w, "hello world")
 	assert.Equal(t, "", buf.String())
 	err := w.Flush()
 	assert.NoError(t, err)

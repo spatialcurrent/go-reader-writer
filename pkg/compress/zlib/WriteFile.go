@@ -24,15 +24,15 @@ func WriteFile(path string, dict []byte, bufferSize int) (*Writer, error) {
 		return nil, fmt.Errorf("error opening file at path %q for writing: %w", path, err)
 	}
 	if bufferSize > 0 {
-		w, err := NewWriterDict(bufio.NewWriterSize(f, bufferSize), dict)
-		if err != nil {
-			return nil, fmt.Errorf("error creating zlib writer for file at path %q: %w", path, err)
+		w, errWriter := NewWriterDict(bufio.NewWriterSize(f, bufferSize), dict)
+		if errWriter != nil {
+			return nil, fmt.Errorf("error creating zlib writer for file at path %q: %w", path, errWriter)
 		}
 		return w, nil
 	}
-	w, err := NewWriterDict(f, dict)
-	if err != nil {
-		return nil, fmt.Errorf("error creating zlib writer for file at path %q: %w", path, err)
+	w, errWriter := NewWriterDict(f, dict)
+	if errWriter != nil {
+		return nil, fmt.Errorf("error creating zlib writer for file at path %q: %w", path, errWriter)
 	}
 	return w, nil
 }

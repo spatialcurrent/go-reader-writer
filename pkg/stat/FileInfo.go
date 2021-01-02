@@ -57,3 +57,7 @@ func (f *FileInfo) Perm() os.FileMode {
 func (f *FileInfo) Size() int64 {
 	return f.FileInfo.Size()
 }
+
+func NewFileInfo(f os.FileInfo) *FileInfo {
+	return &FileInfo{FileInfo: f}
+}

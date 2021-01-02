@@ -23,9 +23,9 @@ import (
 //  - https://golang.org/pkg/compress/gzip/
 //  - https://godoc.org/github.com/golang/snappy
 //
-func UploadS3Object(bucket string, key string, object io.Reader, s3_client *s3.S3) error {
+func UploadS3Object(bucket string, key string, object io.Reader, s3Client *s3.S3) error {
 
-	uploader := s3manager.NewUploaderWithClient(s3_client)
+	uploader := s3manager.NewUploaderWithClient(s3Client)
 
 	uploadInput := &s3manager.UploadInput{
 		Body:   object,

@@ -1,9 +1,9 @@
 // =================================================================
 //
-// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
 
-// Package ssh2 provides functions for interacting with a SSH server.
-package ssh2
+// Package cache includes a struct for caching reads.
+package cache

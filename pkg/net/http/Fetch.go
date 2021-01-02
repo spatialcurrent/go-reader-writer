@@ -65,21 +65,24 @@ func Fetch(uri string, options ...ClientOption) (io.ReadCloser, error) {
 		}
 	}
 
-	request, err := http.NewRequest("GET", fmt.Sprintf("%s://%s:%s%s", scheme, host, port, p), nil)
+	request, errNewRequest := http.NewRequest("GET", fmt.Sprintf("%s://%s:%s%s", scheme, host, port, p), nil)
+	if errNewRequest != nil {
+		return nil, fmt.Errorf("error creating new requestf for %q: %w", fmt.Sprintf("%s://%s:%s%s", scheme, host, port, p), errNewRequest)
+	}
 
 	if len(userinfo) > 0 {
-		user, password, err := splitter.SplitUserInfo(userinfo)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing user info %q: %w", userinfo, err)
+		user, password, errSplitUserInfo := splitter.SplitUserInfo(userinfo)
+		if errSplitUserInfo != nil {
+			return nil, fmt.Errorf("error parsing user info %q: %w", userinfo, errSplitUserInfo)
 		}
 		if len(user) > 0 && len(password) > 0 {
 			request.SetBasicAuth(user, password)
 		}
 	}
 
-	response, err := client.Do(request)
-	if err != nil {
-		return nil, fmt.Errorf("error reading file from uri %q: %w", uri, err)
+	response, errDo := client.Do(request)
+	if errDo != nil {
+		return nil, fmt.Errorf("error reading file from uri %q: %w", uri, errDo)
 	}
 
 	if response == nil {

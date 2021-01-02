@@ -16,20 +16,13 @@ import (
 	"github.com/spatialcurrent/go-reader-writer/pkg/net/ssh2"
 )
 
-// Fetch returns a Reader for a file at a given SFTP address.
-// ReadFTPFile returns the Reader and error, if any.
-//
-// ReadFTPFile returns an error if the address cannot be dialed,
-// the userinfo cannot be parsed,
-// the user and password are invalid, or
-// the file cannot be retrieved.
-//
-// If a private key is provided, the function authenticates with the server
-// and encrypts the connection using the key.
+// FetchWithKey parses the provided key,
+// appends the key to the ClientOption options, and
+// then calls Fetch with the uri and options.
 //
 func FetchWithKey(uri string, key []byte, options ...ssh2.ClientOption) (*Reader, error) {
 
-	if key == nil || len(key) == 0 {
+	if len(key) == 0 {
 		return nil, errors.New("missing private SSH key")
 	}
 

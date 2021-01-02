@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -213,7 +213,7 @@ func (c *Cache) ReadRange(start int, end int) ([]byte, error) {
 			"Content is only %d bytes.  %x.  End is %d",
 			len(*c.Content),
 			fmt.Sprint(c.Content),
-			fmt.Sprint(c.Cursor+end+1)))
+			c.Cursor+end+1))
 	}
 
 	//fmt.Println("End of ReadRange("+fmt.Sprint(start)+","+fmt.Sprint(end)+") has content ",c.Content)

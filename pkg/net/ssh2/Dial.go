@@ -17,16 +17,14 @@ import (
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 
-// Fetch returns a Reader for a file at a given SFTP address.
-// ReadFTPFile returns the Reader and error, if any.
+// Dial returns a Client for the SSH server at a given SSH or SFTP URI.
+// The ClientOption options are processed after the authority from the URI.
 //
-// ReadFTPFile returns an error if the address cannot be dialed,
+// Dial returns an error if the address cannot be dialed,
 // the userinfo cannot be parsed,
 // the user and password are invalid, or
 // the file cannot be retrieved.
 //
-// If a private key is provided, the function authenticates with the server
-// and encrypts the connection using the key.
 //
 func Dial(uri string, options ...ClientOption) (*Client, error) {
 

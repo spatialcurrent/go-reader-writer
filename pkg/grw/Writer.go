@@ -25,7 +25,7 @@ func NewWriter(w io.ByteWriter) *Writer {
 	return &Writer{Writer: w, Mutex: &sync.Mutex{}}
 }
 
-// WriteString writes a slice of bytes to the underlying writer and returns an error, if any.
+// Write writes a slice of bytes to the underlying writer and returns an error, if any.
 //  - https://godoc.org/io#Writer
 func (w *Writer) Write(p []byte) (n int, err error) {
 
@@ -95,7 +95,7 @@ func (w *Writer) WriteError(e error) (n int, err error) {
 	return 0, nil
 }
 
-// WriteError writes a an error as a string with a trailing newline to the underlying writer and returns an error, if any.
+// WriteErrorSafe writes a an error as a string with a trailing newline to the underlying writer and returns an error, if any.
 // WriteErrorSafe also locks the writer for the duration of writing using a sync.Mutex.
 //  - https://godoc.org/io#Writer
 //  - https://godoc.org/sync#Mutex

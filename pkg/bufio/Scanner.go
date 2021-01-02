@@ -13,12 +13,15 @@ import (
 	"io"
 )
 
-// A scanner that propagates the close method.
+// Scanner is a modified version of the Scanner from the standard library
+// bufio package that wraps an io.ReadCloser and closes its underlying closer
+// when the Close method is called.
 type Scanner struct {
 	*bufio.Scanner
 	underlying io.Closer
 }
 
+// Close closes the underlying io.ReadCloser.
 func (s *Scanner) Close() error {
 	err := s.underlying.Close()
 	if err != nil {

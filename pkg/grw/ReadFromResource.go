@@ -55,7 +55,7 @@ func fetchRemoteFile(uri string, password string, privateKeyBytes []byte, sshCli
 	case schemes.SchemeSFTP:
 		if sshClient == nil {
 			options := []ssh2.ClientOption{}
-			if privateKeyBytes != nil && len(privateKeyBytes) > 0 {
+			if len(privateKeyBytes) > 0 {
 				privateKey, err := ssh.ParsePrivateKey(privateKeyBytes)
 				if err != nil {
 					return nil, fmt.Errorf("error parsing private SSH key: %w", err)

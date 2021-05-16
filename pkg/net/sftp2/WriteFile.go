@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2021 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -18,7 +18,7 @@ import (
 	"github.com/spatialcurrent/go-reader-writer/pkg/splitter"
 )
 
-func WriteFile(uri string, options ...ssh2.ClientOption) (*Writer, error) {
+func WriteFile(uri string, fileMode os.FileMode, options ...ssh2.ClientOption) (*Writer, error) {
 
 	sshClient, err := ssh2.Dial(uri, options...)
 	if err != nil {
@@ -38,6 +38,6 @@ func WriteFile(uri string, options ...ssh2.ClientOption) (*Writer, error) {
 		return nil, fmt.Errorf("error opening file: %w", err)
 	}
 
-	return NewWriter(file, sftpClient, sshClient.Client), nil
+	return NewWriter(file, sftpClient, sshClient.Client, fileMode), nil
 
 }

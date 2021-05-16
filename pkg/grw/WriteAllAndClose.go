@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2021 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -20,6 +20,7 @@ import (
 
 // WriteAllAndCloseInput contains the input parameters for WriteAllAndClose.
 type WriteAllAndCloseInput struct {
+	ACL        string // ACL for objects written to AWS S3
 	BufferSize int    // buffer size
 	Bytes      []byte // the content to write
 	URI        string // uri to write to
@@ -39,20 +40,27 @@ func WriteAllAndClose(input *WriteAllAndCloseInput) error {
 		if i == -1 {
 			return errors.New("s3 path missing bucket")
 		}
-		err := UploadS3Object(path[0:i], path[i+1:], bytes.NewBuffer(input.Bytes), input.S3Client)
+		err := UploadS3Object(&UploadS3ObjectInput{
+			ACL:    input.ACL,
+			Bucket: path[0:i],
+			Client: input.S3Client,
+			Key:    path[i+1:],
+			Object: bytes.NewBuffer(input.Bytes),
+		})
 		if err != nil {
 			return fmt.Errorf("error uploading new version of catalog to S3: %w", err)
 		}
 		return nil
 	case "file", "":
 		writeToResourceOutput, err := WriteToResource(&WriteToResourceInput{
-			URI:        input.URI,
-			BufferSize: input.BufferSize,
+			ACL:        input.ACL,
 			Alg:        input.Alg,
-			Dict:       input.Dict,
 			Append:     input.Append,
+			BufferSize: input.BufferSize,
+			Dict:       input.Dict,
 			Parents:    input.Parents,
 			S3Client:   input.S3Client,
+			URI:        input.URI,
 		})
 		if err != nil {
 			return fmt.Errorf("error opening resource at uri %q: %w", input.URI, err)

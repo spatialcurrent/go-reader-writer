@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2021 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -15,7 +15,7 @@ package main
 import (
 	"C"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"strings"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/grw"
@@ -61,7 +61,7 @@ func ReadString(uri *C.char, alg *C.char, str **C.char) *C.char {
 		return C.CString(fmt.Errorf("error opening resource at uri %q: %w", C.GoString(uri), err).Error())
 	}
 
-	b, err := ioutil.ReadAll(readFromResourceOutput.Reader)
+	b, err := io.ReadAll(readFromResourceOutput.Reader)
 	if err != nil {
 		return C.CString(fmt.Errorf("error reading resource at uri %q: %w", C.GoString(uri), err).Error())
 	}

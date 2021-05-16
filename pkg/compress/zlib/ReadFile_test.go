@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2021 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -8,7 +8,7 @@
 package zlib
 
 import (
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,7 +19,7 @@ func TestReadFile(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, r)
 
-	got, err := ioutil.ReadAll(r)
+	got, err := io.ReadAll(r)
 	assert.NoError(t, err)
 	assert.Equal(t, BytesHelloWorld, got)
 

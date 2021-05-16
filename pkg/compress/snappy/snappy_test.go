@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2021 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -11,7 +11,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
 	"testing/quick"
@@ -77,9 +77,9 @@ func TestSnappyMemory(t *testing.T) {
 		}
 
 		// wrap with bufio reader to test propagation.
-		r := NewReader(bufio.NewReader(ioutil.NopCloser(buf)))
+		r := NewReader(bufio.NewReader(io.NopCloser(buf)))
 
-		out, err := ioutil.ReadAll(r)
+		out, err := io.ReadAll(r)
 		if !assert.NoError(t, err) {
 			return false
 		}
@@ -112,7 +112,7 @@ func TestSnappyFile(t *testing.T) {
 
 		_ = os.MkdirAll("temp", 0775)
 
-		f, err := ioutil.TempFile("temp", "*.sz")
+		f, err := os.CreateTemp("temp", "*.sz")
 		_ = f.Close()
 		assert.NoError(t, err)
 
@@ -152,7 +152,7 @@ func TestSnappyFile(t *testing.T) {
 			return false
 		}
 
-		out, err := ioutil.ReadAll(r)
+		out, err := io.ReadAll(r)
 		if !assert.NoError(t, err) {
 			return false
 		}

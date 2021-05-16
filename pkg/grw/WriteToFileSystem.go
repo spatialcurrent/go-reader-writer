@@ -26,6 +26,7 @@ type WriteToFileSystemInput struct {
 	BufferSize int    // buffer size
 	Dict       []byte // compression dictionary
 	Flag       int    // flag for file descriptor
+	Mode       uint32 // mode of the output file
 	Path       string // path to write to
 	Parents    bool   // automatically create parent directories as necessary
 }
@@ -70,7 +71,11 @@ func WriteToFileSystem(input *WriteToFileSystemInput) (io.WriteCloser, error) {
 	case pkgalg.AlgorithmZlib:
 		return zlib.WriteFile(input.Path, input.Dict, input.BufferSize)
 	case pkgalg.AlgorithmNone:
-		return WriteFile(input.Path, input.Dict, input.BufferSize)
+		return WriteFile(&WriteFileInput{
+			Path:       input.Path,
+			BufferSize: input.BufferSize,
+			Mode:       input.Mode,
+		})
 	}
 
 	return nil, &pkgalg.ErrUnknownAlgorithm{Algorithm: input.Alg}

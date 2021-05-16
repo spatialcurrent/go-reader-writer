@@ -12,7 +12,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	stdos "os"
 	"os/signal"
 	"path/filepath"
@@ -52,7 +51,7 @@ func initPrivateKey(p string) ([]byte, error) {
 	if len(p) == 0 {
 		return []byte{}, nil
 	}
-	b, err := ioutil.ReadFile(p)
+	b, err := stdos.ReadFile(p)
 	if err != nil {
 		return nil, fmt.Errorf("error reading private key from %q: %w", p, err)
 	}
@@ -221,6 +220,17 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 
 			verbose := v.GetBool(cli.FlagVerbose)
 
+			outputModeString := v.GetString(cli.FlagOutputMode)
+
+			outputMode, outputModeErr := strconv.ParseUint(outputModeString, 0, 32)
+			if outputModeErr != nil {
+				return fmt.Errorf("invalid output mode %q: %w", outputModeString, outputModeErr)
+			}
+
+			outputACL := v.GetString(cli.FlagOutputACL)
+
+			fmt.Println("output acl:", outputACL)
+
 			outputBufferSize := v.GetInt(cli.FlagOutputBufferSize)
 			if outputBufferSize < 0 {
 				if outputURI == "-" {
@@ -313,16 +323,18 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 						return fmt.Errorf("cannot write to resource at uri %q: %w", outputURI, err)
 					}
 					writeToResourceOutput, errWriteToResource := grw.WriteToResource(&grw.WriteToResourceInput{
-						URI:        uri,
+						ACL:        outputACL,
+						Append:     outputAppend,
 						Alg:        outputCompression,
 						BufferSize: outputBufferSize,
 						Dict:       []byte(outputDictionary),
-						Append:     outputAppend,
+						Mode:       uint32(outputMode),
+						Password:   outputPassword,
+						PrivateKey: outputPrivateKey,
 						S3Client:   s3Client,
 						SSHClient:  outputSSHClient,
 						SFTPClient: outputSFTPClient,
-						Password:   outputPassword,
-						PrivateKey: outputPrivateKey,
+						URI:        uri,
 					})
 					if errWriteToResource != nil {
 						return fmt.Errorf("error writing to resource at uri %q: %w", outputURI, errWriteToResource)
@@ -346,16 +358,18 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 						}
 					}
 					writeToResourceOutput, errWriteToResource := grw.WriteToResource(&grw.WriteToResourceInput{
-						URI:        uri,
+						ACL:        outputACL,
 						Alg:        outputCompression,
+						Append:     outputAppend,
 						BufferSize: outputBufferSize,
 						Dict:       []byte(outputDictionary),
-						Append:     outputAppend,
+						Mode:       uint32(outputMode),
+						Password:   outputPassword,
+						PrivateKey: outputPrivateKey,
 						S3Client:   s3Client,
 						SSHClient:  outputSSHClient,
 						SFTPClient: outputSFTPClient,
-						Password:   outputPassword,
-						PrivateKey: outputPrivateKey,
+						URI:        uri,
 					})
 					if errWriteToResource != nil {
 						return fmt.Errorf("error writing to resource at uri %q: %w", outputURI, errWriteToResource)
@@ -431,16 +445,18 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 									break
 								}
 								writeToResourceOutput, errWriteToResource := grw.WriteToResource(&grw.WriteToResourceInput{
-									URI:        uri,
+									ACL:        outputACL,
 									Alg:        outputCompression,
+									Append:     outputAppend,
 									BufferSize: outputBufferSize,
 									Dict:       []byte(outputDictionary),
-									Append:     outputAppend,
+									Mode:       uint32(outputMode),
+									Password:   outputPassword,
+									PrivateKey: outputPrivateKey,
 									S3Client:   s3Client,
 									SSHClient:  outputSSHClient,
 									SFTPClient: outputSFTPClient,
-									Password:   outputPassword,
-									PrivateKey: outputPrivateKey,
+									URI:        uri,
 								})
 								if errWriteToResource != nil {
 									fmt.Fprint(os.Stderr, fmt.Errorf("error opening resource at uri %q: %w", outputURI, errWriteToResource).Error())
@@ -468,16 +484,18 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 									}
 								}
 								writeToResourceOutput, errWriteToResource := grw.WriteToResource(&grw.WriteToResourceInput{
-									URI:        uri,
+									ACL:        outputACL,
 									Alg:        outputCompression,
+									Append:     outputAppend,
 									BufferSize: outputBufferSize,
 									Dict:       []byte(outputDictionary),
-									Append:     outputAppend,
+									Mode:       uint32(outputMode),
+									Password:   outputPassword,
+									PrivateKey: outputPrivateKey,
 									S3Client:   s3Client,
 									SSHClient:  outputSSHClient,
 									SFTPClient: outputSFTPClient,
-									Password:   outputPassword,
-									PrivateKey: outputPrivateKey,
+									URI:        uri,
 								})
 								if errWriteToResource != nil {
 									fmt.Fprint(os.Stderr, fmt.Errorf("error opening resource at uri %q: %w", outputURI, errWriteToResource).Error())
@@ -579,7 +597,13 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				if i == -1 {
 					return fmt.Errorf("path missing bucket: %w", err)
 				}
-				errUpload := grw.UploadS3Object(outputPath[0:i], outputPath[i+1:], outputBuffer, s3Client)
+				errUpload := grw.UploadS3Object(&grw.UploadS3ObjectInput{
+					ACL:    outputACL,
+					Bucket: outputPath[0:i],
+					Client: s3Client,
+					Key:    outputPath[i+1:],
+					Object: outputBuffer,
+				})
 				if errUpload != nil {
 					return fmt.Errorf("error uploading to AWS S3 at uri %q: %w", outputURI, errUpload)
 				}

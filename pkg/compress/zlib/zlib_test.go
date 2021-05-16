@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2021 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -11,7 +11,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
 	"testing/quick"
@@ -77,12 +77,12 @@ func TestZlibMemory(t *testing.T) {
 		}
 
 		// wrap with bufio reader to test propagation.
-		r, err := NewReader(bufio.NewReader(ioutil.NopCloser(buf)))
+		r, err := NewReader(bufio.NewReader(io.NopCloser(buf)))
 		if !assert.NoError(t, err) {
 			return false
 		}
 
-		out, err := ioutil.ReadAll(r)
+		out, err := io.ReadAll(r)
 		if !assert.NoError(t, err) {
 			return false
 		}
@@ -115,7 +115,7 @@ func TestZlibFile(t *testing.T) {
 
 		_ = os.MkdirAll("temp", 0775)
 
-		f, err := ioutil.TempFile("temp", "*.z")
+		f, err := os.CreateTemp("temp", "*.z")
 		_ = f.Close()
 		assert.NoError(t, err)
 
@@ -155,7 +155,7 @@ func TestZlibFile(t *testing.T) {
 			return false
 		}
 
-		out, err := ioutil.ReadAll(r)
+		out, err := io.ReadAll(r)
 		if !assert.NoError(t, err) {
 			return false
 		}

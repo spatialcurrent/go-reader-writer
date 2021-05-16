@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2021 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -9,7 +9,7 @@ package http
 
 import (
 	"crypto/tls"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"testing"
@@ -23,7 +23,7 @@ func TestFetchHTTP(t *testing.T) {
 		r, err := Fetch(os.Getenv("TEST_ACC_HTTP_URI"))
 		require.NoError(t, err)
 		require.NotNil(t, r)
-		got, err := ioutil.ReadAll(r)
+		got, err := io.ReadAll(r)
 		assert.NoError(t, err)
 		assert.NotNil(t, got)
 		err = r.Close()
@@ -36,7 +36,7 @@ func TestFetchHTTPS(t *testing.T) {
 		r, err := Fetch(os.Getenv("TEST_ACC_HTTPS_URI"))
 		require.NoError(t, err)
 		require.NotNil(t, r)
-		got, err := ioutil.ReadAll(r)
+		got, err := io.ReadAll(r)
 		assert.NoError(t, err)
 		assert.NotNil(t, got)
 		err = r.Close()
@@ -56,7 +56,7 @@ func TestFetchHTTPSWithOption(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.NotNil(t, r)
-		got, err := ioutil.ReadAll(r)
+		got, err := io.ReadAll(r)
 		assert.NoError(t, err)
 		assert.NotNil(t, got)
 		err = r.Close()

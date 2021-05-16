@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2021 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -10,6 +10,7 @@ package grw
 import (
 	"fmt"
 	"io"
+	stdos "os"
 	"path/filepath"
 	"strings"
 
@@ -26,17 +27,19 @@ import (
 )
 
 type WriteToResourceInput struct {
+	ACL        string       // ACL for objects written to AWS s3
 	Alg        string       // compression algorithm
 	Append     bool         // append to output resource
 	BufferSize int          // buffer size
 	Dict       []byte       // compression dictionary
+	Mode       uint32       // mode of the output file
 	Parents    bool         // automatically create parent directories as necessary
+	Password   string       // password
+	PrivateKey []byte       // private key
 	S3Client   *s3.S3       // AWS S3 Client
 	SSHClient  *ssh.Client  // SSH Client
 	SFTPClient *sftp.Client // SFTP Client
 	URI        string       // uri to write to
-	Password   string       // password
-	PrivateKey []byte       // private key
 }
 
 type WriteToResourceOutput struct {
@@ -90,7 +93,20 @@ func writeToSFTP(input *WriteToResourceInput) (*WriteToResourceOutput, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error wrapping writer for resource at %q: %w", input.URI, err)
 	}
-	return &WriteToResourceOutput{Writer: ww}, nil
+	return &WriteToResourceOutput{
+		Writer: &FunctionWriteCloser{
+			Writer: func(p []byte) (n int, err error) { return ww.Write(p) },
+			Closer: func() error {
+				err := ww.Close()
+				// After closing the file, attempt to update the desired mode
+				if input.Mode != uint32(0) {
+					// attempt to change file mode to the desired mode, if error than just continue
+					_ = sftpClient.Chmod(file.Name(), stdos.FileMode(input.Mode))
+				}
+				return err
+			},
+		},
+	}, nil
 }
 
 // WriteToResource returns a ByteWriteCloser and error, if any.
@@ -134,6 +150,7 @@ func WriteToResource(input *WriteToResourceInput) (*WriteToResourceOutput, error
 			BufferSize: input.BufferSize,
 			Dict:       input.Dict,
 			Flag:       flag,
+			Mode:       input.Mode,
 			Parents:    false,
 			Path:       pathExpanded,
 		})

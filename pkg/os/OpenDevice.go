@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2021 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -9,7 +9,6 @@ package os
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -19,7 +18,7 @@ import (
 //  - stdout, /dev/stdout => os.Stdout
 //  - stderr, /dev/stderr => os.Stderr
 //  - stdin, /dev/stdin => os.Stdin
-//  - null, /dev/null => ioutil.Discard
+//  - null, /dev/null => io.Discard
 func OpenDevice(name string) io.Writer {
 	switch strings.ToLower(name) {
 	case "stdout", "/dev/stdout":
@@ -29,7 +28,7 @@ func OpenDevice(name string) io.Writer {
 	case "stdin", "/dev/stdin":
 		return os.Stdin
 	case "null", "/dev/null":
-		return ioutil.Discard
+		return io.Discard
 	}
 	return nil
 }

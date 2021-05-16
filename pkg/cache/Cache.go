@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2021 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -10,7 +10,7 @@ package cache
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/io"
 )
@@ -167,7 +167,7 @@ func (c *Cache) ReadAt(i int) (byte, error) {
 func (c *Cache) ReadAll() ([]byte, error) {
 	//fmt.Println("ReadAll()")
 	if !*c.Complete {
-		newContent, err := ioutil.ReadAll(c.Reader)
+		newContent, err := io.ReadAll(c.Reader)
 		if err != nil {
 			return newContent, fmt.Errorf("error reading all content from underlying reader: %w", err)
 		}

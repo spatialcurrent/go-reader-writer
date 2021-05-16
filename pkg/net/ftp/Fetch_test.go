@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2021 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -9,7 +9,7 @@ package ftp
 
 import (
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/textproto"
 	"os"
 	"testing"
@@ -33,7 +33,7 @@ func TestFetchAnonymous(t *testing.T) {
 		r, err := Fetch("ftp://anonymous@ftp2.census.gov/robots.txt")
 		require.NoError(t, err)
 		require.NotNil(t, r)
-		got, err := ioutil.ReadAll(r)
+		got, err := io.ReadAll(r)
 		assert.NoError(t, err)
 		assert.NotNil(t, got)
 		assert.Len(t, got, 478)

@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2021 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -19,10 +19,12 @@ const (
 	FlagInputBufferSize    = "input-buffer-size"
 	FlagInputPrivateKey    = "input-private-key"
 	FlagInputPassword      = "input-password"
+	FlagOutputACL          = "output-acl"
 	FlagOutputCompression  = "output-compression"
 	FlagOutputBufferSize   = "output-buffer-size"
 	FlagOutputAppend       = "output-append"
 	FlagOutputMkdirs       = "output-mkdirs"
+	FlagOutputMode         = "output-mode"
 	FlagOutputOverwrite    = "output-overwrite"
 	FlagOutputDictionary   = "output-dictionary"
 	FlagOutputPrivateKey   = "output-private-key"

@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2021 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -9,7 +9,7 @@ package ssh2
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -19,7 +19,7 @@ type PrivateKey interface {
 }
 
 func LoadPrivateKey(path string) (PrivateKey, error) {
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("error reading private key from path %q: %w", path, err)
 	}

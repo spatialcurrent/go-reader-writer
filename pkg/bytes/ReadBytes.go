@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2021 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -9,7 +9,6 @@ package bytes
 
 import (
 	"io"
-	"io/ioutil"
 
 	pkgalg "github.com/spatialcurrent/go-reader-writer/pkg/alg"
 )
@@ -29,11 +28,11 @@ func ReadBytes(b []byte, alg string, dict []byte) (io.ReadCloser, error) {
 	case pkgalg.AlgorithmGzip:
 		return ReadGzipBytes(b, true)
 	case pkgalg.AlgorithmSnappy:
-		return ioutil.NopCloser(ReadSnappyBytes(b)), nil
+		return io.NopCloser(ReadSnappyBytes(b)), nil
 	case pkgalg.AlgorithmZlib:
 		return ReadZlibBytes(b, dict)
 	case "none", "":
-		return ioutil.NopCloser(ReadPlainBytes(b)), nil
+		return io.NopCloser(ReadPlainBytes(b)), nil
 	}
 	return nil, &pkgalg.ErrUnknownAlgorithm{Algorithm: alg}
 }

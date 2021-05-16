@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2021 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -27,11 +27,13 @@ func InitFlags(flag *pflag.FlagSet) {
 	flag.String(FlagInputPrivateKey, "", "Use the provided private key to connect to the input.")
 	flag.String(FlagInputPassword, "", "Use the provided password to connect to the input.")
 
+	flag.String(FlagOutputACL, "", "ACL of an output file in AWS S3")
 	flag.String(FlagOutputCompression, "none", "the output compression")
 	flag.String(FlagOutputDictionary, "", "the output dictionary")
 	flag.IntP(FlagOutputBufferSize, "b", -1, "The output writer buffer size. The default for stdout is 0.  The default for files is 4096.")
 
 	flag.BoolP(FlagOutputMkdirs, "m", false, "make directories if missing for output file")
+	flag.String(FlagOutputMode, "0600", "the mode of the output file")
 	flag.BoolP(FlagOutputAppend, "a", false, "append to output files")
 	flag.BoolP(FlagOutputOverwrite, "o", false, "overwrite output if it already exists")
 	flag.String(FlagOutputPrivateKey, "", "Use the provided private key to connect to the output.")

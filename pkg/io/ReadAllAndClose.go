@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2021 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -8,7 +8,7 @@
 package io
 
 import (
-	"io/ioutil"
+	"io"
 )
 
 // ReadAllAndClose reads all the data from the reader and calls its close method (if it has one).
@@ -18,7 +18,7 @@ func ReadAllAndClose(r Reader) ([]byte, error) {
 		return make([]byte, 0), ErrMissingReader
 	}
 
-	b, err := ioutil.ReadAll(r)
+	b, err := io.ReadAll(r)
 	if err != nil {
 		_ = Close(r) // ignores error from close and returns error from ReadAll
 		return b, err

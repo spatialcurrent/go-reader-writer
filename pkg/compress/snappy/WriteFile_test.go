@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2021 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -8,7 +8,6 @@
 package snappy
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -17,7 +16,7 @@ import (
 
 func TestWriteFile(t *testing.T) {
 	_ = os.MkdirAll("temp", 0775)
-	f, err := ioutil.TempFile("temp", "*.sz")
+	f, err := os.CreateTemp("temp", "*.sz")
 	assert.NoError(t, err)
 	defer removeFile(t, f.Name())
 

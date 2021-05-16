@@ -8,25 +8,48 @@
 package flate
 
 import (
+	"fmt"
 	"io"
 
 	"compress/flate"
-
-	"github.com/pkg/errors"
 )
 
-type Reader struct {
+type ByteReadCloser interface {
 	io.ReadCloser
-	underlying io.Reader
+	io.ByteReader
 }
 
-// Close closes the underlying reader if it implements io.Closer.
-func (r *Reader) Close() error {
-	if c, ok := r.underlying.(io.Closer); ok {
-		err := c.Close()
+type Reader struct {
+	reader     io.ReadCloser
+	underlying io.ReadCloser
+}
+
+func (r *Reader) Read(p []byte) (int, error) {
+	return r.reader.Read(p)
+}
+
+func (r *Reader) Reset(reader ByteReadCloser, dict []byte) error {
+	r.underlying = nil
+	if resetter, ok := r.reader.(flate.Resetter); ok {
+		err := resetter.Reset(reader, dict)
 		if err != nil {
-			return errors.Wrap(err, "error closing underlying reader")
+			return fmt.Errorf("error resetting underlying reader: %w", err)
 		}
+	} else {
+		r.reader = flate.NewReaderDict(r, dict)
+	}
+	r.underlying = reader
+	return nil
+}
+
+func (r *Reader) Close() error {
+	err := r.reader.Close()
+	if err != nil {
+		return fmt.Errorf("error closing reader: %w", err)
+	}
+	err = r.underlying.Close()
+	if err != nil {
+		return fmt.Errorf("error closing underlying reader: %w", err)
 	}
 	return nil
 }
@@ -39,8 +62,8 @@ func (r *Reader) Close() error {
 // when finished reading.
 //
 // The ReadCloser returned by NewReader also implements Resetter.
-func NewReader(r io.Reader) *Reader {
-	return &Reader{ReadCloser: flate.NewReader(r), underlying: r}
+func NewReader(r ByteReadCloser) *Reader {
+	return &Reader{reader: flate.NewReader(r), underlying: r}
 }
 
 // NewReaderDict is like NewReader but initializes the reader
@@ -50,6 +73,6 @@ func NewReader(r io.Reader) *Reader {
 // to read data compressed by NewWriterDict.
 //
 // The ReadCloser returned by NewReader also implements Resetter.
-func NewReaderDict(r io.Reader, dict []byte) *Reader {
-	return &Reader{ReadCloser: flate.NewReaderDict(r, dict), underlying: r}
+func NewReaderDict(r ByteReadCloser, dict []byte) *Reader {
+	return &Reader{reader: flate.NewReaderDict(r, dict), underlying: r}
 }

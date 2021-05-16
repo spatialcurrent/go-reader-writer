@@ -8,7 +8,7 @@
 package grw
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/io"
 )
@@ -27,13 +27,13 @@ func CloseWriters(input *CloseWritersInput) error {
 		if input.Flush {
 			err := io.Flush(w)
 			if err != nil {
-				return errors.Wrap(err, "error flushing writer")
+				return fmt.Errorf("error flushing writer: %w", err)
 			}
 		}
 
 		err := io.Close(w)
 		if err != nil {
-			return errors.Wrap(err, "error closing writer")
+			return fmt.Errorf("error closing writer: %w", err)
 		}
 
 	}

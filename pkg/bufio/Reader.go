@@ -9,39 +9,58 @@ package bufio
 
 import (
 	"bufio"
+	"fmt"
 	"io"
-
-	"github.com/pkg/errors"
 )
 
+// Reader is a modified version of the Reader from the standard library
+// bufio package that wraps an io.ReadCloser and closes its underlying closer
+// when the Close method is called.
 type Reader struct {
 	*bufio.Reader
-	underlying io.Reader
+	underlying io.Closer
+	close      bool
 }
 
-// Close, calls the Close method of the underlying reader, if it implements io.Closer.
-func (r *Reader) Close() error {
-	if c, ok := r.underlying.(io.Closer); ok {
-		err := c.Close()
+func (b *Reader) Reset(r io.ReadCloser) {
+	b.Reader.Reset(r)
+	b.underlying = r
+}
+
+// Close closes the underlying io.ReadCloser.
+func (b *Reader) Close() error {
+	if b.close {
+		err := b.underlying.Close()
 		if err != nil {
-			return errors.Wrap(err, "error closing underlying reader")
+			return fmt.Errorf("error closing underlying reader: %w", err)
 		}
 	}
 	return nil
 }
 
-// NewReader returns a new Reader whose buffer has the default size.
-func NewReader(r io.Reader) *Reader {
+// NewReader returns a new NewReader whose buffer has the default size.
+func NewReader(r io.ReadCloser) *Reader {
 	return &Reader{
 		Reader:     bufio.NewReader(r),
 		underlying: r,
+		close:      true,
 	}
 }
 
 // NewReaderSize returns a new Reader whose buffer has at least the specified size. If the argument io.Reader is already a Reader with large enough size, it returns the underlying Reader.
-func NewReaderSize(r io.Reader, size int) *Reader {
+func NewReaderSize(r io.ReadCloser, size int) *Reader {
 	return &Reader{
 		Reader:     bufio.NewReaderSize(r, size),
 		underlying: r,
+		close:      true,
+	}
+}
+
+// NewReaderSizeClose returns a new Reader whose buffer has at least the specified size. If the argument io.Reader is already a Reader with large enough size, it returns the underlying Reader.
+func NewReaderSizeClose(r io.ReadCloser, size int, close bool) *Reader {
+	return &Reader{
+		Reader:     bufio.NewReaderSize(r, size),
+		underlying: r,
+		close:      close,
 	}
 }

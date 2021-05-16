@@ -9,7 +9,6 @@ package snappy
 
 import (
 	"bytes"
-	"io"
 
 	"github.com/golang/snappy"
 )
@@ -20,7 +19,7 @@ import (
 //  - https://godoc.org/github.com/golang/snappy
 //  - https://en.wikipedia.org/wiki/Snappy_(compression)
 //
-func ReadBytes(b []byte) io.Reader {
+func ReadBytes(b []byte) ReadResetter {
 	// Just uses original reader, since nothing to close.
 	return snappy.NewReader(bytes.NewReader(b))
 }

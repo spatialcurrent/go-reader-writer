@@ -10,9 +10,8 @@
 package io
 
 import (
+	"errors"
 	"io"
-
-	"github.com/pkg/errors"
 )
 
 var (

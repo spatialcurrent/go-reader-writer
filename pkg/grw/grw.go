@@ -5,8 +5,6 @@
 //
 // =================================================================
 
-// +build !js
-
 // Package grw provides the interfaces, embedded structs, and implementing code
 // for normalizing the reading/writing of a stream of bytes from archive/compressed files.
 // This package supports the bzip2, gzip, snappy, and zip archive/compression algorithms.  No compression can be identified as "none" or a blank string.
@@ -29,7 +27,7 @@
 //    b, err := input_reader.ReadBytes([]byte("\n")[0])
 //    if err != nil {
 //      if err != io.EOF {
-//        fmt.Println(errors.Wrap(err, "Error reading bytes from file"))
+//        fmt.Println(fmt.Errorf("error reading bytes from file: %w", err))
 //        os.Exit(1)
 //      }
 //    }
@@ -56,43 +54,19 @@ package grw
 
 import (
 	"errors"
-)
 
-const (
-	AlgorithmBzip2  = "bzip2"  // bzip2
-	AlgorithmFlate  = "flate"  // flate aka DEFLATE
-	AlgorithmGzip   = "gzip"   // gzip
-	AlgorithmNone   = "none"   // no compressions
-	AlgorithmSnappy = "snappy" // snappy
-	AlgorithmZip    = "zip"    // zip archive
-	AlgorithmZlib   = "zlib"   // zlib
-
-	SchemeFile  = "file"
-	SchemeFtp   = "ftp"
-	SchemeHTTP  = "http"
-	SchemeHTTPS = "https"
-	SchemeS3    = "s3"
+	"github.com/spatialcurrent/go-reader-writer/pkg/alg"
 )
 
 var (
 	Algorithms = []string{
-		AlgorithmBzip2,
-		AlgorithmFlate,
-		AlgorithmGzip,
-		AlgorithmNone,
-		AlgorithmSnappy,
-		AlgorithmZip,
-		AlgorithmZlib,
-	}
-)
-
-var (
-	Schemes = []string{
-		SchemeFile,
-		SchemeFtp,
-		SchemeHTTP,
-		SchemeHTTPS,
-		SchemeS3,
+		alg.AlgorithmBzip2,
+		alg.AlgorithmFlate,
+		alg.AlgorithmGzip,
+		alg.AlgorithmNone,
+		alg.AlgorithmSnappy,
+		alg.AlgorithmZip,
+		alg.AlgorithmZlib,
 	}
 )
 
@@ -105,5 +79,6 @@ var (
 )
 
 var (
-	NoDict = []byte{} // no dictionary
+	NoDict   = []byte{} // no dictionary
+	NoBuffer = 0
 )

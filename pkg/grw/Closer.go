@@ -8,9 +8,8 @@
 package grw
 
 import (
+	"fmt"
 	"io"
-
-	"github.com/pkg/errors"
 )
 
 // Closer is a helper struct for closing a sequential list of closers associated with a resource.
@@ -25,7 +24,7 @@ func (c *Closer) Close() error {
 		for i, x := range c.Closers {
 			err := x.Close()
 			if err != nil {
-				return errors.Wrapf(err, "error closing underlying closer %d", i)
+				return fmt.Errorf("error closing underlying closer %d: %w", i, err)
 			}
 		}
 	}

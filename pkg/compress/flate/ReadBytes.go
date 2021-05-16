@@ -10,7 +10,6 @@ package flate
 import (
 	"bytes"
 	"compress/flate"
-	"io"
 )
 
 // ReadBytes returns a reader for reading DEFLATE-compressed bytes from an input slice.
@@ -19,10 +18,10 @@ import (
 //  - https://golang.org/pkg/compress/flate/
 //  - https://en.wikipedia.org/wiki/DEFLATE
 //
-func ReadBytes(b []byte, dict []byte) io.ReadCloser {
+func ReadBytes(b []byte, dict []byte) ReadResetCloser {
 	if len(dict) > 0 {
-		return flate.NewReaderDict(bytes.NewReader(b), dict)
+		return flate.NewReaderDict(bytes.NewReader(b), dict).(ReadResetCloser)
 	}
 
-	return flate.NewReader(bytes.NewReader(b))
+	return flate.NewReader(bytes.NewReader(b)).(ReadResetCloser)
 }

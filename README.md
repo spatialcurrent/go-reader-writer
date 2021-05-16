@@ -17,20 +17,28 @@
 
 Using cross compilers, this library can also be called by other languages.  This library is cross compiled into a Shared Object file (`*.so`).  The Shared Object file can be called by `C`, `C++`, and `Python` on Linux machines.  See the examples folder for patterns that you can use.  This library is also compiled to pure `JavaScript` using [GopherJS](https://github.com/gopherjs/gopherjs).
 
+## Platforms
+
+The following platforms are supported.  Pull requests to support other platforms are welcome!
+
+| GOOS | 386 | amd64 | arm | arm64 |
+| ---- | --- | ----- | --- | ----- |
+| darwin | - | ✓ | - | - |
+| freebsd | ✓ | ✓ | ✓ | - |
+| linux | ✓ | ✓ | ✓ | ✓ |
+| openbsd | ✓ | ✓ | - | - |
+| solaris | - | ✓ | - | - |
+| windows | ✓ | ✓ | - | - |
+
+## Releases
+
+Find releases for the supported platforms at [https://github.com/spatialcurrent/go-reader-writer/releases](https://github.com/spatialcurrent/go-reader-writer/releases).  See the **Building** section below to build for another platform from source.
+
 ## Usage
 
 **CLI**
 
-The command line tool, `grw`, can be used to easily read and write compressed resources by uri.  We currently support the following platforms.
-
-| GOOS | GOARCH |
-| ---- | ------ |
-| darwin | amd64 |
-| linux | amd64 |
-| windows | amd64 |
-| linux | arm64 |
-
-Pull requests to support other platforms are welcome!  See the [CLI.md](docs/CLI.md) document for detailed usage and examples.
+The command line tool, `grw`, can be used to easily read and write compressed resources by uri.  See the [CLI.md](docs/CLI.md) document for detailed usage and examples.
 
 **Go**
 
@@ -43,16 +51,6 @@ go get -u -d github.com/spatialcurrent/go-reader-writer/...
 
 See [grw](https://godoc.org/github.com/spatialcurrent/go-reader-writer/pkg/grw) in GoDoc for information on how to use Go API.
 
-**Node**
-
-GRW is built as a module.  In modern JavaScript, the module can be imported using [destructuring assignment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment).
-
-```javascript
-const { read, algorithms, schemes } = require('./dist/grw.mod.min.js');
-```
-
-In legacy JavaScript, you can use the `grw.global.js` file that simply adds `grw` to the global scope.
-
 **C**
 
 A variant of the reader and writer functions are exported in a Shared Object file (`*.so`), which can be called by `C`, `C++`, and `Python` programs on Linux machines.  For complete patterns for `C`, `C++`, and `Python`, see the `examples` folder in this repo.
@@ -61,12 +59,6 @@ A variant of the reader and writer functions are exported in a Shared Object fil
 
 **go-reader-writer** is currently in **alpha**.  Find releases at [https://github.com/spatialcurrent/go-reader-writer/releases](https://github.com/spatialcurrent/go-reader-writer/releases).  See the **Building** section below to build from scratch.
 
-**JavaScript**
-
-- `grw.global.js`, `grw.global.js.map` - JavaScript global build  with source map
-- `grw.global.min.js`, `grw.global.min.js.map` - Minified JavaScript global build with source map
-- `grw.mod.js`, `grw.mod.js.map` - JavaScript module build  with source map
-- `grw.mod.min.js`, `grw.mod.min.js.map` - Minified JavaScript module with source map
 
 **Darwin**
 
@@ -106,18 +98,20 @@ You can compile GRW to pure JavaScript with the `make build_javascript` script.
 
 The `make build_so` script is used to build Shared Objects (`*.so`), which can be called by `C`, `C++`, and `Python` on Linux machines.
 
-**Changing Destination**
-
-The default destination for build artifacts is `go-reader-writer/bin`, but you can change the destination with an environment variable.  For building on a Chromebook consider saving the artifacts in `/usr/local/go/bin`, e.g., `DEST=/usr/local/go/bin make build_cli`
-
 ## Testing
 
 **CLI**
 
 To run CLI testes use `make test_cli`, which uses [shUnit2](https://github.com/kward/shunit2).  If you recive a `shunit2:FATAL Please declare TMPDIR with path on partition with exec permission.` error, you can modify the `TMPDIR` environment variable in line or with `export TMPDIR=<YOUR TEMP DIRECTORY HERE>`. For example:
 
-```
+```shell
 TMPDIR="/usr/local/tmp" make test_cli
+```
+
+To test SFTP support, set following environment variables as shown below.
+
+```shell
+GRW_TESTDATA_SFTP=sftp://ubuntu@A.B.C.D OUTPUT_PRIVATE_KEY=~/sftp-test-1.pem INPUT_PRIVATE_KEY=~/sftp-test-1.pem OUTPUT_OVERWRITE=1 make test_cli
 ```
 
 **Go**

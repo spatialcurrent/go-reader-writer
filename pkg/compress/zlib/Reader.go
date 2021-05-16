@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -8,25 +8,56 @@
 package zlib
 
 import (
-	"io"
-
 	"compress/zlib"
-
-	"github.com/pkg/errors"
+	"fmt"
+	"io"
 )
 
-type Reader struct {
+type ByteReadCloser interface {
 	io.ReadCloser
-	underlying io.Reader
+	io.ByteReader
 }
 
-// Close closes the underlying reader if it implements io.Closer.
-func (r *Reader) Close() error {
-	if c, ok := r.underlying.(io.Closer); ok {
-		err := c.Close()
+type Reader struct {
+	reader     io.ReadCloser
+	underlying io.ReadCloser
+}
+
+// Read implements the io.Reader inferface.
+func (r *Reader) Read(p []byte) (int, error) {
+	return r.reader.Read(p)
+}
+
+// Reset resets a ReadCloser returned by NewReader or NewReaderDict
+// to switch to a new underlying Reader. This permits reusing a ReadCloser
+// instead of allocating a new one.
+func (r *Reader) Reset(reader ByteReadCloser, dict []byte) error {
+	r.underlying = nil
+	if resetter, ok := r.reader.(zlib.Resetter); ok {
+		err := resetter.Reset(reader, dict)
 		if err != nil {
-			return errors.Wrap(err, "error closing underlying reader")
+			return fmt.Errorf("error resetting underlying reader: %w", err)
 		}
+	} else {
+		zr, err := zlib.NewReaderDict(reader, dict)
+		if err != nil {
+			return fmt.Errorf("error recreating reader: %w", err)
+		}
+		r.reader = zr
+	}
+	r.underlying = reader
+	return nil
+}
+
+// Close closes the Reader and the underlying io.ReadCloser.
+func (r *Reader) Close() error {
+	err := r.reader.Close()
+	if err != nil {
+		return fmt.Errorf("error closing reader: %w", err)
+	}
+	err = r.underlying.Close()
+	if err != nil {
+		return fmt.Errorf("error closing underlying reader: %w", err)
 	}
 	return nil
 }
@@ -38,12 +69,12 @@ func (r *Reader) Close() error {
 // It is the caller's responsibility to call Close on the ReadCloser when done.
 //
 // The ReadCloser returned by NewReader also implements Resetter.
-func NewReader(r io.Reader) (*Reader, error) {
+func NewReader(r ByteReadCloser) (*Reader, error) {
 	zr, err := zlib.NewReader(r)
 	if err != nil {
 		return nil, err
 	}
-	return &Reader{ReadCloser: zr, underlying: r}, nil
+	return &Reader{reader: zr, underlying: r}, nil
 }
 
 // NewReaderDict is like NewReader but uses a preset dictionary.
@@ -51,10 +82,10 @@ func NewReader(r io.Reader) (*Reader, error) {
 // If the compressed data refers to a different dictionary, NewReaderDict returns ErrDictionary.
 //
 // The ReadCloser returned by NewReaderDict also implements Resetter.
-func NewReaderDict(r io.Reader, dict []byte) (*Reader, error) {
+func NewReaderDict(r ByteReadCloser, dict []byte) (*Reader, error) {
 	zr, err := zlib.NewReaderDict(r, dict)
 	if err != nil {
 		return nil, err
 	}
-	return &Reader{ReadCloser: zr, underlying: r}, nil
+	return &Reader{reader: zr, underlying: r}, nil
 }

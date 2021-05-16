@@ -9,14 +9,14 @@ package bufio
 
 import (
 	"bufio"
+	"fmt"
 	"io"
-
-	"github.com/pkg/errors"
 )
 
 type Writer struct {
 	*bufio.Writer
 	underlying io.Writer
+	close      bool
 }
 
 type flusher interface {
@@ -27,23 +27,25 @@ type flusher interface {
 func (b *Writer) Flush() error {
 	err := b.Writer.Flush()
 	if err != nil {
-		return errors.Wrap(err, "error flushing bufio.Writer")
+		return fmt.Errorf("error flushing bufio.Writer: %w", err)
 	}
 	if f, ok := b.underlying.(flusher); ok {
 		err = f.Flush()
 		if err != nil {
-			return errors.Wrap(err, "error flushing underlying writer")
+			return fmt.Errorf("error flushing underlying writer: %w", err)
 		}
 	}
 	return nil
 }
 
-// Close, calls the "Close() error" method of the underlying writer, if it implements io.Closer.
+// Close calls the "Close() error" method of the underlying writer, if it implements io.Closer.
 func (b *Writer) Close() error {
-	if c, ok := b.underlying.(io.Closer); ok {
-		err := c.Close()
-		if err != nil {
-			return errors.Wrap(err, "error closing underlying writer")
+	if b.close {
+		if c, ok := b.underlying.(io.Closer); ok {
+			err := c.Close()
+			if err != nil {
+				return fmt.Errorf("error closing underlying writer: %w", err)
+			}
 		}
 	}
 	return nil
@@ -54,6 +56,16 @@ func NewWriter(w io.Writer) *Writer {
 	return &Writer{
 		Writer:     bufio.NewWriter(w),
 		underlying: w,
+		close:      true,
+	}
+}
+
+// NewWriterClose returns a new Writer whose buffer has the default size.  If close is false, then does not close the underlying writer.
+func NewWriterClose(w io.Writer, close bool) *Writer {
+	return &Writer{
+		Writer:     bufio.NewWriter(w),
+		underlying: w,
+		close:      close,
 	}
 }
 
@@ -62,5 +74,15 @@ func NewWriterSize(w io.Writer, size int) *Writer {
 	return &Writer{
 		Writer:     bufio.NewWriterSize(w, size),
 		underlying: w,
+		close:      true,
+	}
+}
+
+// NewWriterSizeClose returns a new Writer whose buffer has at least the specified size. If the argument io.Writer is already a Writer with large enough size, it returns the underlying Writer.
+func NewWriterSizeClose(w io.Writer, size int, close bool) *Writer {
+	return &Writer{
+		Writer:     bufio.NewWriterSize(w, size),
+		underlying: w,
+		close:      close,
 	}
 }

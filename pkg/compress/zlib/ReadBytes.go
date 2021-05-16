@@ -10,7 +10,6 @@ package zlib
 import (
 	"bytes"
 	"compress/zlib"
-	"io"
 )
 
 // ReadBytes returns a reader for reading zlib-compressed bytes from an input slice.
@@ -19,10 +18,18 @@ import (
 //  - https://golang.org/pkg/compress/zlib/
 //  - https://en.wikipedia.org/wiki/Zlib
 //
-func ReadBytes(b []byte, dict []byte) (io.ReadCloser, error) {
+func ReadBytes(b []byte, dict []byte) (ReadResetCloser, error) {
 	if len(dict) > 0 {
-		return zlib.NewReaderDict(bytes.NewReader(b), dict)
+		r, err := zlib.NewReaderDict(bytes.NewReader(b), dict)
+		if err != nil {
+			return nil, err
+		}
+		return r.(ReadResetCloser), nil
 	}
 
-	return zlib.NewReader(bytes.NewReader(b))
+	r, err := zlib.NewReader(bytes.NewReader(b))
+	if err != nil {
+		return nil, err
+	}
+	return r.(ReadResetCloser), nil
 }

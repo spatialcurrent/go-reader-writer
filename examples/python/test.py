@@ -41,13 +41,13 @@ input_uri = "https://raw.githubusercontent.com/spatialcurrent/go-reader-writer/m
 input_alg = "none"
 output_string_pointer = c_char_p()
 
-print "Algorithms: "+ algorithms()
+print("Algorithms:", algorithms())
 
-print "Schemes: "+ schemes()
+print("Schemes:", schemes())
 
-print input_uri
+print("URI:", input_uri)
 
-err = read_string(input_uri, input_alg, byref(output_string_pointer))
+err = read_string(input_uri.encode('utf_8'), input_alg.encode('utf_8'), byref(output_string_pointer))
 if err != None:
     print("error: %s" % (str(err, encoding='utf-8')))
     sys.exit(1)
@@ -55,8 +55,8 @@ if err != None:
 # Convert from ctype to python string
 output_string = output_string_pointer.value
 
-# Print output to stdout
-err = write_string("stdout", "", 0, output_string)
+# Print output to stdout (and keep stdout open)
+err = write_string("stdout".encode('utf_8'), "none".encode('utf_8'), 0, output_string, 0)
 if err != None:
     print("error: %s" % (str(err, encoding='utf-8')))
     sys.exit(1)

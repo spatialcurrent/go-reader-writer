@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -20,7 +20,7 @@ import (
 //  - https://golang.org/pkg/compress/zlib/
 //  - https://en.wikipedia.org/wiki/Zlib
 //
-func ReadBytes(b []byte, multistream bool) (*gzip.Reader, error) {
+func ReadBytes(b []byte, multistream bool) (ReadResetCloser, error) {
 	gr, err := gzip.NewReader(bytes.NewReader(b))
 	if err != nil {
 		return nil, err

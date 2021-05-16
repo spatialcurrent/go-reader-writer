@@ -7,10 +7,11 @@
 
 package grw
 
-import (
-	"os"
+/*
 
-	"github.com/pkg/errors"
+import (
+	"fmt"
+	"os"
 )
 
 type ReadFromFileInput struct {
@@ -30,15 +31,17 @@ func ReadFromFile(input *ReadFromFileInput) (*Reader, error) {
 	case AlgorithmBzip2, AlgorithmGzip, AlgorithmSnappy, AlgorithmNone, "":
 		r, err := WrapReader(input.File, input.Alg, input.Dict, input.BufferSize)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error wrapping reader for file at path %q", input.File.Name())
+			return nil, fmt.Errorf("error wrapping reader for file at path %q: %w", input.File.Name(), err)
 		}
 		return &Reader{Reader: r}, nil
 	case AlgorithmZip:
 		brc, err := ReadZipFile(input.File.Name())
 		if err != nil {
-			return nil, errors.Wrapf(err, "error creating reader for zip file at path %q", input.File.Name())
+			return nil, fmt.Errorf("error creating reader for zip file at path %q: %w", input.File.Name(), err)
 		}
 		return brc, nil
 	}
 	return nil, &ErrUnknownAlgorithm{Algorithm: input.Alg}
 }
+
+*/

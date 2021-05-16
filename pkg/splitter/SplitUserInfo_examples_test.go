@@ -16,7 +16,7 @@ func ExampleSplitUserInfo_none() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(fmt.Sprintf("user=%q password=%q", user, password))
+	fmt.Printf("user=%q password=%q\n", user, password)
 	// Output: user="" password=""
 }
 
@@ -25,7 +25,7 @@ func ExampleSplitUserInfo_user() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(fmt.Sprintf("user=%q password=%q", user, password))
+	fmt.Printf("user=%q password=%q\n", user, password)
 	// Output: user="foo" password=""
 }
 
@@ -34,7 +34,7 @@ func ExampleSplitUserInfo_userColon() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(fmt.Sprintf("user=%q password=%q", user, password))
+	fmt.Printf("user=%q password=%q\n", user, password)
 	// Output: user="foo" password=""
 }
 
@@ -43,6 +43,6 @@ func ExampleSplitUserInfo_userPassword() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(fmt.Sprintf("user=%q password=%q", user, password))
+	fmt.Printf("user=%q password=%q\n", user, password)
 	// Output: user="foo" password="bar"
 }

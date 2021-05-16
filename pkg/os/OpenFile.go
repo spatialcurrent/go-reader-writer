@@ -8,16 +8,15 @@
 package os
 
 import (
+	"fmt"
 	"os"
-
-	"github.com/pkg/errors"
 )
 
 // OpenFile returns wraps os.OpenFile
 func OpenFile(path string) (*os.File, error) {
 	f, err := os.OpenFile(path, os.O_RDONLY, 0)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error opening file at %q for reading", path)
+		return nil, fmt.Errorf("error opening file at %q for reading: %w", path, err)
 	}
 	return f, nil
 }

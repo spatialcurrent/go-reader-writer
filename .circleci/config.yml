@@ -19,7 +19,7 @@ executors:
   # `macos` uses the macOS machine image.
   macos:
     macos:
-      xcode: 11.5.0
+      xcode: 12.4.0
       resource_class: medium
 
   # `windows` uses the Windows machine image.
@@ -99,6 +99,7 @@ jobs:
           root: bin
           paths:
             - grw_darwin_amd64
+            - grw_darwin_arm64
             - grw_linux_386
             - grw_linux_amd64
             - grw_linux_arm

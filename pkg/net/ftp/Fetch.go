@@ -33,7 +33,7 @@ const (
 //
 func Fetch(uri string) (*Reader, error) {
 
-	_, fullpath := splitter.SplitUri(uri)
+	_, fullpath := splitter.SplitURI(uri)
 
 	parts := strings.SplitN(fullpath, "/", 2)
 	authority, p := parts[0], parts[1]

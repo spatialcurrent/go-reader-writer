@@ -35,25 +35,25 @@ type Reader struct {
 // in order to be left positioned just after the gzip stream.
 // To start the next stream, call z.Reset(r) followed by z.Multistream(false).
 // If there is no next stream, z.Reset(r) will return io.EOF.
-func (z *Reader) Multistream(ok bool) {
-	z.reader.Multistream(ok)
+func (r *Reader) Multistream(ok bool) {
+	r.reader.Multistream(ok)
 }
 
 // Read implements io.Reader, reading uncompressed bytes from its underlying Reader.
-func (z *Reader) Read(p []byte) (int, error) {
-	return z.reader.Read(p)
+func (r *Reader) Read(p []byte) (int, error) {
+	return r.reader.Read(p)
 }
 
 // Reset discards the Reader z's state and makes it equivalent to the
 // result of its original state from NewReader, but reading from r instead.
 // This permits reusing a Reader rather than allocating a new one.
-func (z *Reader) Reset(reader io.ReadCloser) error {
-	z.underlying = nil
-	err := z.reader.Reset(reader)
+func (r *Reader) Reset(reader io.ReadCloser) error {
+	r.underlying = nil
+	err := r.reader.Reset(reader)
 	if err != nil {
 		return fmt.Errorf("error resetting reader: %w", err)
 	}
-	z.underlying = reader
+	r.underlying = reader
 	return nil
 }
 

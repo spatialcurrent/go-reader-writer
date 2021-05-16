@@ -31,21 +31,21 @@ func (r *Reader) Read(p []byte) (int, error) {
 // Reset resets a ReadCloser returned by NewReader or NewReaderDict
 // to switch to a new underlying Reader. This permits reusing a ReadCloser
 // instead of allocating a new one.
-func (z *Reader) Reset(reader ByteReadCloser, dict []byte) error {
-	z.underlying = nil
-	if resetter, ok := z.reader.(zlib.Resetter); ok {
+func (r *Reader) Reset(reader ByteReadCloser, dict []byte) error {
+	r.underlying = nil
+	if resetter, ok := r.reader.(zlib.Resetter); ok {
 		err := resetter.Reset(reader, dict)
 		if err != nil {
 			return fmt.Errorf("error resetting underlying reader: %w", err)
 		}
 	} else {
-		r, err := zlib.NewReaderDict(reader, dict)
+		zr, err := zlib.NewReaderDict(reader, dict)
 		if err != nil {
 			return fmt.Errorf("error recreating reader: %w", err)
 		}
-		z.reader = r
+		r.reader = zr
 	}
-	z.underlying = reader
+	r.underlying = reader
 	return nil
 }
 

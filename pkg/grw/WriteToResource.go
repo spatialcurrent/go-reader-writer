@@ -83,7 +83,7 @@ func writeToSFTP(input *WriteToResourceInput) (*WriteToResourceOutput, error) {
 		}
 		sftpClient = c
 	}
-	_, fullpath := splitter.SplitUri(input.URI)
+	_, fullpath := splitter.SplitURI(input.URI)
 	file, err := sftpClient.OpenFile(strings.SplitN(fullpath, "/", 2)[1], os.O_WRONLY|os.O_CREATE|os.O_TRUNC)
 	if err != nil {
 		return nil, fmt.Errorf("error opening file: %w", err)
@@ -120,7 +120,7 @@ func WriteToResource(input *WriteToResourceInput) (*WriteToResourceOutput, error
 		return &WriteToResourceOutput{Writer: w}, nil
 	}
 
-	scheme, path := splitter.SplitUri(input.URI)
+	scheme, path := splitter.SplitURI(input.URI)
 	switch scheme {
 	case schemes.SchemeSFTP:
 		return writeToSFTP(input)

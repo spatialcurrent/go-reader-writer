@@ -29,8 +29,8 @@ func CheckConfig(args []string, v *viper.Viper) error {
 		case "stdout", "/dev/stdout", "-":
 			return fmt.Errorf("cannot split by lines when writing to stdout")
 		}
-		outputUri := args[1]
-		if !strings.Contains(outputUri, NumberReplacementCharacter) {
+		outputURI := args[1]
+		if !strings.Contains(outputURI, NumberReplacementCharacter) {
 			return fmt.Errorf(
 				"when splitting by lines, you must include the number replacement character (%q) in the output uri",
 				NumberReplacementCharacter,

@@ -11,9 +11,9 @@ import (
 	"strings"
 )
 
-// SplitUri splits a uri string into a scheme and remainder.
+// SplitURI splits a uri string into a scheme and remainder.
 // If no scheme is specified, then returns "" as the scheme and the original string.
-func SplitUri(uri string) (string, string) {
+func SplitURI(uri string) (string, string) {
 	if i := strings.Index(uri, "://"); i != -1 {
 		return uri[0:i], uri[i+3:]
 	}

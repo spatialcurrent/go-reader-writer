@@ -49,7 +49,7 @@ type ReadFromResourceOutput struct {
 }
 
 func fetchRemoteFile(uri string, password string, privateKeyBytes []byte, sshClient *ssh.Client, sftpClient *sftp.Client) (io.ReadCloser, error) {
-	switch scheme, fullpath := splitter.SplitUri(uri); scheme {
+	switch scheme, fullpath := splitter.SplitURI(uri); scheme {
 	case schemes.SchemeFTP:
 		return ftp.Fetch(uri)
 	case schemes.SchemeSFTP:
@@ -109,7 +109,7 @@ func ReadFromResource(input *ReadFromResourceInput) (*ReadFromResourceOutput, er
 		return &ReadFromResourceOutput{Reader: wr, Metadata: nil}, nil
 	}
 
-	scheme, path := splitter.SplitUri(input.URI)
+	scheme, path := splitter.SplitURI(input.URI)
 
 	switch scheme {
 	case schemes.SchemeFile, "":

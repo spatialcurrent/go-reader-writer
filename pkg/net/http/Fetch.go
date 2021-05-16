@@ -39,7 +39,7 @@ func splitPath(str string) (string, string) {
 //
 func Fetch(uri string, options ...ClientOption) (io.ReadCloser, error) {
 
-	scheme, fullpath := splitter.SplitUri(uri)
+	scheme, fullpath := splitter.SplitURI(uri)
 
 	if scheme != "http" && scheme != "https" {
 		return nil, fmt.Errorf("error reading file from uri %q: http.Fetch only supports schemes http and https", uri)

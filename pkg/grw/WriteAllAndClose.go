@@ -33,7 +33,7 @@ type WriteAllAndCloseInput struct {
 
 // WriteAllAndClose writes the bytes to the resource indicated by the uri given, flushes, and closes the resource.
 func WriteAllAndClose(input *WriteAllAndCloseInput) error {
-	scheme, path := splitter.SplitUri(input.URI)
+	scheme, path := splitter.SplitURI(input.URI)
 	switch scheme {
 	case "s3":
 		i := strings.Index(path, "/")

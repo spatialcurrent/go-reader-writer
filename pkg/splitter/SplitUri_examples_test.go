@@ -11,26 +11,26 @@ import (
 	"fmt"
 )
 
-func ExampleSplitUri_none() {
+func ExampleSplitURI_none() {
 	scheme, remainder := SplitUri("foo.bar")
-	fmt.Println(fmt.Sprintf("scheme=%q remainder=%q", scheme, remainder))
+	fmt.Printf("scheme=%q remainder=%q\n", scheme, remainder)
 	// Output: scheme="" remainder="foo.bar"
 }
 
-func ExampleSplitUri_fTP() {
+func ExampleSplitURI_fTP() {
 	scheme, remainder := SplitUri("ftp://foo.bar")
-	fmt.Println(fmt.Sprintf("scheme=%q remainder=%q", scheme, remainder))
+	fmt.Printf("scheme=%q remainder=%q\n", scheme, remainder)
 	// Output: scheme="ftp" remainder="foo.bar"
 }
 
-func ExampleSplitUri_hTTPS() {
+func ExampleSplitURI_hTTPS() {
 	scheme, remainder := SplitUri("https://foo.bar")
-	fmt.Println(fmt.Sprintf("scheme=%q remainder=%q", scheme, remainder))
+	fmt.Printf("scheme=%q remainder=%q\n", scheme, remainder)
 	// Output: scheme="https" remainder="foo.bar"
 }
 
-func ExampleSplitUri_file() {
+func ExampleSplitURI_file() {
 	scheme, remainder := SplitUri("file:///path/to/file")
-	fmt.Println(fmt.Sprintf("scheme=%q remainder=%q", scheme, remainder))
+	fmt.Printf("scheme=%q remainder=%q\n", scheme, remainder)
 	// Output: scheme="file" remainder="/path/to/file"
 }

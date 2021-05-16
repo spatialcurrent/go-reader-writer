@@ -33,7 +33,7 @@ func Stat(uri string) (bool, stat.Info, error) {
 		return true, stat.NewFileInfo(info), err
 	}
 
-	scheme, path := splitter.SplitUri(uri)
+	scheme, path := splitter.SplitURI(uri)
 
 	switch scheme {
 	case "file", "none", "":

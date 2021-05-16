@@ -10,7 +10,6 @@ package cache
 import (
 	"errors"
 	"fmt"
-	"io"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/io"
 )
@@ -62,7 +61,7 @@ func (c *Cache) Read(p []byte) (n int, err error) {
 	}
 
 	if len(p) == 0 {
-		return 0, errors.New("error attempting to read zero bytes from file.")
+		return 0, errors.New("error attempting to read zero bytes from file")
 	}
 
 	n, err = c.Reader.Read(p)
@@ -209,11 +208,11 @@ func (c *Cache) ReadRange(start int, end int) ([]byte, error) {
 	}
 
 	if (c.Cursor + end + 1) > len(*c.Content) {
-		return make([]byte, 0), errors.New(fmt.Sprintf(
-			"Content is only %d bytes.  %x.  End is %d",
+		return make([]byte, 0), fmt.Errorf(
+			"content is only %d bytes,  %x,  end is %d",
 			len(*c.Content),
 			fmt.Sprint(c.Content),
-			c.Cursor+end+1))
+			c.Cursor+end+1)
 	}
 
 	//fmt.Println("End of ReadRange("+fmt.Sprint(start)+","+fmt.Sprint(end)+") has content ",c.Content)

@@ -30,7 +30,7 @@ func WriteFile(uri string, fileMode os.FileMode, options ...ssh2.ClientOption) (
 		return nil, fmt.Errorf("error creating SFTP client: %w", err)
 	}
 
-	_, fullpath := splitter.SplitUri(uri)
+	_, fullpath := splitter.SplitURI(uri)
 	parts := strings.SplitN(fullpath, "/", 2)
 
 	file, err := sftpClient.OpenFile(parts[1], os.O_WRONLY|os.O_CREATE|os.O_TRUNC)

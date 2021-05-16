@@ -41,7 +41,7 @@ func Fetch(uri string, options ...ssh2.ClientOption) (*Reader, error) {
 		return nil, fmt.Errorf("error creating SFTP client: %w", err)
 	}
 
-	_, fullpath := splitter.SplitUri(uri)
+	_, fullpath := splitter.SplitURI(uri)
 	parts := strings.SplitN(fullpath, "/", 2)
 
 	file, err := sftpClient.Open(parts[1])

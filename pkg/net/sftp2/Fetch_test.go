@@ -35,7 +35,7 @@ func TestFetchPassword(t *testing.T) {
 
 func TestFetchKey(t *testing.T) {
 	if os.Getenv("TEST_ACC_SFTP") == "1" {
-		key, err := io.ReadFile(os.Getenv("TEST_ACC_SFTP_KEY"))
+		key, err := os.ReadFile(os.Getenv("TEST_ACC_SFTP_KEY"))
 		if err != nil {
 			t.Fatal(err)
 		}

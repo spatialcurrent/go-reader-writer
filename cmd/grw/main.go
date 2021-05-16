@@ -151,7 +151,7 @@ func initSFTPClient(uri string, password string, privateKeyBytes []byte) (*sftp.
 
 func checkURIRead(uri string, sftpClient *sftp.Client) error {
 	if uri != "-" {
-		scheme, path := splitter.SplitUri(uri)
+		scheme, path := splitter.SplitURI(uri)
 		switch scheme {
 		case "sftp":
 			err := sftp2.CheckFileRead(sftpClient, strings.SplitN(path, "/", 2)[1])
@@ -216,7 +216,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				}
 			}
 
-			_, outputPath := splitter.SplitUri(outputURI)
+			_, outputPath := splitter.SplitURI(outputURI)
 
 			verbose := v.GetBool(cli.FlagVerbose)
 
@@ -316,7 +316,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				if splitLines > 0 {
 					uri = strings.ReplaceAll(outputURI, cli.NumberReplacementCharacter, "1")
 				}
-				scheme, path := splitter.SplitUri(uri)
+				scheme, path := splitter.SplitURI(uri)
 				if scheme == "sftp" {
 					err = sftp2.CheckFileWrite(outputSFTPClient, strings.SplitN(path, "/", 2)[1], outputAppend, outputOverwrite)
 					if err != nil {
@@ -437,7 +437,7 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 
 							uri := strings.ReplaceAll(outputURI, cli.NumberReplacementCharacter, strconv.Itoa(files))
 
-							scheme, path := splitter.SplitUri(uri)
+							scheme, path := splitter.SplitURI(uri)
 							if scheme == "sftp" {
 								errCheckFileWrite := sftp2.CheckFileWrite(outputSFTPClient, strings.SplitN(path, "/", 2)[1], outputAppend, outputOverwrite)
 								if errCheckFileWrite != nil {

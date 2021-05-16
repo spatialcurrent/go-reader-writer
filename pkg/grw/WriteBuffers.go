@@ -36,7 +36,7 @@ func WriteBuffers(input *WriteBuffersInput) error {
 
 	for uri, buffer := range input.Buffers {
 
-		scheme, path := splitter.SplitUri(uri)
+		scheme, path := splitter.SplitURI(uri)
 
 		if scheme == "" || scheme == "file" {
 			if (!input.Overwrite) && (!input.Append) {

@@ -28,7 +28,7 @@ import (
 //
 func Dial(uri string, options ...ClientOption) (*Client, error) {
 
-	scheme, fullpath := splitter.SplitUri(uri)
+	scheme, fullpath := splitter.SplitURI(uri)
 
 	if scheme != SchemeSSH && scheme != SchemeSFTP {
 		return nil, fmt.Errorf("error dialing %q: unknown scheme %q", uri, scheme)

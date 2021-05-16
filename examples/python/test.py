@@ -56,7 +56,7 @@ if err != None:
 output_string = output_string_pointer.value
 
 # Print output to stdout (and keep stdout open)
-err = write_string("stdout".encode('utf_8'), "".encode('utf_8'), 0, output_string, 0)
+err = write_string("stdout".encode('utf_8'), "none".encode('utf_8'), 0, output_string, 0)
 if err != None:
     print("error: %s" % (str(err, encoding='utf-8')))
     sys.exit(1)

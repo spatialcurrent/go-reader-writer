@@ -12,25 +12,25 @@ import (
 )
 
 func ExampleSplitURI_none() {
-	scheme, remainder := SplitUri("foo.bar")
+	scheme, remainder := SplitURI("foo.bar")
 	fmt.Printf("scheme=%q remainder=%q\n", scheme, remainder)
 	// Output: scheme="" remainder="foo.bar"
 }
 
 func ExampleSplitURI_fTP() {
-	scheme, remainder := SplitUri("ftp://foo.bar")
+	scheme, remainder := SplitURI("ftp://foo.bar")
 	fmt.Printf("scheme=%q remainder=%q\n", scheme, remainder)
 	// Output: scheme="ftp" remainder="foo.bar"
 }
 
 func ExampleSplitURI_hTTPS() {
-	scheme, remainder := SplitUri("https://foo.bar")
+	scheme, remainder := SplitURI("https://foo.bar")
 	fmt.Printf("scheme=%q remainder=%q\n", scheme, remainder)
 	// Output: scheme="https" remainder="foo.bar"
 }
 
 func ExampleSplitURI_file() {
-	scheme, remainder := SplitUri("file:///path/to/file")
+	scheme, remainder := SplitURI("file:///path/to/file")
 	fmt.Printf("scheme=%q remainder=%q\n", scheme, remainder)
 	// Output: scheme="file" remainder="/path/to/file"
 }

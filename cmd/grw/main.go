@@ -229,8 +229,6 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 
 			outputACL := v.GetString(cli.FlagOutputACL)
 
-			fmt.Println("output acl:", outputACL)
-
 			outputBufferSize := v.GetInt(cli.FlagOutputBufferSize)
 			if outputBufferSize < 0 {
 				if outputURI == "-" {

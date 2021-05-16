@@ -5,6 +5,8 @@
 //
 // =================================================================
 
+//lint:file-ignore ST1020 conflicts with format required by cgo
+
 // grw.so creates a shared library of Go that can be called by C, C++, or Python
 //
 //  - https://godoc.org/cmd/cgo

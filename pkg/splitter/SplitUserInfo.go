@@ -8,10 +8,9 @@
 package splitter
 
 import (
+	"fmt"
 	"net/url"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 // SplitUserInfo splits a user info string into a user and password.
@@ -28,18 +27,18 @@ func SplitUserInfo(userinfo string) (string, string, error) {
 	if !strings.Contains(userinfo, ":") {
 		user, err := url.PathUnescape(userinfo)
 		if err != nil {
-			return "", "", errors.Wrapf(err, "error parsing user %q", userinfo)
+			return "", "", fmt.Errorf("error parsing user %q: %w", userinfo, err)
 		}
 		return user, "", nil
 	}
 	parts := strings.SplitN(userinfo, ":", 2)
 	user, err := url.PathUnescape(parts[0])
 	if err != nil {
-		return "", "", errors.Wrapf(err, "error parsing user %q", parts[0])
+		return "", "", fmt.Errorf("error parsing user %q: %w", parts[0], err)
 	}
 	password, err := url.PathUnescape(parts[1])
 	if err != nil {
-		return user, "", errors.Wrap(err, "error parsing password")
+		return user, "", fmt.Errorf("error parsing password: %w", err)
 	}
 	return user, password, nil
 }

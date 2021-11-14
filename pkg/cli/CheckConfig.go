@@ -16,8 +16,12 @@ import (
 
 func CheckConfig(args []string, v *viper.Viper) error {
 
-	if len(args) > 2 {
-		return fmt.Errorf("expecting less than 3 arguments, found %d arguments", len(args))
+	if len(args) == 0 {
+		return fmt.Errorf("missing positional arguments for input and output")
+	} else if len(args) == 1 {
+		return fmt.Errorf("missing positional argument for output")
+	} else if len(args) > 2 {
+		return fmt.Errorf("extra positional arguments")
 	}
 
 	splitLines := v.GetInt(FlagSplitLines)
@@ -29,8 +33,8 @@ func CheckConfig(args []string, v *viper.Viper) error {
 		case "stdout", "/dev/stdout", "-":
 			return fmt.Errorf("cannot split by lines when writing to stdout")
 		}
-		outputUri := args[1]
-		if !strings.Contains(outputUri, NumberReplacementCharacter) {
+		outputURI := args[1]
+		if !strings.Contains(outputURI, NumberReplacementCharacter) {
 			return fmt.Errorf(
 				"when splitting by lines, you must include the number replacement character (%q) in the output uri",
 				NumberReplacementCharacter,

@@ -8,9 +8,8 @@
 package grw
 
 import (
+	"fmt"
 	"sync"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/io"
 )
@@ -26,7 +25,7 @@ func NewWriter(w io.ByteWriter) *Writer {
 	return &Writer{Writer: w, Mutex: &sync.Mutex{}}
 }
 
-// WriteString writes a slice of bytes to the underlying writer and returns an error, if any.
+// Write writes a slice of bytes to the underlying writer and returns an error, if any.
 //  - https://godoc.org/io#Writer
 func (w *Writer) Write(p []byte) (n int, err error) {
 
@@ -96,7 +95,7 @@ func (w *Writer) WriteError(e error) (n int, err error) {
 	return 0, nil
 }
 
-// WriteError writes a an error as a string with a trailing newline to the underlying writer and returns an error, if any.
+// WriteErrorSafe writes a an error as a string with a trailing newline to the underlying writer and returns an error, if any.
 // WriteErrorSafe also locks the writer for the duration of writing using a sync.Mutex.
 //  - https://godoc.org/io#Writer
 //  - https://godoc.org/sync#Mutex
@@ -118,7 +117,7 @@ func (w *Writer) Flush() error {
 	if f, ok := w.Writer.(io.Flusher); ok {
 		err := f.Flush()
 		if err != nil {
-			return errors.Wrapf(err, "error flushing underlying writer")
+			return fmt.Errorf("error flushing underlying writer: %w", err)
 		}
 	}
 	return nil
@@ -135,7 +134,7 @@ func (w *Writer) FlushSafe() error {
 		err := f.Flush()
 		if err != nil {
 			w.Unlock()
-			return errors.Wrapf(err, "error flushing underlying writer")
+			return fmt.Errorf("error flushing underlying writer: %w", err)
 		}
 		w.Unlock()
 	}
@@ -148,7 +147,7 @@ func (w *Writer) Close() error {
 	if c, ok := w.Writer.(io.Closer); ok {
 		err := c.Close()
 		if err != nil {
-			return errors.Wrapf(err, "error closing underlying writer")
+			return fmt.Errorf("error closing underlying writer: %w", err)
 		}
 	}
 	return nil

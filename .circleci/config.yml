@@ -1,148 +1,206 @@
-version: 2.1
+version: "2.1"
+
 executors:
+  # `main` uses the `cimg/go:1.17` docker image.
+  main:
+    docker:
+      - image: cimg/go:1.17
+
+  # `base` uses the `cimg/base` docker image.
   base:
     docker:
-      - image: circleci/golang:1.12-node
-    working_directory: /go/src/github.com/spatialcurrent/go-reader-writer
+      - image: cimg/base:2020.07
+
+  # `android` uses the `cimg/base` docker image.
+  android:
+    docker:
+      - image: circleci/android:api-29-ndk
+
+  # `macos` uses the macOS machine image.
+  macos:
+    macos:
+      xcode: 12.4.0
+      resource_class: medium
+
+  # `windows` uses the Windows machine image.
+  windows:
+    machine:
+      image: "windows-server-2019-vs2019:stable"
+      resource_class: "windows.medium"
+      shell: "powershell.exe -ExecutionPolicy Bypass"
+
+
 jobs:
-  pre_deps_golang:
-    executor: base
+
+  # `test_go` tests the GRW source code.
+  test_go:
+    executor: main
     steps:
       - checkout
-      - run: make deps_go
-      - run: sudo chown -R circleci /go/src
-      - save_cache:
-          key: v1-go-src-{{ .Branch }}-{{ .Revision }}
-          paths:
-            - /go/src
-  test_go:
-    executor: base
-    steps:
-      - run: sudo chown -R circleci /go/src
-      - restore_cache:
-          keys:
-            - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run: make deps_go_test
-      - run: make test_go
+      - setup_remote_docker:
+          docker_layer_caching: false
+      - run: make fmt
       - run: make imports
+      - run: make test_go
       - run: git diff --exit-code
+
+  # `test_cli` tests the GRW executable.
   test_cli:
-    executor: base
+    executor: main
     steps:
-      - run: sudo chown -R circleci /go/src
-      - restore_cache:
-          keys:
-            - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run: make deps_go
-      - run: make install
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: false
+      - run: make tidy
+      - run: make bin/grw
       - run: make test_cli
-  test_javascript:
-    executor: base
+
+  # `build` builds the GRW executables and libraries.
+  build:
+    executor: main
     steps:
-      - run: sudo chown -R circleci /go/src
-      - restore_cache:
-          keys:
-            - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run: sudo npm install -g n
-      - run: sudo n v11.15.0
-      - run: sudo npm install --global source-map-support
-      - run: make deps_gopherjs
-      - run: make deps_javascript
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: false
+
+      # Update apt cache
+      - run: sudo apt-get update
+
+      # Tidy dependencies
+      - run: make tidy
+
+      # Build Executeables
+      - run: make build_release
+
+      # Remove gox
+      - run: rm -f bin/gox
+
+      # Build Linux / AMD64 Shared Library
+      - run: make bin/grw_linux_amd64.so
+
+      # Build Linux / 386 Shared Library
+      # Install gcc-multilib to support building 32-bit shared libraries.
+      # https://askubuntu.com/questions/91909/trouble-compiling-a-32-bit-binary-on-a-64-bit-machine
+      - run: sudo apt-get install gcc-multilib
+      - run: make bin/grw_linux_386.so
+
+      # Build ARM / v7 Shared Library
+      - run: sudo make deps_arm
+      - run: make bin/grw_linux_arm_v7.so
+
+      # Build ARM64 Shared Library.
+      - run: sudo make deps_arm64
+      - run: make bin/grw_linux_arm64.so
+
+      - store_artifacts:
+          path: bin
+          destination: /
+      - persist_to_workspace:
+          root: bin
+          paths:
+            - grw_darwin_amd64
+            - grw_darwin_arm64
+            - grw_linux_386
+            - grw_linux_amd64
+            - grw_linux_arm
+            - grw_linux_arm64
+            - grw_windows_386.exe
+            - grw_windows_amd64.exe
+            - grw_linux_386.h
+            - grw_linux_386.so
+            - grw_linux_amd64.h
+            - grw_linux_amd64.so
+            - grw_linux_arm_v7.h
+            - grw_linux_arm_v7.so
+            - grw_linux_arm64.h
+            - grw_linux_arm64.so
+
+  # `build_android` builds the GRW Android Archive (AAR)
+  build_android:
+    executor: android
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: false
       - run:
-          name: Install support for syscalls 
+          name: Install go
           command: |
-            cd /go/src/github.com/gopherjs/gopherjs/node-syscall
-            echo '{"engines" : {"node" : ">=11.15.0 <12.0.0"},"dependencies": {"node-gyp": "^5.0.3"}}' > package.json
-            npm install .
-            node_modules/node-gyp/bin/node-gyp.js rebuild
-            mkdir -p ~/.node_libraries/
-            cp build/Release/syscall.node ~/.node_libraries/syscall.node
-      - run: npm run test:unit:clean
+            curl -fsSL "https://golang.org/dl/go1.17.3.linux-amd64.tar.gz" | sudo tar --gunzip -x -C /usr/local
+      - run: echo "export PATH=$PATH:/usr/local/go/bin" >> $BASH_ENV
+      - run: echo "export PATH=$PATH:/home/circleci/project/bin" >> $BASH_ENV
+      - run: make tidy
+      - run: make build_android
+      - run: rm -f bin/gobind bin/gomobile
+      - store_artifacts:
+          path: bin
+          destination: /
+      - persist_to_workspace:
+          root: bin
+          paths:
+            - grw.aar
+
+  # `examples` runs the GRW examples.
   examples:
-    executor: base
+    executor: main
     steps:
-      - run: sudo chown -R circleci /go/src
-      - restore_cache:
-          keys:
-            - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run: sudo npm install -g n
-      - run:
-          name: Install Node 11.15.0
-          command: sudo n 11.15.0
-      - run: make deps_gopherjs
-      - run: make deps_javascript
-      - run: npm run build:clean
-      - run:
-          name: Install support for syscalls
-          command: |
-            cd /go/src/github.com/gopherjs/gopherjs/node-syscall
-            echo '{"engines" : {"node" : ">=11.15.0 <12.0.0"},"dependencies": {"node-gyp": "^5.0.3"}}' > package.json
-            npm install .
-            node_modules/node-gyp/bin/node-gyp.js rebuild
-            mkdir -p ~/.node_libraries/
-            cp build/Release/syscall.node ~/.node_libraries/syscall.node
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: false
+
+      # Update apt cache
+      - run: sudo apt-get update
+
+      # Tidy dependencies
+      - run: make tidy
+
+      # Run Examples
       - run: make run_example_c
       - run: make run_example_cpp
-      - run: make run_example_javascript
-      - run: make run_example_python
-  build_cli:
+      - run: make run_example_python3
+
+  # `verify_linux` verifys the linux build
+  verify_linux:
     executor: base
     steps:
-      - run: sudo chown -R circleci /go/src
-      - restore_cache:
-          keys:
-            - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run: go get github.com/inconshreveable/mousetrap # for windows CLI builds
-      - run: make build_cli
-      - store_artifacts:
-          path: bin
-          destination: /
-  build_javascript:
-    executor: base
+      - attach_workspace:
+          at: bin
+      - run: bin/grw_linux_386 --help
+      - run: bin/grw_linux_amd64 --help
+
+  # `verify_macos` verifys the macOS build
+  verify_macos:
+    executor: macos
     steps:
-      - run: sudo chown -R circleci /go/src
-      - restore_cache:
-          keys:
-            - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run: make deps_gopherjs
-      - run: make build_javascript
-      - store_artifacts:
-          path: dist
-          destination: /
-  build_so:
-    executor: base
+      - attach_workspace:
+          at: bin
+      - run: bin/grw_darwin_amd64 --help
+
+  # `verify_windows` verifys the windows build
+  verify_windows:
+    executor: windows
     steps:
-      - run: sudo chown -R circleci /go/src
-      - restore_cache:
-          keys:
-            - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run: sudo make deps_arm
-      - run: make build_so
-      - store_artifacts:
-          path: bin
-          destination: /
+      - attach_workspace:
+          at: bin
+      - run: bin/grw_windows_386.exe --help
+      - run: bin/grw_windows_amd64.exe --help
+
 workflows:
+  version: 2
   main:
     jobs:
-      - pre_deps_golang
-      - test_go:
+      - test_go
+      - test_cli
+      - build
+      - build_android
+      - verify_linux:
           requires:
-            - pre_deps_golang
-      - test_javascript:
+            - build
+      - verify_macos:
           requires:
-            - pre_deps_golang
-      - test_cli:
+            - build
+      - verify_windows:
           requires:
-            - pre_deps_golang
+            - build
       - examples:
           requires:
-            - pre_deps_golang
-      - build_cli:
-          requires:
-            - pre_deps_golang
-      - build_javascript:
-          requires:
-            - pre_deps_golang
-      - build_so:
-          requires:
-            - pre_deps_golang
+            - build

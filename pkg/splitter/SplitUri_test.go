@@ -13,32 +13,32 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSplitUri(t *testing.T) {
-	scheme, remainder := SplitUri("https://example.com")
+func TestSplitURI(t *testing.T) {
+	scheme, remainder := SplitURI("https://example.com")
 	assert.Equal(t, "https", scheme)
 	assert.Equal(t, "example.com", remainder)
 }
 
-func TestSplitUriPort(t *testing.T) {
-	scheme, remainder := SplitUri("https://example.com:80")
+func TestSplitURIPort(t *testing.T) {
+	scheme, remainder := SplitURI("https://example.com:80")
 	assert.Equal(t, "https", scheme)
 	assert.Equal(t, "example.com:80", remainder)
 }
 
-func TestSplitUriPortPath(t *testing.T) {
-	scheme, remainder := SplitUri("https://example.com:80/foo")
+func TestSplitURIPortPath(t *testing.T) {
+	scheme, remainder := SplitURI("https://example.com:80/foo")
 	assert.Equal(t, "https", scheme)
 	assert.Equal(t, "example.com:80/foo", remainder)
 }
 
-func TestSplitUriNoScheme(t *testing.T) {
-	scheme, remainder := SplitUri("example.com")
+func TestSplitURINoScheme(t *testing.T) {
+	scheme, remainder := SplitURI("example.com")
 	assert.Equal(t, "", scheme)
 	assert.Equal(t, "example.com", remainder)
 }
 
-func TestSplitUriNoSchemePath(t *testing.T) {
-	scheme, remainder := SplitUri("example.com/foo/bar")
+func TestSplitURINoSchemePath(t *testing.T) {
+	scheme, remainder := SplitURI("example.com/foo/bar")
 	assert.Equal(t, "", scheme)
 	assert.Equal(t, "example.com/foo/bar", remainder)
 }

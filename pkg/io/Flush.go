@@ -8,7 +8,7 @@
 package io
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
 )
 
 // Flush flushes the given writer if it has a Flush method.
@@ -21,7 +21,7 @@ func Flush(w interface{}) error {
 	if f, ok := w.(Flusher); ok {
 		err := f.Flush()
 		if err != nil {
-			return errors.Wrapf(err, "error flushing writer")
+			return fmt.Errorf("error flushing writer: %w", err)
 		}
 	}
 	return nil

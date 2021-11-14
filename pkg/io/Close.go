@@ -8,7 +8,7 @@
 package io
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
 )
 
 // Close closes the given resource if it has a Close method.
@@ -21,7 +21,7 @@ func Close(i interface{}) error {
 	if f, ok := i.(Closer); ok {
 		err := f.Close()
 		if err != nil {
-			return errors.Wrapf(err, "error closing resource")
+			return fmt.Errorf("error closing resource: %w", err)
 		}
 	}
 	return nil

@@ -2,7 +2,7 @@
 
 # =================================================================
 #
-# Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
+# Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
 # Released as open source under the MIT License.  See LICENSE file.
 #
 # =================================================================
@@ -11,14 +11,21 @@ set -euo pipefail
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-export testdata_local=$(realpath "${DIR}/../testdata")
+#export testdata_local=$(realpath "${DIR}/../testdata")
+export testdata_local="${DIR}/../testdata"
 
 export "testdata_s3"="${GRW_TESTDATA_S3:-}"
+
+export "testdata_sftp"="${GRW_TESTDATA_SFTP:-}"
+
+rand() {
+  head -c $((${1}/2)) < /dev/random | base64
+}
 
 _testDevice() {
   local algorithm=$1
   local expected='hello world'
-  local output=$(echo 'hello world' | grw --output-compression $algorithm | grw --input-compression $algorithm)
+  local output=$(echo 'hello world' | "${DIR}/../bin/grw" --output-compression $algorithm - - | "${DIR}/../bin/grw" --input-compression $algorithm - -)
   assertEquals "unexpected output" "${expected}" "${output}"
 }
 
@@ -26,8 +33,25 @@ _testRead() {
   local algorithm=$1
   local filePath=$2
   local expected='hello world'
-  local output=$(grw --input-compression ${algorithm} ${filePath} -)
+  local output=$("${DIR}/../bin/grw" --input-compression ${algorithm} ${filePath} -)
   assertEquals "unexpected output" "${expected}" "${output}"
+}
+
+_testWriteRead() {
+  local algorithm=$1
+  local filePath=$2
+  local expected=$(rand 4096)
+  echo "${expected}" | "${DIR}/../bin/grw" --output-compression "${algorithm}" - "${filePath}"
+  local output=$("${DIR}/../bin/grw" --input-compression "${algorithm}" "${filePath}" -)
+  assertEquals "unexpected output" "${expected}" "${output}"
+}
+
+#
+# Test Help
+#
+
+testHelp() {
+  "${DIR}/../bin/grw" --help > /dev/null
 }
 
 #
@@ -37,14 +61,14 @@ _testRead() {
 
 testDevicePath() {
   local expected='hello world'
-  local output=$(echo 'hello world' | grw /dev/stdin /dev/stdout)
+  local output=$(echo 'hello world' | "${DIR}/../bin/grw" file:///dev/stdin file:///dev/stdout)
   assertEquals "unexpected output" "${expected}" "${output}"
 }
 
 testDeviceName() {
   local expected='hello world'
-  local output=$(echo 'hello world' | grw stdin stdout)
-  assertEquals "unexpected output" "${expected}" "${output}"
+  #local output=$(echo 'hello world' | "${DIR}/../bin/grw" stdin stdout)
+  #assertEquals "unexpected output" "${expected}" "${output}"
 }
 
 testDeviceNone() {
@@ -69,13 +93,13 @@ testDeviceZlib() {
 
 testDeviceDashes() {
   local expected='hello world'
-  local output=$(echo 'hello world' | grw - -)
+  local output=$(echo 'hello world' | "${DIR}/../bin/grw" - -)
   assertEquals "unexpected output" "${expected}" "${output}"
 }
 
 testDeviceAbsolutePath() {
   local expected='hello world'
-  local output=$(echo 'hello world' | grw '/dev/stdin' '/dev/stdout')
+  local output=$(echo 'hello world' | "${DIR}/../bin/grw" 'file:///dev/stdin' 'file:///dev/stdout')
   assertEquals "unexpected output" "${expected}" "${output}"
 }
 
@@ -118,11 +142,54 @@ testReadFileZip() {
 testSplit() {
   local input='hello\nbeautiful\nworld'
   local expected='hello world'
-  echo -e "${input}" | grw --split-lines 1 - "${SHUNIT_TMPDIR}/test_split_#.txt"
+  echo -e "${input}" | "${DIR}/../bin/grw" --split-lines 1 - "${SHUNIT_TMPDIR}/test_split_#.txt"
   local output=$(cat "${SHUNIT_TMPDIR}/test_split_1.txt" "${SHUNIT_TMPDIR}/test_split_2.txt" "${SHUNIT_TMPDIR}/test_split_3.txt")
   assertEquals "unexpected output" "$(echo -e "${output}")" "${output}"
 }
 
+#
+# Test Reading SFTP Objects
+#
+
+testWriteReadSFTPNone() {
+  if [[ ! -z "${testdata_sftp}" ]]; then
+    _testWriteRead 'none' "${testdata_sftp}/doc.txt"
+  else
+    echo "* skipping"
+  fi
+}
+
+testWriteReadSFTPGZIP() {
+  if [[ ! -z "${testdata_sftp}" ]]; then
+    _testWriteRead 'gzip' "${testdata_sftp}/doc.txt.gz"
+  else
+    echo "* skipping"
+  fi
+}
+
+testWriteReadSFTPFlate() {
+  if [[ ! -z "${testdata_sftp}" ]]; then
+    _testWriteRead 'flate' "${testdata_sftp}/doc.txt.f"
+  else
+    echo "* skipping"
+  fi
+}
+
+testWriteReadSFTPSnappy() {
+  if [[ ! -z "${testdata_sftp}" ]]; then
+    _testWriteRead 'snappy' "${testdata_sftp}/doc.txt.sz"
+  else
+    echo "* skipping"
+  fi
+}
+
+testWriteReadSFTPZlib() {
+  if [[ ! -z "${testdata_sftp}" ]]; then
+    _testWriteRead 'zlib' "${testdata_sftp}/doc.txt.z"
+  else
+    echo "* skipping"
+  fi
+}
 
 #
 # Test Reading S3 Objects

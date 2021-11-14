@@ -7,3 +7,17 @@
 
 // Package gzip provides a reader and writer that propagate calls to Flush and Close.
 package gzip
+
+import (
+	"io"
+)
+
+type Resetter interface {
+	Reset(r io.Reader) error
+}
+
+type ReadResetCloser interface {
+	io.Reader
+	io.Closer
+	Resetter
+}

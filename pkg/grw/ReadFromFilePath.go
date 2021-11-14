@@ -7,11 +7,13 @@
 
 package grw
 
+/*
+
 import (
+	"fmt"
 	"path/filepath"
 
 	homedir "github.com/mitchellh/go-homedir"
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/os"
 )
@@ -39,7 +41,7 @@ func ReadFromFilePath(input *ReadFromFilePathInput) (*Reader, error) {
 
 	pathExpanded, err := homedir.Expand(input.Path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error expanding file path %q", input.Path)
+		return nil, fmt.Errorf("error expanding file path %q: %w", input.Path, err)
 	}
 
 	pathCleaned := filepath.Clean(pathExpanded)
@@ -48,11 +50,11 @@ func ReadFromFilePath(input *ReadFromFilePathInput) (*Reader, error) {
 	case AlgorithmBzip2, AlgorithmFlate, AlgorithmGzip, AlgorithmNone, AlgorithmSnappy, AlgorithmZlib, "":
 		f, err := os.OpenFile(pathCleaned)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error opening file at path %q", pathCleaned)
+			return nil, fmt.Errorf("error opening file at path %q: %w", pathCleaned, err)
 		}
 		r, err := WrapReader(f, input.Alg, input.Dict, input.BufferSize)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error wrapping reader for file at path %q", pathCleaned)
+			return nil, fmt.Errorf("error wrapping reader for file at path %q: %w", pathCleaned, err)
 		}
 		return &Reader{Reader: r}, nil
 	case AlgorithmZip:
@@ -61,3 +63,4 @@ func ReadFromFilePath(input *ReadFromFilePathInput) (*Reader, error) {
 
 	return nil, &ErrUnknownAlgorithm{Algorithm: input.Alg}
 }
+*/

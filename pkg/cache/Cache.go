@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2021 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -8,10 +8,8 @@
 package cache
 
 import (
+	"errors"
 	"fmt"
-	"io/ioutil"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-reader-writer/pkg/io"
 )
@@ -63,7 +61,7 @@ func (c *Cache) Read(p []byte) (n int, err error) {
 	}
 
 	if len(p) == 0 {
-		return 0, errors.New("error attempting to read zero bytes from file.")
+		return 0, errors.New("error attempting to read zero bytes from file")
 	}
 
 	n, err = c.Reader.Read(p)
@@ -122,7 +120,7 @@ func (c *Cache) ReadFirst() (byte, error) {
 					//*c.Complete = true
 					break
 				} else {
-					return byte(0), errors.Wrap(err, "error reading first byte starting at cursor "+fmt.Sprint(c.Cursor))
+					return byte(0), fmt.Errorf("error reading first byte starting at cursor %q: %w", fmt.Sprint(c.Cursor), err)
 				}
 			}
 		}
@@ -151,7 +149,7 @@ func (c *Cache) ReadAt(i int) (byte, error) {
 					//*c.Complete = true
 					return byte(0), err
 				} else {
-					return byte(0), errors.Wrap(err, "error reading bytes from index "+fmt.Sprint(i)+" starting at cursor "+fmt.Sprint(c.Cursor))
+					return byte(0), fmt.Errorf("error reading bytes from index %q starting at cursor %q: %w", fmt.Sprint(i), fmt.Sprint(c.Cursor), err)
 				}
 			}
 		}
@@ -168,9 +166,9 @@ func (c *Cache) ReadAt(i int) (byte, error) {
 func (c *Cache) ReadAll() ([]byte, error) {
 	//fmt.Println("ReadAll()")
 	if !*c.Complete {
-		newContent, err := ioutil.ReadAll(c.Reader)
+		newContent, err := io.ReadAll(c.Reader)
 		if err != nil {
-			return newContent, errors.Wrap(err, "error reading all content from underlying reader")
+			return newContent, fmt.Errorf("error reading all content from underlying reader: %w", err)
 		}
 		*c.Content = append(*c.Content, newContent...)
 		*c.Complete = true
@@ -197,14 +195,24 @@ func (c *Cache) ReadRange(start int, end int) ([]byte, error) {
 					//*c.Complete = true
 					break
 				} else {
-					return make([]byte, 0), errors.Wrap(err, "error reading "+fmt.Sprint(c.Cursor+end-len(*c.Content)+1)+" bytes for range "+fmt.Sprint(start)+"-"+fmt.Sprint(end)+" starting at cursor "+fmt.Sprint(c.Cursor)+".  Current Content:"+fmt.Sprint(c.Content))
+					return make([]byte, 0), fmt.Errorf("error reading %d bytes for range %d-%d starting at cursor %d.  Current Content: %x: %w",
+						c.Cursor+end-len(*c.Content)+1,
+						start,
+						end,
+						c.Cursor,
+						c.Content,
+						err)
 				}
 			}
 		}
 	}
 
 	if (c.Cursor + end + 1) > len(*c.Content) {
-		return make([]byte, 0), errors.New("Content is only " + fmt.Sprint(len(*c.Content)) + " bytes.  " + fmt.Sprint(c.Content) + ".  End is " + fmt.Sprint(c.Cursor+end+1))
+		return make([]byte, 0), fmt.Errorf(
+			"content is only %d bytes,  %x,  end is %d",
+			len(*c.Content),
+			fmt.Sprint(c.Content),
+			c.Cursor+end+1)
 	}
 
 	//fmt.Println("End of ReadRange("+fmt.Sprint(start)+","+fmt.Sprint(end)+") has content ",c.Content)

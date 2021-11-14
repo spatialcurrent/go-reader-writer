@@ -7,3 +7,16 @@
 
 // Package snappy provides a reader and writer that propagate calls to Flush and Close.
 package snappy
+
+import (
+	"io"
+)
+
+type Resetter interface {
+	Reset(reader io.Reader)
+}
+
+type ReadResetter interface {
+	io.Reader
+	Resetter
+}

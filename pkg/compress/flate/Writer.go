@@ -1,6 +1,6 @@
 // =================================================================
 //
-// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
+// Copyright (C) 2020 Spatial Current, Inc. - All Rights Reserved
 // Released as open source under the MIT License.  See LICENSE file.
 //
 // =================================================================
@@ -9,47 +9,36 @@ package flate
 
 import (
 	"compress/flate"
+	"fmt"
 	"io"
-
-	"github.com/pkg/errors"
-)
-
-const (
-	NoCompression      = flate.NoCompression
-	BestSpeed          = flate.BestSpeed
-	BestCompression    = flate.BestCompression
-	DefaultCompression = flate.DefaultCompression
-	HuffmanOnly        = flate.HuffmanOnly
 )
 
 type Writer struct {
 	*flate.Writer
-	underlying io.Writer
+	underlying io.WriteCloser
 }
 
 type flusher interface {
 	Flush() error
 }
 
-// Close, flushes and closes the flate.Writer and calls the "Close() error" method of the underlying writer, if it implements io.Closer.
+// Close closes the flate.Writer, and then flushes and closes the underlying WriteCloser.
 func (w *Writer) Close() error {
 	err := w.Writer.Close()
 	if err != nil {
-		return errors.Wrap(err, "error closing flate.Writer")
+		return fmt.Errorf("error closing flate.Writer: %w", err)
 	}
 	// When the flate writer is closed is flushes one last time.
 	// Therefore, we need to flush the underlying writer one last time before we close it.
 	if f, ok := w.underlying.(flusher); ok {
 		err = f.Flush()
 		if err != nil {
-			return errors.Wrap(err, "error flushing underlying writer")
+			return fmt.Errorf("error flushing underlying writer: %w", err)
 		}
 	}
-	if c, ok := w.underlying.(io.Closer); ok {
-		err = c.Close()
-		if err != nil {
-			return errors.Wrap(err, "error closing underlying writer")
-		}
+	err = w.underlying.Close()
+	if err != nil {
+		return fmt.Errorf("error closing underlying writer: %w", err)
 	}
 	return nil
 }
@@ -66,18 +55,27 @@ func (w *Writer) Close() error {
 func (w *Writer) Flush() error {
 	err := w.Writer.Flush()
 	if err != nil {
-		return errors.Wrap(err, "error flushing flate.Writer")
+		return fmt.Errorf("error flushing flate.Writer: %w", err)
 	}
 	if f, ok := w.underlying.(flusher); ok {
 		err = f.Flush()
 		if err != nil {
-			return errors.Wrap(err, "error flushing underlying writer")
+			return fmt.Errorf("error flushing underlying writer: %w", err)
 		}
 	}
 	return nil
 }
 
-// NewWriter returns a new Writer compressing data at the given level.
+// NewWriter returns a new Writer compressing data at the default level.
+func NewWriter(w io.WriteCloser) (*Writer, error) {
+	fw, err := flate.NewWriter(w, DefaultCompression)
+	if err != nil {
+		return nil, err
+	}
+	return &Writer{Writer: fw, underlying: w}, nil
+}
+
+// NewWriterLevel returns a new Writer compressing data at the given level.
 // Following zlib, levels range from 1 (BestSpeed) to 9 (BestCompression);
 // higher levels typically run slower but compress more. Level 0
 // (NoCompression) does not attempt any compression; it only adds the
@@ -89,7 +87,7 @@ func (w *Writer) Flush() error {
 //
 // If level is in the range [-2, 9] then the error returned will be nil.
 // Otherwise the error returned will be non-nil.
-func NewWriter(w io.Writer, level int) (*Writer, error) {
+func NewWriterLevel(w io.WriteCloser, level int) (*Writer, error) {
 	fw, err := flate.NewWriter(w, level)
 	if err != nil {
 		return nil, err
@@ -103,7 +101,7 @@ func NewWriter(w io.Writer, level int) (*Writer, error) {
 // any compressed output. The compressed data written to w
 // can only be decompressed by a Reader initialized with the
 // same dictionary.
-func NewWriterDict(w io.Writer, level int, dict []byte) (*Writer, error) {
+func NewWriterDict(w io.WriteCloser, level int, dict []byte) (*Writer, error) {
 	fw, err := flate.NewWriterDict(w, level, dict)
 	if err != nil {
 		return nil, err

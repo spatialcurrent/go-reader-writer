@@ -16,8 +16,12 @@ import (
 
 func CheckConfig(args []string, v *viper.Viper) error {
 
-	if len(args) > 2 {
-		return fmt.Errorf("expecting less than 3 arguments, found %d arguments", len(args))
+	if len(args) == 0 {
+		return fmt.Errorf("missing positional arguments for input and output")
+	} else if len(args) == 1 {
+		return fmt.Errorf("missing positional argument for output")
+	} else if len(args) > 2 {
+		return fmt.Errorf("extra positional arguments")
 	}
 
 	splitLines := v.GetInt(FlagSplitLines)

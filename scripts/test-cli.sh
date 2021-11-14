@@ -25,7 +25,7 @@ rand() {
 _testDevice() {
   local algorithm=$1
   local expected='hello world'
-  local output=$(echo 'hello world' | "${DIR}/../bin/grw" --output-compression $algorithm | "${DIR}/../bin/grw" --input-compression $algorithm)
+  local output=$(echo 'hello world' | "${DIR}/../bin/grw" --output-compression $algorithm - - | "${DIR}/../bin/grw" --input-compression $algorithm - -)
   assertEquals "unexpected output" "${expected}" "${output}"
 }
 

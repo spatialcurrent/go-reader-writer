@@ -171,13 +171,11 @@ func checkURIRead(uri string, sftpClient *sftp.Client) error {
 func main() {
 
 	rootCommand := cobra.Command{
-		Use: `grw [flags] [-|INPUT_URI] [-|OUTPUT_URI]
-  grw [flags] [-|INPUT_URI]
-  grw [flags]`,
+		Use:                   `grw [flags] <-|INPUT_URI> <-|OUTPUT_URI>`,
 		DisableFlagsInUseLine: true,
 		Short:                 "grw is a simple tool for reading and writing compressed resources by uri.",
 		Long: `grw is a simple tool for reading and writing compressed resources by uri.
-By default, reads from stdin and writes to stdout.
+grw requires input and output locations to be specified.
 If the output uri is a device, then the append flag is not required.
 Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, ", "),
 		SilenceErrors: true,
@@ -207,14 +205,8 @@ Supports the following compression algorithms: ` + strings.Join(grw.Algorithms, 
 				return err
 			}
 
-			inputURI := "-"
-			outputURI := "-"
-			if len(args) > 0 {
-				inputURI = args[0]
-				if len(args) > 1 {
-					outputURI = args[1]
-				}
-			}
+			inputURI := args[0]
+			outputURI := args[1]
 
 			_, outputPath := splitter.SplitURI(outputURI)
 

@@ -72,9 +72,6 @@ jobs:
       # Build Executeables
       - run: make build_release
 
-      # Make darwin, freebsd, linux, and openbsd binaries executable
-      - run: chmod +x bin/grw_darwin_* bin/grw_freebsd_* bin/grw_linux_* bin/grw_openbsd_*
-
       # Remove gox
       - run: rm -f bin/gox
 

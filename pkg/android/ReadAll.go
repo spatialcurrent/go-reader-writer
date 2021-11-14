@@ -13,7 +13,7 @@ import (
 )
 
 func ReadAll(uri string, alg string) ([]byte, error) {
-  readFromResourceOutput, err := grw.ReadFromResource(&grw.ReadFromResourceInput{
+  readFromResourceOutput, readFromResourceError := grw.ReadFromResource(&grw.ReadFromResourceInput{
     URI: uri,
     Alg: alg,
     Dict: make([]byte, 0),
@@ -24,9 +24,12 @@ func ReadAll(uri string, alg string) ([]byte, error) {
     Password: "",
     PrivateKey: make([]byte, 0),
   })
-  data, err := io.ReadAll(readFromResourceOutput.Reader)
-  if err != nil {
-    return nil, err
+  if readFromResourceError != nil {
+    return nil, readFromResourceError
+  }
+  data, errReadAll := io.ReadAll(readFromResourceOutput.Reader)
+  if errReadAll != nil {
+    return nil, errReadAll
   }
   return data, nil
 }

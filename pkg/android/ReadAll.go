@@ -8,8 +8,9 @@
 package android
 
 import (
-	"github.com/spatialcurrent/go-reader-writer/pkg/grw"
 	"io"
+
+	"github.com/spatialcurrent/go-reader-writer/pkg/grw"
 )
 
 func ReadAll(uri string, alg string) ([]byte, error) {

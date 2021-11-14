@@ -60,9 +60,6 @@ test_cli: bin/grw ## Run CLI tests
 install:  ## Install grw CLI on current platform
 	go install github.com/spatialcurrent/go-reader-writer/cmd/grw
 
-#.PHONY: build
-#build: build_cli build_javascript build_so build_android  ## Build CLI, Shared Objects (.so), JavaScript, and Android
-
 #
 # Command line Programs
 #

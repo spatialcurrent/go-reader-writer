@@ -50,7 +50,7 @@ tidy: ## Tidy Go source code
 	go mod tidy
 
 .PHONY: test_go
-test_go: bin/errcheck bin/ineffassign bin/misspell bin/staticcheck bin/shadow ## Run Go tests
+test_go: bin/errcheck bin/misspell bin/staticcheck bin/shadow ## Run Go tests
 	bash scripts/test.sh
 
 .PHONY: test_cli
@@ -81,9 +81,6 @@ bin/gomobile:
 
 bin/gox:
 	go build -o bin/gox github.com/mitchellh/gox
-
-bin/ineffassign:
-	go build -o bin/ineffassign github.com/gordonklaus/ineffassign
 
 bin/misspell:
 	go build -o bin/misspell github.com/client9/misspell/cmd/misspell

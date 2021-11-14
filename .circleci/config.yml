@@ -1,10 +1,10 @@
 version: "2.1"
 
 executors:
-  # `main` uses the `cimg/go:1.16` docker image.
+  # `main` uses the `cimg/go:1.17` docker image.
   main:
     docker:
-      - image: cimg/go:1.16
+      - image: cimg/go:1.17
 
   # `base` uses the `cimg/base` docker image.
   base:
@@ -125,7 +125,7 @@ jobs:
       - run:
           name: Install go
           command: |
-            curl -fsSL "https://golang.org/dl/go1.16.4.linux-amd64.tar.gz" | sudo tar --gunzip -x -C /usr/local
+            curl -fsSL "https://golang.org/dl/go1.17.3.linux-amd64.tar.gz" | sudo tar --gunzip -x -C /usr/local
       - run: echo "export PATH=$PATH:/usr/local/go/bin" >> $BASH_ENV
       - run: echo "export PATH=$PATH:/home/circleci/project/bin" >> $BASH_ENV
       - run: make tidy
